@@ -1,0 +1,13 @@
+{
+  "appId": "com.tradeplan.app",
+  "appName": "TradePlan by SNG",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "minSdkVersion": 21,
+    "targetSdkVersion": 34
+  }
+}
