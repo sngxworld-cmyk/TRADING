@@ -42,7 +42,7 @@ const DEFAULT_CHAT_MESSAGES: ChatMessage[] = [
     senderUsername: "Sng",
     senderDisplayName: "Sng (Host Admin)",
     senderRole: "owner",
-    content: "Welcome to SNGxJOURNAL Real Community Hub! Share your trade analyses, create your signal group, and connect with real fellow traders. All new signal groups start free, and VIP subscriptions unlock after 30 verified trades with 75%–85%+ win rate.",
+    content: "Welcome to TrackerX Real Community Hub! Share your trade analyses, create your signal group, and connect with real fellow traders. All new signal groups start free, and VIP subscriptions unlock after 30 verified trades with 75%–85%+ win rate.",
     createdAt: new Date().toISOString(),
   },
 ];

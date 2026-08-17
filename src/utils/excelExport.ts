@@ -257,7 +257,7 @@ export function exportTradingPlanToExcel(
   // Format clean filename
   const cleanGmail = (userEmail || "Trader").split("@")[0].replace(/[^a-zA-Z0-9]/g, "_");
   const cleanPeriod = yearRange.replace(/\s/g, "");
-  const filename = `SNGxJOURNAL_Trade_Journal_${cleanGmail}_${cleanPeriod}.xlsx`;
+  const filename = `TrackerX_Trade_Journal_${cleanGmail}_${cleanPeriod}.xlsx`;
 
   // Trigger Excel file download
   XLSX.writeFile(workbook, filename);

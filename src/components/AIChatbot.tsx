@@ -20,7 +20,7 @@ export const AIChatbot: React.FC = () => {
     {
       id: "msg_welcome",
       sender: "bot",
-      text: "Hello! SNGxJOURNAL AI Assistant active. English, Sinhala (සිංහලෙන්), or Singlish (e.g. 'kohomada log wenne', 'plan eka set කරන්නේ kohomada') support ready!",
+      text: "Hello! TrackerX AI Assistant active. English, Sinhala (සිංහලෙන්), or Singlish (e.g. 'kohomada log wenne', 'plan eka set කරන්නේ kohomada') support ready!",
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -119,7 +119,7 @@ export const AIChatbot: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-5 right-5 z-40 w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/40 border border-indigo-400 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-        title="Open SNGxJOURNAL AI Assistant"
+        title="Open TrackerX AI Assistant"
       >
         <MessageSquare className="w-5 h-5" />
         <span className="absolute top-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-950"></span>
@@ -136,7 +136,7 @@ export const AIChatbot: React.FC = () => {
               </div>
               <div>
                 <h4 className="text-xs font-bold text-white leading-tight">
-                  SNGxJOURNAL AI Assistant
+                  TrackerX AI Assistant
                 </h4>
                 <p className="text-[10px] text-emerald-400 font-mono">
                   Online (EN / SI / Singlish)

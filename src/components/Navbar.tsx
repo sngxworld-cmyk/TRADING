@@ -59,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </div>
           <span className="hidden sm:block text-[10px] text-slate-500 font-mono tracking-wider uppercase truncate">
-            SNGxJOURNAL Ecosystem Matrix
+            TrackerX Ecosystem Matrix
           </span>
         </div>
 

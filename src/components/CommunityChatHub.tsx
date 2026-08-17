@@ -356,7 +356,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
             </div>
             <div>
               <h1 className="text-base font-bold text-slate-100 font-mono tracking-tight flex items-center gap-2">
-                SNGxCOMMUNITY HUB
+                TRACKERX COMMUNITY HUB
               </h1>
               <p className="text-[10px] text-slate-400 font-mono">
                 Real-Time Trading Signals & Trader Network

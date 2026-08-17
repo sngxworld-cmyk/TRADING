@@ -435,7 +435,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
               <ShieldCheck className="w-3.5 h-3.5" /> Core Gateway Infrastructure
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white mb-2">
-              SNGz<span className="text-indigo-500">TRADES</span> Pro Journal
+              Tracker<span className="text-indigo-500">X</span> Pro Journal
             </h1>
             <p className="text-sm text-slate-400 max-w-lg">
               Enterprise Multi-Year Trade Journal Tracker Infrastructure.
@@ -797,7 +797,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                 )}
               </div>
               <div className="text-[10px] text-slate-600 font-mono">
-                SNGxJOURNAL Ecosystem Systems Hub v4.2
+                TrackerX Ecosystem Systems Hub v4.2
               </div>
             </div>
           </div>

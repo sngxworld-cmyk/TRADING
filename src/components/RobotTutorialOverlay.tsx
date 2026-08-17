@@ -84,7 +84,7 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
       subtitle: "Interactive 3D Walkthrough Guidance",
       icon: Cpu,
       description:
-        "3D AI Robot උපදේශක එක මගින් SNGxJOURNAL Trading Plan App එකෙහි සියලුම විශේෂාංග පිළිබඳ සවිස්තරාත්මක 3D නිබන්ධන මඟපෙන්වීමක් ලබාදේ.",
+        "3D AI Robot උපදේශක එක මගින් TrackerX Trading Plan App එකෙහි සියලුම විශේෂාංග පිළිබඳ සවිස්තරාත්මක 3D නිබන්ධන මඟපෙන්වීමක් ලබාදේ.",
       highlightHint: "3D Interactive AI Tutorial Overlay",
     },
   ];
@@ -159,7 +159,7 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
       subtitle: "Interactive 3D Walkthrough Guidance",
       icon: Cpu,
       description:
-        "The 3D AI Robot Assistant provides this comprehensive interactive walkthrough tutorial covering all features of your SNGxJOURNAL Trading Plan.",
+        "The 3D AI Robot Assistant provides this comprehensive interactive walkthrough tutorial covering all features of your TrackerX Trading Plan.",
       highlightHint: "3D Interactive AI Tutorial Overlay",
     },
   ];
@@ -183,7 +183,7 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-mono mb-2">
               <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-spin" />
-              SNGxJOURNAL 3D AI Mentor
+              TrackerX 3D AI Mentor
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
               සාදරයෙන් පිළිගනිමු! / Welcome!
@@ -266,7 +266,7 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
               <Robot3D size={150} isTalking={true} className="relative z-10" />
             </div>
             <span className="text-[10px] font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 mt-1">
-              SNGxJOURNAL AI
+              TrackerX AI
             </span>
           </div>
 
