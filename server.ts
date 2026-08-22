@@ -56,6 +56,10 @@ const DB_FILE = process.env.VERCEL
   ? path.join("/tmp", "db.json")
   : path.join(process.cwd(), "data", "db.json");
 
+const DB_BACKUP_FILE = process.env.VERCEL
+  ? path.join("/tmp", "db.backup.json")
+  : path.join(process.cwd(), "data", "db.backup.json");
+
 function ensureDirectoryExistence(filePath: string) {
   const dirname = path.dirname(filePath);
   if (fs.existsSync(dirname)) {
@@ -70,13 +74,28 @@ function loadDB(): DBStructure {
     ensureDirectoryExistence(DB_FILE);
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, "utf-8");
-      const parsed = JSON.parse(raw);
-      // Ensure default host admin exists
-      ensureDefaultAdmin(parsed);
-      return parsed;
+      if (raw.trim()) {
+        const parsed = JSON.parse(raw);
+        // Ensure default host admin and community collections exist
+        ensureDefaultAdmin(parsed);
+        return parsed;
+      }
     }
   } catch (err) {
-    console.error("Error reading database file, resetting to default:", err);
+    console.error("Error reading database file, attempting recovery from backup:", err);
+    try {
+      if (fs.existsSync(DB_BACKUP_FILE)) {
+        const backupRaw = fs.readFileSync(DB_BACKUP_FILE, "utf-8");
+        if (backupRaw.trim()) {
+          const parsed = JSON.parse(backupRaw);
+          ensureDefaultAdmin(parsed);
+          console.log("Successfully recovered database from db.backup.json!");
+          return parsed;
+        }
+      }
+    } catch (bErr) {
+      console.error("Backup recovery also failed:", bErr);
+    }
   }
 
   const defaultDB: DBStructure = {
@@ -100,6 +119,11 @@ function loadDB(): DBStructure {
         type: "info",
       },
     ],
+    communitySignalGroups: [],
+    communityChatMessages: [],
+    communitySignals: [],
+    communityDirectMessages: [],
+    communityGroupChatMessages: {},
   };
 
   saveDB(defaultDB);
@@ -109,6 +133,11 @@ function loadDB(): DBStructure {
 function ensureDefaultAdmin(db: DBStructure) {
   if (!db.subOwnerRequests) db.subOwnerRequests = [];
   if (!db.moderatorReports) db.moderatorReports = [];
+  if (!db.communitySignalGroups) db.communitySignalGroups = [];
+  if (!db.communityChatMessages) db.communityChatMessages = [];
+  if (!db.communitySignals) db.communitySignals = [];
+  if (!db.communityDirectMessages) db.communityDirectMessages = [];
+  if (!db.communityGroupChatMessages) db.communityGroupChatMessages = {};
 
   const adminIndex = db.users.findIndex(
     (u) =>
@@ -149,7 +178,13 @@ function ensureDefaultAdmin(db: DBStructure) {
 function saveDB(db: DBStructure) {
   try {
     ensureDirectoryExistence(DB_FILE);
-    fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), "utf-8");
+    const serialized = JSON.stringify(db, null, 2);
+    // Write primary database file
+    fs.writeFileSync(DB_FILE, serialized, "utf-8");
+    // Also maintain secondary atomic backup file
+    try {
+      fs.writeFileSync(DB_BACKUP_FILE, serialized, "utf-8");
+    } catch {}
   } catch (err) {
     console.error("Failed to save DB:", err);
   }
@@ -171,6 +206,17 @@ function logActivity(message: string, type: "info" | "access" | "warn" = "info")
 }
 
 export const app = express();
+
+// Enable CORS for external Host Admin Dashboards and client apps
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-api-key");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 app.use(express.json({ limit: "10mb" }));
 
@@ -1435,24 +1481,26 @@ app.use((req, res, next) => {
   });
 
   // =========================================================================
-  // COMMUNITY & SIGNAL GROUPS BACKEND API (Slides 1 - 15)
+  // COMMUNITY & SIGNAL GROUPS BACKEND API (Permanent 20-Year Server Vault)
   // =========================================================================
   
-  // In-memory store fallback with persistent DB support
-  let communityChatMessages: any[] = [];
-  let communitySignalGroups: any[] = [];
-  let communitySignals: any[] = [];
-  let communityDirectMessages: any[] = [];
-  let communityGroupChatMessages: { [groupId: string]: any[] } = {};
+  // Hydrate in-memory stores directly from persistent DB on boot
+  const initialCommunityDb = getDB();
+  let communityChatMessages: any[] = initialCommunityDb.communityChatMessages || [];
+  let communitySignalGroups: any[] = initialCommunityDb.communitySignalGroups || [];
+  let communitySignals: any[] = initialCommunityDb.communitySignals || [];
+  let communityDirectMessages: any[] = initialCommunityDb.communityDirectMessages || [];
+  let communityGroupChatMessages: { [groupId: string]: any[] } = initialCommunityDb.communityGroupChatMessages || {};
 
   // Group Chat: GET messages for a signal group
   app.get("/api/community/signal-groups/:groupId/chat", (req, res) => {
     const { groupId } = req.params;
-    const msgs = communityGroupChatMessages[groupId] || [];
+    const currentDb = getDB();
+    const msgs = communityGroupChatMessages[groupId] || currentDb.communityGroupChatMessages?.[groupId] || [];
     return res.json({ success: true, messages: msgs });
   });
 
-  // Group Chat: POST message for a signal group (enforces admin-only talk rules & 20-year server vault persistence)
+  // Group Chat: POST message for a signal group (enforces admin-only talk rules & permanent server vault persistence)
   app.post("/api/community/signal-groups/:groupId/chat", (req, res) => {
     const { groupId } = req.params;
     const msg = req.body;
@@ -1464,15 +1512,21 @@ app.use((req, res, next) => {
       communityGroupChatMessages[groupId] = [];
     }
 
-    // 20-Year Server History Vault Storage
+    // Permanent Server History Vault Storage
     const messageWithVault = {
       ...msg,
       id: msg.id || "gmsg_" + Math.random().toString(36).substring(2, 9),
       vaultArchivedAt: new Date().toISOString(),
-      vaultRetention: "20_YEARS",
+      vaultRetention: "PERMANENT_VAULT",
     };
 
-    communityGroupChatMessages[groupId].push(messageWithVault);
+    // Deduplicate by ID
+    const existingIdx = communityGroupChatMessages[groupId].findIndex((m: any) => m.id === messageWithVault.id);
+    if (existingIdx >= 0) {
+      communityGroupChatMessages[groupId][existingIdx] = messageWithVault;
+    } else {
+      communityGroupChatMessages[groupId].push(messageWithVault);
+    }
 
     const currentDb = getDB();
     if (!currentDb.communityGroupChatMessages) {
@@ -1514,11 +1568,13 @@ app.use((req, res, next) => {
       vault: {
         status: "ONLINE",
         architecture: "Permanent Lifetime Server Vault",
-        retentionPolicy: "Permanent Lifetime (No Expiration / No Auto-Deletion)",
+        retentionPolicy: "Permanent Lifetime (No Expiration / No Auto-Deletion Across Updates)",
         maxActiveGroupsPerUser: 1,
         totalActiveSignalGroups: groups.length,
         totalArchivedGroupMessages: totalVaultMsgs,
         totalPublicChatMessages: communityChatMessages.length,
+        totalSignals: communitySignals.length,
+        totalDirectMessages: communityDirectMessages.length,
         syncedAt: new Date().toISOString(),
       },
     });
@@ -1526,42 +1582,297 @@ app.use((req, res, next) => {
 
   // Chat Room: GET All Messages (Permanent Lifetime Archive - No expiration or auto-deletion)
   app.get("/api/community/chat/messages", (_req, res) => {
-    return res.json({ success: true, messages: communityChatMessages });
+    const currentDb = getDB();
+    const msgs = communityChatMessages.length > 0 ? communityChatMessages : (currentDb.communityChatMessages || []);
+    return res.json({ success: true, messages: msgs });
   });
 
   // Chat Room: POST Message
   app.post("/api/community/chat/messages", (req, res) => {
-    const { sender, content, photoUrl } = req.body;
-    if (!sender || (!content && !photoUrl)) {
-      return res.status(400).json({ error: "Sender and message content or photo are required." });
+    const { sender, content, photoUrl, audioUrl, id, senderEmail, senderUsername, senderDisplayName, senderPhotoURL, senderRole, createdAt } = req.body;
+    
+    const resolvedEmail = sender?.email || senderEmail;
+    const resolvedContent = content || "";
+    const resolvedPhoto = photoUrl || "";
+    const resolvedAudio = audioUrl || "";
+
+    if (!resolvedEmail && !resolvedContent && !resolvedPhoto && !resolvedAudio) {
+      return res.status(400).json({ error: "Sender and message content or media are required." });
     }
 
     const newMessage = {
-      id: "msg_" + Math.random().toString(36).substring(2, 9),
-      senderEmail: sender.email,
-      senderUsername: sender.username,
-      senderDisplayName: sender.displayName || sender.username,
-      senderPhotoURL: sender.photoURL || "",
-      senderRole: sender.platformRole || (sender.role === "admin" ? "owner" : "member"),
-      content: (content || "").trim(),
-      photoUrl: photoUrl || "",
-      createdAt: new Date().toISOString(),
+      id: id || "msg_" + Math.random().toString(36).substring(2, 9),
+      senderEmail: resolvedEmail,
+      senderUsername: sender?.username || senderUsername || (resolvedEmail ? resolvedEmail.split("@")[0] : "Trader"),
+      senderDisplayName: sender?.displayName || senderDisplayName || sender?.username || senderUsername || "Trader",
+      senderPhotoURL: sender?.photoURL || senderPhotoURL || "",
+      senderRole: sender?.platformRole || senderRole || (sender?.role === "admin" ? "owner" : "member"),
+      content: (resolvedContent || "").trim(),
+      photoUrl: resolvedPhoto,
+      audioUrl: resolvedAudio,
+      createdAt: createdAt || new Date().toISOString(),
     };
 
-    communityChatMessages.push(newMessage);
+    // Deduplicate in memory
+    const existingIdx = communityChatMessages.findIndex((m) => m.id === newMessage.id);
+    if (existingIdx >= 0) {
+      communityChatMessages[existingIdx] = newMessage;
+    } else {
+      communityChatMessages.push(newMessage);
+    }
+
+    // Persist to DB file
+    const currentDb = getDB();
+    if (!currentDb.communityChatMessages) currentDb.communityChatMessages = [];
+    const dbIdx = currentDb.communityChatMessages.findIndex((m: any) => m.id === newMessage.id);
+    if (dbIdx >= 0) {
+      currentDb.communityChatMessages[dbIdx] = newMessage;
+    } else {
+      currentDb.communityChatMessages.push(newMessage);
+    }
+    saveDB(currentDb);
+
     return res.json({ success: true, message: newMessage });
   });
 
-  // Signal Groups: Sync All Groups
+  // Signal Groups: GET All Groups
+  app.get("/api/community/signal-groups", (_req, res) => {
+    const currentDb = getDB();
+    const groups = communitySignalGroups.length > 0 ? communitySignalGroups : (currentDb.communitySignalGroups || []);
+    return res.json({ success: true, groups });
+  });
+
+  // Signal Groups: Sync All Groups (Non-destructive merge)
   app.post("/api/community/signal-groups/sync", (req, res) => {
     const { groups } = req.body;
-    if (Array.isArray(groups)) {
-      communitySignalGroups = groups;
+    if (Array.isArray(groups) && groups.length > 0) {
       const currentDb = getDB();
-      currentDb.communitySignalGroups = groups;
+      const existing = currentDb.communitySignalGroups || [];
+      const map = new Map<string, any>();
+      existing.forEach((g: any) => map.set(g.id, g));
+      groups.forEach((g: any) => map.set(g.id, { ...(map.get(g.id) || {}), ...g }));
+      const merged = Array.from(map.values());
+      communitySignalGroups = merged;
+      currentDb.communitySignalGroups = merged;
       saveDB(currentDb);
     }
     return res.json({ success: true, count: communitySignalGroups.length });
+  });
+
+  // SIGNALS: GET All Signals across all groups
+  app.get("/api/community/signals", (req, res) => {
+    const { groupId } = req.query;
+    const currentDb = getDB();
+    const allSignals = communitySignals.length > 0 ? communitySignals : (currentDb.communitySignals || []);
+    if (groupId) {
+      const filtered = allSignals.filter((s: any) => s.groupId === groupId);
+      return res.json({ success: true, signals: filtered });
+    }
+    return res.json({ success: true, signals: allSignals });
+  });
+
+  // SIGNALS: POST Create/Publish a Signal
+  app.post("/api/community/signals", (req, res) => {
+    const signalData = req.body;
+    if (!signalData || !signalData.groupId || !signalData.coin || !signalData.entry) {
+      return res.status(400).json({ error: "Signal groupId, coin, and entry are required." });
+    }
+
+    const newSignal = {
+      ...signalData,
+      id: signalData.id || "sig_" + Math.random().toString(36).substring(2, 9),
+      createdAt: signalData.createdAt || new Date().toISOString(),
+    };
+
+    const currentDb = getDB();
+    if (!currentDb.communitySignals) currentDb.communitySignals = [];
+
+    const existingIdx = currentDb.communitySignals.findIndex((s: any) => s.id === newSignal.id);
+    if (existingIdx >= 0) {
+      currentDb.communitySignals[existingIdx] = newSignal;
+    } else {
+      currentDb.communitySignals.unshift(newSignal);
+    }
+    communitySignals = currentDb.communitySignals;
+    saveDB(currentDb);
+
+    return res.json({ success: true, signal: newSignal });
+  });
+
+  // SIGNALS: Sync Signals (Non-destructive merge)
+  app.post("/api/community/signals/sync", (req, res) => {
+    const { signals } = req.body;
+    if (Array.isArray(signals) && signals.length > 0) {
+      const currentDb = getDB();
+      const existing = currentDb.communitySignals || [];
+      const map = new Map<string, any>();
+      existing.forEach((s: any) => map.set(s.id, s));
+      signals.forEach((s: any) => map.set(s.id, { ...(map.get(s.id) || {}), ...s }));
+      const merged = Array.from(map.values());
+      communitySignals = merged;
+      currentDb.communitySignals = merged;
+      saveDB(currentDb);
+    }
+    return res.json({ success: true, count: communitySignals.length });
+  });
+
+  // SIGNALS: Finish Trade / Set 3-Day Feedback Window
+  app.post("/api/community/signals/:signalId/finish", (req, res) => {
+    const { signalId } = req.params;
+    const currentDb = getDB();
+    const signals = currentDb.communitySignals || [];
+    const target = signals.find((s: any) => s.id === signalId);
+    if (!target) return res.status(404).json({ error: "Signal not found." });
+
+    target.status = "voting";
+    target.votingEndsAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+    target.votes = target.votes || {};
+
+    communitySignals = signals;
+    saveDB(currentDb);
+    return res.json({ success: true, signal: target });
+  });
+
+  // SIGNALS: Cast Vote (TP / SL)
+  app.post("/api/community/signals/:signalId/vote", (req, res) => {
+    const { signalId } = req.params;
+    const { userEmail, vote } = req.body;
+    if (!userEmail || !vote) return res.status(400).json({ error: "User email and vote (tp/sl) are required." });
+
+    const currentDb = getDB();
+    const signals = currentDb.communitySignals || [];
+    const target = signals.find((s: any) => s.id === signalId);
+    if (!target) return res.status(404).json({ error: "Signal not found." });
+
+    if (!target.votes) target.votes = {};
+    target.votes[userEmail.toLowerCase()] = vote;
+
+    const allVotes = Object.values(target.votes);
+    target.tpVotesCount = allVotes.filter((v) => v === "tp").length;
+    target.slVotesCount = allVotes.filter((v) => v === "sl").length;
+
+    communitySignals = signals;
+    saveDB(currentDb);
+    return res.json({ success: true, signal: target });
+  });
+
+  // SIGNALS: Delete Signal
+  app.delete("/api/community/signals/:signalId", (req, res) => {
+    const { signalId } = req.params;
+    const currentDb = getDB();
+    if (currentDb.communitySignals) {
+      currentDb.communitySignals = currentDb.communitySignals.filter((s: any) => s.id !== signalId);
+      communitySignals = currentDb.communitySignals;
+      saveDB(currentDb);
+    }
+    return res.json({ success: true, message: `Signal ${signalId} deleted.` });
+  });
+
+  // FULL COMMUNITY UNIFIED SYNC (One-shot safe sync on app load or post-update)
+  app.get("/api/community/sync/all", (_req, res) => {
+    const currentDb = getDB();
+    return res.json({
+      success: true,
+      chatMessages: communityChatMessages.length > 0 ? communityChatMessages : (currentDb.communityChatMessages || []),
+      signalGroups: communitySignalGroups.length > 0 ? communitySignalGroups : (currentDb.communitySignalGroups || []),
+      signals: communitySignals.length > 0 ? communitySignals : (currentDb.communitySignals || []),
+      directMessages: communityDirectMessages.length > 0 ? communityDirectMessages : (currentDb.communityDirectMessages || []),
+      groupChats: currentDb.communityGroupChatMessages || communityGroupChatMessages || {},
+      syncedAt: new Date().toISOString(),
+    });
+  });
+
+  // FULL COMMUNITY PUSH SYNC (Safely merges client data with server vault without data deletion)
+  app.post("/api/community/sync/all", (req, res) => {
+    const { chatMessages, signalGroups, signals, directMessages, groupChats } = req.body;
+    const currentDb = getDB();
+
+    // 1. Merge Public Chat
+    if (Array.isArray(chatMessages) && chatMessages.length > 0) {
+      const msgMap = new Map<string, any>();
+      (currentDb.communityChatMessages || []).forEach((m: any) => msgMap.set(m.id, m));
+      chatMessages.forEach((m: any) => msgMap.set(m.id, { ...(msgMap.get(m.id) || {}), ...m }));
+      currentDb.communityChatMessages = Array.from(msgMap.values());
+      communityChatMessages = currentDb.communityChatMessages;
+    }
+
+    // 2. Merge Signal Groups
+    if (Array.isArray(signalGroups) && signalGroups.length > 0) {
+      const grpMap = new Map<string, any>();
+      (currentDb.communitySignalGroups || []).forEach((g: any) => grpMap.set(g.id, g));
+      signalGroups.forEach((g: any) => grpMap.set(g.id, { ...(grpMap.get(g.id) || {}), ...g }));
+      currentDb.communitySignalGroups = Array.from(grpMap.values());
+      communitySignalGroups = currentDb.communitySignalGroups;
+    }
+
+    // 3. Merge Signals
+    if (Array.isArray(signals) && signals.length > 0) {
+      const sigMap = new Map<string, any>();
+      (currentDb.communitySignals || []).forEach((s: any) => sigMap.set(s.id, s));
+      signals.forEach((s: any) => sigMap.set(s.id, { ...(sigMap.get(s.id) || {}), ...s }));
+      currentDb.communitySignals = Array.from(sigMap.values());
+      communitySignals = currentDb.communitySignals;
+    }
+
+    // 4. Merge Direct Messages
+    if (Array.isArray(directMessages) && directMessages.length > 0) {
+      const dmMap = new Map<string, any>();
+      (currentDb.communityDirectMessages || []).forEach((d: any) => dmMap.set(d.id, d));
+      directMessages.forEach((d: any) => dmMap.set(d.id, { ...(dmMap.get(d.id) || {}), ...d }));
+      currentDb.communityDirectMessages = Array.from(dmMap.values());
+      communityDirectMessages = currentDb.communityDirectMessages;
+    }
+
+    // 5. Merge Group Chats
+    if (groupChats && typeof groupChats === "object") {
+      if (!currentDb.communityGroupChatMessages) currentDb.communityGroupChatMessages = {};
+      Object.keys(groupChats).forEach((gId) => {
+        const incomingList = groupChats[gId];
+        if (Array.isArray(incomingList) && incomingList.length > 0) {
+          const existingList = currentDb.communityGroupChatMessages[gId] || [];
+          const gcMap = new Map<string, any>();
+          existingList.forEach((m: any) => gcMap.set(m.id, m));
+          incomingList.forEach((m: any) => gcMap.set(m.id, { ...(gcMap.get(m.id) || {}), ...m }));
+          currentDb.communityGroupChatMessages[gId] = Array.from(gcMap.values());
+        }
+      });
+      communityGroupChatMessages = currentDb.communityGroupChatMessages;
+    }
+
+    saveDB(currentDb);
+
+    return res.json({
+      success: true,
+      message: "Unified community data safely synchronized and permanently backed up in server vault.",
+      counts: {
+        publicMessages: communityChatMessages.length,
+        signalGroups: communitySignalGroups.length,
+        signals: communitySignals.length,
+        directMessages: communityDirectMessages.length,
+      },
+    });
+  });
+
+  // HOST ADMIN / AUTOMATED BACKUP: Export complete JSON snapshot of community vault
+  app.get("/api/admin/community/backup", (_req, res) => {
+    const currentDb = getDB();
+    res.setHeader("Content-Disposition", `attachment; filename="TrackerX_Community_Vault_Backup_${Date.now()}.json"`);
+    res.setHeader("Content-Type", "application/json");
+    return res.send(
+      JSON.stringify(
+        {
+          exportedAt: new Date().toISOString(),
+          vaultPolicy: "PERMANENT_LIFETIME_SERVER_VAULT",
+          signalGroups: currentDb.communitySignalGroups || [],
+          signals: currentDb.communitySignals || [],
+          publicChatMessages: currentDb.communityChatMessages || [],
+          groupChatMessages: currentDb.communityGroupChatMessages || {},
+          directMessages: currentDb.communityDirectMessages || [],
+        },
+        null,
+        2
+      )
+    );
   });
 
   // HOST ADMIN: Global Community Overview
@@ -1576,11 +1887,13 @@ app.use((req, res, next) => {
       data: {
         totalGroups: groups.length,
         totalPublicMessages: publicChat.length,
+        totalSignals: communitySignals.length,
         totalDirectMessages: dms.length,
         groups,
         publicChat,
+        signals: communitySignals,
         dms,
-        groupChats: communityGroupChatMessages,
+        groupChats: currentDb.communityGroupChatMessages || communityGroupChatMessages,
       },
     });
   });

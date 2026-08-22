@@ -127,8 +127,26 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </p>
           )}
 
+          {/* Date of Birth (DOB) Display */}
+          {((targetUser as any).dob || (isSelf && currentUser.dob)) && (
+            <div className="mt-3 p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between font-mono text-xs">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Date of Birth</span>
+                  <strong className="text-slate-200">
+                    {new Date(((targetUser as any).dob || currentUser.dob) + "T00:00:00").toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </strong>
+                </div>
+              </div>
+              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
+                Verified
+              </span>
+            </div>
+          )}
+
           {/* Platform Age & Trading Pair */}
-          <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-mono">
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-mono">
             <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
               <div>

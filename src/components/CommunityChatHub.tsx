@@ -443,9 +443,9 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                 <span className="text-slate-500">•</span>
                 <span className="text-slate-400">All registered traders & verified providers</span>
               </div>
-              <div className="text-[10px] text-emerald-400 font-mono flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                <Database className="w-3 h-3 text-emerald-400 shrink-0" />
-                <span>Permanent Lifetime Server Vault</span>
+              <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1.5 bg-slate-800/60 px-2.5 py-1 rounded-full border border-slate-700/50">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>Community Chat</span>
               </div>
             </div>
 

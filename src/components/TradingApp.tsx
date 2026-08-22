@@ -5,7 +5,7 @@ import {
   DayRecord,
   MonthData,
 } from "../types";
-import { saveUserDataToFirestore, subscribeUserDataFromFirestore } from "../lib/userStore";
+import { saveUserDataToFirestore, subscribeUserDataFromFirestore, resetUserTradingDataInFirestore } from "../lib/userStore";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler, BarElement } from "chart.js";
 import { Line, Bar } from "react-chartjs-2";
 import { exportTradingPlanToExcel } from "../utils/excelExport";
@@ -61,16 +61,95 @@ const MONTH_NAMES = [
 
 const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
+// Auto-expanding downward textarea for trade notes and descriptions (no text clipping/hiding)
+const AutoExpandingTextarea: React.FC<{
+  value: string;
+  placeholder?: string;
+  onChange: (val: string) => void;
+  className?: string;
+}> = ({ value, placeholder, onChange, className }) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const resize = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.max(34, textareaRef.current.scrollHeight)}px`;
+    }
+  };
+
+  useEffect(() => {
+    resize();
+  }, [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      rows={1}
+      value={value}
+      placeholder={placeholder}
+      onChange={(e) => {
+        onChange(e.target.value);
+        e.target.style.height = "auto";
+        e.target.style.height = `${Math.max(34, e.target.scrollHeight)}px`;
+      }}
+      className={`w-full resize-none overflow-hidden transition-[height] duration-75 ease-out leading-snug break-words whitespace-pre-wrap ${className || ""}`}
+    />
+  );
+};
+
 export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer }) => {
   const [activeTab, setActiveTab] = useState<"grid" | "summary" | "goal">("grid");
   const [summarySubTab, setSummarySubTab] = useState<"monthly" | "yearly" | "overall">("monthly");
   
-  const [yearRange, setYearRange] = useState("2026");
-  const [startMonth, setStartMonth] = useState<number>(0);
-  const [selectedMonth, setSelectedMonth] = useState<number>(0);
-  const [startingCapital, setStartingCapital] = useState<string>("100");
+  // Synchronous Zero-Blink state initialization from localStorage & user data
+  const [yearRange, setYearRange] = useState<string>(() => {
+    try {
+      const savedSettings = localStorage.getItem(`trading_settings_${user?.email}`);
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        if (parsed.yearRange) return parsed.yearRange;
+      }
+    } catch {}
+    return "2026";
+  });
 
-  // Trading Data Store
+  const [startMonth, setStartMonth] = useState<number>(() => {
+    try {
+      const savedSettings = localStorage.getItem(`trading_settings_${user?.email}`);
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        if (parsed.startMonth !== undefined) return Number(parsed.startMonth);
+      }
+    } catch {}
+    return 0;
+  });
+
+  const [selectedMonth, setSelectedMonth] = useState<number>(() => {
+    try {
+      const savedSettings = localStorage.getItem(`trading_settings_${user?.email}`);
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        if (parsed.selectedMonth !== undefined) return Number(parsed.selectedMonth);
+      }
+    } catch {}
+    return 0;
+  });
+
+  const [startingCapital, setStartingCapital] = useState<string>(() => {
+    if (user?.startingCapital && String(user.startingCapital).trim()) return String(user.startingCapital);
+    try {
+      const savedSettings = localStorage.getItem(`trading_settings_${user?.email}`);
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        if (parsed.startingCapital) return String(parsed.startingCapital);
+      }
+      const directCapital = localStorage.getItem(`trading_capital_${user?.email}`);
+      if (directCapital) return directCapital;
+    } catch {}
+    return "100";
+  });
+
+  // Trading Data Store (synchronous local retrieval prevents flash of empty content)
   const [dataStore, setDataStore] = useState<TradingDataStore>(() => {
     if (user.tradingData && Object.keys(user.tradingData).length > 0) return user.tradingData;
     const local = localStorage.getItem(`trading_store_${user.email}`);
@@ -86,11 +165,24 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
   const [activePopupDay, setActivePopupDay] = useState<number | null>(null);
   const isInitialMount = useRef(true);
 
-  // Sync prop changes into dataStore
+  // Synchronously persist settings to eliminate reload flickering
+  useEffect(() => {
+    if (!user?.email) return;
+    try {
+      localStorage.setItem(
+        `trading_settings_${user.email}`,
+        JSON.stringify({ yearRange, startMonth, selectedMonth, startingCapital })
+      );
+      localStorage.setItem(`trading_capital_${user.email}`, startingCapital);
+    } catch {}
+  }, [user?.email, yearRange, startMonth, selectedMonth, startingCapital]);
+
+  // Sync prop changes into dataStore cleanly
   useEffect(() => {
     if (user.tradingData && Object.keys(user.tradingData).length > 0) {
       setDataStore((prev) => {
         if (!prev || Object.keys(prev).length === 0) return user.tradingData!;
+        if (JSON.stringify(prev) === JSON.stringify(user.tradingData)) return prev;
         return { ...user.tradingData, ...prev };
       });
     }
@@ -109,11 +201,11 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
           return prev;
         });
       }
-      if (data?.yearRange) setYearRange(data.yearRange);
-      if (data?.startMonth !== undefined) {
+      if (data?.yearRange && data.yearRange !== yearRange) setYearRange(data.yearRange);
+      if (data?.startMonth !== undefined && data.startMonth !== startMonth) {
         setStartMonth(data.startMonth);
       }
-      if (data?.startingCapital !== undefined) {
+      if (data?.startingCapital !== undefined && data.startingCapital !== startingCapital) {
         setStartingCapital(data.startingCapital);
       }
     });
@@ -581,11 +673,30 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
     );
   };
 
-  const handleReset = () => {
-    if (confirm("Reset Trade Journal? All input history, win/loss ticks, and trade notes will be wiped out.")) {
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const handleExecuteReset = async () => {
+    setResetting(true);
+    try {
       setDataStore({});
       localStorage.removeItem(`trading_store_${user.email}`);
+      localStorage.removeItem(`sngx_trading_data_${user.email}`);
+      localStorage.removeItem(`trading_settings_${user.email}`);
+      localStorage.removeItem(`trading_capital_${user.email}`);
+      
+      await resetUserTradingDataInFirestore(user.email);
+      onSaveDataToServer({});
+      setResetConfirmOpen(false);
+    } catch (err) {
+      console.error("Error resetting journal:", err);
+    } finally {
+      setResetting(false);
     }
+  };
+
+  const handleReset = () => {
+    setResetConfirmOpen(true);
   };
 
   return (
@@ -603,9 +714,22 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
           <h1 className="text-base sm:text-xl font-black text-white tracking-tight leading-snug">
             TRADE JOURNAL METRIC PERFORMANCE TRACKER
           </h1>
-          <p className="text-xs text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
-            <span>Client Gmail: <strong className="text-indigo-400 font-mono">{user.email}</strong></span>
-          </p>
+          <div className="text-xs text-slate-400 mt-2 flex items-center gap-2.5 flex-wrap">
+            <span className="bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800">
+              Client Gmail: <strong className="text-indigo-400 font-mono">{user.email}</strong>
+            </span>
+            {user.dob && (
+              <span className="bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300 font-mono flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                DOB: <strong className="text-slate-200">{new Date(user.dob + "T00:00:00").toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</strong>
+              </span>
+            )}
+            {user.tradingMarket && (
+              <span className="bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300 font-mono">
+                Market: <strong className="text-amber-400">{user.tradingMarket}</strong>
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Action Controls */}
@@ -927,12 +1051,11 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                             </div>
                           </div>
 
-                          <input
-                            type="text"
+                          <AutoExpandingTextarea
                             placeholder="Trade notes..."
                             value={sub.description ?? sub.notes ?? ""}
-                            onChange={(e) => updateSubTrade(day, subIdx, { description: e.target.value, notes: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:outline-none"
+                            onChange={(val) => updateSubTrade(day, subIdx, { description: val, notes: val })}
+                            className="bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-indigo-500/60"
                           />
                         </div>
                       ))}
@@ -1018,14 +1141,13 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                       </div>
 
                       <div>
-                        <input
-                          type="text"
+                        <AutoExpandingTextarea
                           placeholder="Trade notes (e.g. BTC 1h OB retest, TP hit...)"
                           value={dayRec.description ?? dayRec.notes ?? ""}
-                          onChange={(e) =>
-                            updateDayRecord(day, { description: e.target.value, notes: e.target.value })
+                          onChange={(val) =>
+                            updateDayRecord(day, { description: val, notes: val })
                           }
-                          className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500/60 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none"
+                          className="bg-slate-900 border border-slate-800 focus:border-indigo-500/60 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none"
                         />
                       </div>
                     </>
@@ -1202,14 +1324,13 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
                         {/* Trade Description Input */}
                         <td className="p-3">
-                          <input
-                            type="text"
+                          <AutoExpandingTextarea
                             placeholder="e.g. BTC 1h Order Block retest, TP 2.5:1 hit..."
                             value={dayRec.description ?? dayRec.notes ?? ""}
-                            onChange={(e) =>
-                              updateDayRecord(day, { description: e.target.value, notes: e.target.value })
+                            onChange={(val) =>
+                              updateDayRecord(day, { description: val, notes: val })
                             }
-                            className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500/60 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none transition-colors"
+                            className="bg-slate-950 border border-slate-800 focus:border-indigo-500/60 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none transition-colors"
                           />
                         </td>
 
@@ -1320,12 +1441,11 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
                             {/* Sub-Trade Description Input */}
                             <td className="p-2.5">
-                              <input
-                                type="text"
+                              <AutoExpandingTextarea
                                 placeholder={`Trade #${subIdx + 1} notes (e.g. BTC Long OB retest, TP hit...)`}
                                 value={sub.description ?? sub.notes ?? ""}
-                                onChange={(e) => updateSubTrade(day, subIdx, { description: e.target.value, notes: e.target.value })}
-                                className="w-full bg-slate-900 border border-slate-800/80 focus:border-indigo-500/60 rounded-lg px-2.5 py-1 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none"
+                                onChange={(val) => updateSubTrade(day, subIdx, { description: val, notes: val })}
+                                className="bg-slate-900 border border-slate-800/80 focus:border-indigo-500/60 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none"
                               />
                             </td>
 
@@ -1893,6 +2013,56 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                   </li>
                 </ul>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Journal Confirmation Modal */}
+      {resetConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-rose-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+                <RotateCcw className="w-5 h-5 text-rose-400 animate-spin-reverse" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white font-mono">Reset Trade Journal?</h3>
+                <p className="text-xs text-rose-300 font-mono">This action cannot be undone.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed font-mono bg-slate-950/80 p-3.5 rounded-xl border border-slate-800">
+              This will permanently clear all daily trade entries, profit/loss states, sub-trades, and notes across all years and months for <strong className="text-indigo-300">{user.email}</strong>.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setResetConfirmOpen(false)}
+                disabled={resetting}
+                className="px-4 py-2 rounded-xl text-xs font-semibold font-mono text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteReset}
+                disabled={resetting}
+                className="px-5 py-2 rounded-xl text-xs font-bold font-mono text-white bg-rose-600 hover:bg-rose-500 active:scale-95 transition-all shadow-lg shadow-rose-600/30 flex items-center gap-2 disabled:opacity-50"
+              >
+                {resetting ? (
+                  <>
+                    <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                    Wiping Journal...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Confirm Reset
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

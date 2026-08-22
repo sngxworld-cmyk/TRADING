@@ -505,7 +505,7 @@ export async function saveUserDataToFirestore(
       updatedAt: new Date().toISOString(),
     };
 
-    if (tradingData && Object.keys(tradingData).length > 0) {
+    if (tradingData !== undefined) {
       payload.tradingData = tradingData;
     }
 
@@ -520,6 +520,51 @@ export async function saveUserDataToFirestore(
     }
 
     await setDoc(doc(db, "users", key), payload, { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, docPath);
+  }
+}
+
+/**
+ * Hard Reset / Wipe trading plan data for a user across all stores (Firestore, Server, localStorage)
+ */
+export async function resetUserTradingDataInFirestore(email: string) {
+  const key = cleanEmailKey(email);
+  if (!key) return;
+
+  // Clear local storage keys
+  try {
+    localStorage.removeItem(`sngx_trading_data_${key}`);
+    localStorage.removeItem(`trading_store_${key}`);
+    localStorage.removeItem(`trading_settings_${key}`);
+  } catch (e) {}
+
+  // Server API wipe
+  try {
+    await fetch("/api/user/data", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: key,
+        tradingData: {},
+        force: true,
+      }),
+    });
+  } catch (e) {}
+
+  if (checkQuotaStatus()) return;
+
+  const docPath = `users/${key}`;
+  try {
+    await setDoc(
+      doc(db, "users", key),
+      {
+        email: key,
+        tradingData: {},
+        updatedAt: new Date().toISOString(),
+      },
+      { merge: true }
+    );
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, docPath);
   }

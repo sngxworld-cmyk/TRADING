@@ -285,16 +285,24 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono">
-                Date of Birth (DOB)
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                  Date of Birth (DOB)
+                </span>
+                {dob && (
+                  <span className="text-[10px] font-mono text-emerald-400">
+                    {new Date(dob + "T00:00:00").toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </span>
+                )}
               </label>
               <div className="relative">
-                <Calendar className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
+                <Calendar className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3 pointer-events-none" />
                 <input
                   type="date"
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 font-mono"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 font-mono cursor-pointer"
                 />
               </div>
             </div>

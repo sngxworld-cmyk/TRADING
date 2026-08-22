@@ -603,6 +603,12 @@ export function getSignals(): SignalItem[] {
 
 export function saveSignals(signals: SignalItem[]) {
   localStorage.setItem(SIGNALS_STORAGE_KEY, JSON.stringify(signals));
+  // Sync with persistent server backend
+  fetch("/api/community/signals/sync", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ signals }),
+  }).catch(() => {});
 }
 
 export function postSignal(
@@ -683,6 +689,13 @@ export function postSignal(
   allSignals.unshift(newSignal);
   saveSignals(allSignals);
 
+  // Push new signal directly to backend server vault
+  fetch("/api/community/signals", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newSignal),
+  }).catch(() => {});
+
   return { success: true, signal: newSignal };
 }
 
@@ -705,6 +718,13 @@ export function finishTradeStartFeedback(
   sig.votes = sig.votes || {};
 
   saveSignals(allSignals);
+
+  // Sync finish status to backend
+  fetch(`/api/community/signals/${signalId}/finish`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  }).catch(() => {});
+
   return { success: true, signal: sig };
 }
 
@@ -738,6 +758,14 @@ export function castSignalVote(
   sig.slVotesCount = allVotes.filter((v) => v === "sl").length;
 
   saveSignals(allSignals);
+
+  // Sync vote to backend
+  fetch(`/api/community/signals/${signalId}/vote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userEmail: user.email, vote }),
+  }).catch(() => {});
+
   return { success: true };
 }
 
@@ -1175,3 +1203,118 @@ export function deleteGroupChatMessage(
 
   return { success: true };
 }
+
+// =========================================================================
+// UNIFIED BIDIRECTIONAL NON-DESTRUCTIVE SYNC & ANTI-DATA-DELETION ENGINE
+// Ensures all chat messages, signal groups, signals, DMs, and group chats
+// remain permanently safe across code updates, reboots, and browser refreshes.
+// =========================================================================
+
+let isSyncing = false;
+
+export async function initCommunitySync(): Promise<void> {
+  if (isSyncing) return;
+  isSyncing = true;
+
+  try {
+    const res = await fetch("/api/community/sync/all");
+    if (!res.ok) throw new Error(`Sync error: ${res.status}`);
+    const data = await res.json();
+
+    if (data.success) {
+      // 1. Merge Public Chat Messages (Union by ID)
+      const localChat = getChatMessages();
+      const chatMap = new Map<string, ChatMessage>();
+      localChat.forEach((m) => chatMap.set(m.id, m));
+      (data.chatMessages || []).forEach((m: ChatMessage) => chatMap.set(m.id, { ...(chatMap.get(m.id) || {}), ...m }));
+      const mergedChat = Array.from(chatMap.values()).sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      if (mergedChat.length > 0) {
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(mergedChat));
+      }
+
+      // 2. Merge Signal Groups (Union by ID)
+      const localGroups = getSignalGroups();
+      const grpMap = new Map<string, SignalGroup>();
+      localGroups.forEach((g) => grpMap.set(g.id, g));
+      (data.signalGroups || []).forEach((g: SignalGroup) => grpMap.set(g.id, { ...(grpMap.get(g.id) || {}), ...g }));
+      const mergedGroups = Array.from(grpMap.values());
+      if (mergedGroups.length > 0) {
+        localStorage.setItem(GROUPS_STORAGE_KEY, JSON.stringify(mergedGroups));
+      }
+
+      // 3. Merge Signals (Union by ID)
+      const localSignals = getSignals();
+      const sigMap = new Map<string, SignalItem>();
+      localSignals.forEach((s) => sigMap.set(s.id, s));
+      (data.signals || []).forEach((s: SignalItem) => sigMap.set(s.id, { ...(sigMap.get(s.id) || {}), ...s }));
+      const mergedSignals = Array.from(sigMap.values()).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      if (mergedSignals.length > 0) {
+        localStorage.setItem(SIGNALS_STORAGE_KEY, JSON.stringify(mergedSignals));
+      }
+
+      // 4. Merge Direct Messages (Union by ID)
+      const localDms = getDirectMessages();
+      const dmMap = new Map<string, DirectMessage>();
+      localDms.forEach((d) => dmMap.set(d.id, d));
+      (data.directMessages || []).forEach((d: DirectMessage) => dmMap.set(d.id, { ...(dmMap.get(d.id) || {}), ...d }));
+      const mergedDms = Array.from(dmMap.values()).sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      if (mergedDms.length > 0) {
+        localStorage.setItem(DMS_STORAGE_KEY, JSON.stringify(mergedDms));
+      }
+
+      // 5. Merge Group Chats
+      const serverGroupChats = data.groupChats || {};
+      const allGroupIds = new Set<string>([
+        ...mergedGroups.map((g) => g.id),
+        ...Object.keys(serverGroupChats),
+      ]);
+
+      const mergedGroupChats: { [groupId: string]: GroupChatMessage[] } = {};
+      allGroupIds.forEach((gId) => {
+        const localGc = getGroupChatMessages(gId);
+        const gcMap = new Map<string, GroupChatMessage>();
+        localGc.forEach((m) => gcMap.set(m.id, m));
+        (serverGroupChats[gId] || []).forEach((m: GroupChatMessage) => gcMap.set(m.id, { ...(gcMap.get(m.id) || {}), ...m }));
+        const mergedGc = Array.from(gcMap.values()).sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        if (mergedGc.length > 0) {
+          localStorage.setItem(getGroupChatStorageKey(gId), JSON.stringify(mergedGc));
+          mergedGroupChats[gId] = mergedGc;
+        }
+      });
+
+      // 6. Push unified merged state back to server vault to ensure permanent retention
+      fetch("/api/community/sync/all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chatMessages: mergedChat,
+          signalGroups: mergedGroups,
+          signals: mergedSignals,
+          directMessages: mergedDms,
+          groupChats: mergedGroupChats,
+        }),
+      }).catch(() => {});
+    }
+  } catch (err) {
+    console.warn("Community sync background warning:", err);
+  } finally {
+    isSyncing = false;
+  }
+}
+
+// Run initial sync on load in browser environment
+if (typeof window !== "undefined") {
+  initCommunitySync();
+  setInterval(() => {
+    initCommunitySync();
+  }, 12000);
+}
+
