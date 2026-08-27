@@ -80,6 +80,30 @@ function loadDB(): DBStructure {
         ensureDefaultAdmin(parsed);
         return parsed;
       }
+    } else if (process.env.VERCEL) {
+      // In Vercel serverless environment, check for bundled seed DB in workspace data/
+      const bundledDbPath = path.join(process.cwd(), "data", "db.json");
+      const bundledBackupPath = path.join(process.cwd(), "data", "db.backup.json");
+      let seedParsed: DBStructure | null = null;
+
+      if (fs.existsSync(bundledDbPath)) {
+        try {
+          const raw = fs.readFileSync(bundledDbPath, "utf-8");
+          if (raw.trim()) seedParsed = JSON.parse(raw);
+        } catch {}
+      }
+      if (!seedParsed && fs.existsSync(bundledBackupPath)) {
+        try {
+          const backupRaw = fs.readFileSync(bundledBackupPath, "utf-8");
+          if (backupRaw.trim()) seedParsed = JSON.parse(backupRaw);
+        } catch {}
+      }
+
+      if (seedParsed) {
+        ensureDefaultAdmin(seedParsed);
+        saveDB(seedParsed);
+        return seedParsed;
+      }
     }
   } catch (err) {
     console.error("Error reading database file, attempting recovery from backup:", err);
@@ -1388,43 +1412,60 @@ app.use((req, res, next) => {
   });
 
   // USER: Save trading plan data and metadata under Gmail
-  app.post("/api/user/data", (req, res) => {
-    const { userId, email, tradingData, metadata } = req.body;
+  const handleSaveUserData = (req: express.Request, res: express.Response) => {
+    const { userId: bodyUserId, email: bodyEmail, tradingData, metadata, yearRange, startMonth, startingCapital, force } = req.body;
+    const paramUserId = req.params?.userId;
     const currentDb = getDB();
 
-    const cleanEmail = (email || "").trim().toLowerCase();
-    const cleanUserId = (userId || "").trim().toLowerCase();
+    const cleanEmail = (bodyEmail || paramUserId || "").trim().toLowerCase();
+    const cleanUserId = (bodyUserId || paramUserId || "").trim().toLowerCase();
 
-    const user = currentDb.users.find(
+    let user = currentDb.users.find(
       (u) =>
         (cleanUserId && u.id.trim().toLowerCase() === cleanUserId) ||
-        (cleanEmail && u.email.trim().toLowerCase() === cleanEmail)
+        (cleanEmail && u.email.trim().toLowerCase() === cleanEmail) ||
+        (cleanEmail && u.email.trim().toLowerCase().includes(cleanEmail))
     );
+
+    if (!user && (cleanEmail || cleanUserId)) {
+      // Auto-upsert record if user exists in client session
+      user = {
+        id: cleanUserId || `user_${Date.now()}`,
+        email: cleanEmail || `${cleanUserId}@gmail.com`,
+        username: (cleanEmail || cleanUserId).split("@")[0],
+        displayName: (cleanEmail || cleanUserId).split("@")[0],
+        role: "client",
+        status: "approved",
+        password: "",
+        createdAt: new Date().toISOString(),
+        tradingData: {},
+      };
+      currentDb.users.push(user);
+    }
 
     if (!user) {
       return res.status(404).json({ error: "User not found." });
     }
 
     if (tradingData !== undefined && typeof tradingData === "object") {
-      const isEmptyNew = Object.keys(tradingData).length === 0;
-      const hasExisting = user.tradingData && Object.keys(user.tradingData).length > 0;
-      if (isEmptyNew && hasExisting && !req.body.force) {
-        // Retain existing data instead of wiping with empty object
-      } else {
-        user.tradingData = req.body.merge
-          ? { ...user.tradingData, ...tradingData }
-          : tradingData;
-      }
+      user.tradingData = tradingData;
     }
     if (metadata) {
       if (metadata.yearRange) user.yearRange = metadata.yearRange;
       if (metadata.startMonth !== undefined) user.startMonth = metadata.startMonth;
+      if (metadata.startingCapital !== undefined) user.startingCapital = metadata.startingCapital;
     }
+    if (yearRange) user.yearRange = yearRange;
+    if (startMonth !== undefined) user.startMonth = startMonth;
+    if (startingCapital !== undefined) user.startingCapital = startingCapital;
 
     saveDB(currentDb);
 
-    return res.json({ success: true, message: "Trading plan data saved under your Gmail successfully!" });
-  });
+    return res.json({ success: true, message: "Trading plan data saved successfully!" });
+  };
+
+  app.post("/api/user/data", handleSaveUserData);
+  app.post("/api/user/data/:userId", handleSaveUserData);
 
   // USER: Fetch trading plan data by Gmail or userId
   app.get("/api/user/data/:userId", (req, res) => {
@@ -2305,7 +2346,7 @@ Provide a concise, helpful, friendly, and expert response based on the above tra
   });
 
 // --- VITE / STATIC SERVING & SERVER LISTEN ---
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
   createServerServer();
 } else if (!process.env.VERCEL) {
   const distPath = path.join(process.cwd(), "dist");

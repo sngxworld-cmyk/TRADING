@@ -11,7 +11,7 @@ import {
   limit,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { TradingDataStore, User, UserProfile, UserStatus, AdminUserRecord, AuditLog } from "../types";
+import { TradingDataStore, DayRecord, MonthData, User, UserProfile, UserStatus, AdminUserRecord, AuditLog } from "../types";
 import { verifyDeviceRegistrationPermission, recordDeviceRegistration, getDeviceId, isHostMasterDevice } from "../utils/deviceUtils";
 
 export enum OperationType {
@@ -470,6 +470,100 @@ export async function loginUserInFirestore(
 }
 
 /**
+ * Deep sanitizes TradingDataStore to strip empty day records and empty sub-trades
+ * ensuring zero lingering ghost entries when users delete rows or clear cells.
+ */
+export function sanitizeTradingDataStore(store: TradingDataStore): TradingDataStore {
+  if (!store || typeof store !== "object") return {};
+  const cleaned: TradingDataStore = {};
+
+  for (const year of Object.keys(store)) {
+    const yearData = store[year];
+    if (!yearData || typeof yearData !== "object") continue;
+    const cleanedYear: Record<number, MonthData> = {};
+    let yearHasEntries = false;
+
+    for (let m = 0; m < 12; m++) {
+      const monthData = yearData[m];
+      if (!monthData || typeof monthData !== "object") continue;
+      const cleanedMonth: MonthData = {};
+      let monthHasEntries = false;
+
+      for (const dayStr of Object.keys(monthData)) {
+        const dayNum = parseInt(dayStr, 10);
+        if (isNaN(dayNum)) continue;
+        const rec = monthData[dayNum];
+        if (!rec) continue;
+
+        const hasSubTrades = Array.isArray(rec.subTrades) && rec.subTrades.length > 0;
+        const state = (rec.state || "").trim();
+        const amount = (rec.amount !== undefined && rec.amount !== null) ? String(rec.amount).trim() : "";
+        const roi = (rec.roi !== undefined && rec.roi !== null) ? String(rec.roi).trim() : "";
+        const desc = (rec.description || rec.notes || "").trim();
+
+        if (!state && (!amount || amount === "0") && (!roi || roi === "0") && !desc && !hasSubTrades) {
+          // Empty or deleted day record - do not include in store
+          continue;
+        }
+
+        const cleanedRecord: DayRecord = {
+          state: (state as any) || "",
+          amount: amount || "",
+          roi: roi || "",
+          description: desc,
+          notes: desc,
+        };
+
+        if (hasSubTrades) {
+          const cleanedSubs: DayRecord[] = [];
+          for (const sub of rec.subTrades!) {
+            if (!sub) continue;
+            const sState = (sub.state || "").trim();
+            const sAmt = (sub.amount !== undefined && sub.amount !== null) ? String(sub.amount).trim() : "";
+            const sRoi = (sub.roi !== undefined && sub.roi !== null) ? String(sub.roi).trim() : "";
+            const sDesc = (sub.description || sub.notes || "").trim();
+            if (sState || (sAmt && sAmt !== "0") || (sRoi && sRoi !== "0") || sDesc) {
+              cleanedSubs.push({
+                state: (sState as any) || "",
+                amount: sAmt || "",
+                roi: sRoi || "",
+                description: sDesc,
+                notes: sDesc,
+              });
+            }
+          }
+
+          if (cleanedSubs.length > 1) {
+            cleanedRecord.subTrades = cleanedSubs;
+          } else if (cleanedSubs.length === 1) {
+            // Single sub-trade promotes to main trade
+            cleanedRecord.state = cleanedSubs[0].state;
+            cleanedRecord.amount = cleanedSubs[0].amount;
+            cleanedRecord.roi = cleanedSubs[0].roi;
+            cleanedRecord.description = cleanedSubs[0].description;
+            cleanedRecord.notes = cleanedSubs[0].notes;
+          }
+        }
+
+        cleanedMonth[dayNum] = cleanedRecord;
+        monthHasEntries = true;
+      }
+
+      if (monthHasEntries) {
+        cleanedYear[m] = cleanedMonth;
+        yearHasEntries = true;
+      }
+    }
+
+    if (yearHasEntries) {
+      cleaned[year] = cleanedYear;
+    }
+  }
+
+  return cleaned;
+}
+
+/**
  * Save user trading data & metadata directly to Firestore under their Gmail
  */
 export async function saveUserDataToFirestore(
@@ -480,11 +574,12 @@ export async function saveUserDataToFirestore(
   const key = cleanEmailKey(email);
   if (!key) return;
 
-  // Always back up to localStorage
+  const sanitizedData = sanitizeTradingDataStore(tradingData);
+
+  // Always back up locally with 0ms latency
   try {
-    if (tradingData && Object.keys(tradingData).length > 0) {
-      localStorage.setItem(`sngx_trading_data_${key}`, JSON.stringify(tradingData));
-    }
+    localStorage.setItem(`sngx_trading_data_${key}`, JSON.stringify(sanitizedData));
+    localStorage.setItem(`trading_store_${key}`, JSON.stringify(sanitizedData));
   } catch (e) {}
 
   // Save to Server API
@@ -492,7 +587,7 @@ export async function saveUserDataToFirestore(
     await fetch(`/api/user/data/${encodeURIComponent(key)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tradingData, ...metadata }),
+      body: JSON.stringify({ email: key, tradingData: sanitizedData, ...metadata, force: true }),
     });
   } catch (e) {}
 
@@ -502,24 +597,28 @@ export async function saveUserDataToFirestore(
   try {
     const payload: Record<string, any> = {
       email: key,
+      tradingData: sanitizedData,
       updatedAt: new Date().toISOString(),
     };
 
-    if (tradingData !== undefined) {
-      payload.tradingData = tradingData;
-    }
+    const mergeFields = ["email", "tradingData", "updatedAt"];
 
     if (metadata?.yearRange !== undefined) {
       payload.yearRange = metadata.yearRange;
+      mergeFields.push("yearRange");
     }
     if (metadata?.startMonth !== undefined) {
       payload.startMonth = metadata.startMonth;
+      mergeFields.push("startMonth");
     }
     if (metadata?.startingCapital !== undefined) {
       payload.startingCapital = metadata.startingCapital;
+      mergeFields.push("startingCapital");
     }
 
-    await setDoc(doc(db, "users", key), payload, { merge: true });
+    // Using mergeFields completely replaces the 'tradingData' map in Firestore
+    // preventing deleted sub-keys or deleted sub-trades from reappearing!
+    await setDoc(doc(db, "users", key), payload, { mergeFields });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, docPath);
   }

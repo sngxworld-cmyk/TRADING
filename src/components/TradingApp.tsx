@@ -5,7 +5,7 @@ import {
   DayRecord,
   MonthData,
 } from "../types";
-import { saveUserDataToFirestore, subscribeUserDataFromFirestore, resetUserTradingDataInFirestore } from "../lib/userStore";
+import { saveUserDataToFirestore, subscribeUserDataFromFirestore, resetUserTradingDataInFirestore, sanitizeTradingDataStore } from "../lib/userStore";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler, BarElement } from "chart.js";
 import { Line, Bar } from "react-chartjs-2";
 import { exportTradingPlanToExcel } from "../utils/excelExport";
@@ -151,19 +151,23 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
   // Trading Data Store (synchronous local retrieval prevents flash of empty content)
   const [dataStore, setDataStore] = useState<TradingDataStore>(() => {
-    if (user.tradingData && Object.keys(user.tradingData).length > 0) return user.tradingData;
-    const local = localStorage.getItem(`trading_store_${user.email}`);
+    const local = localStorage.getItem(`trading_store_${user.email}`) || localStorage.getItem(`sngx_trading_data_${user.email}`);
     if (local) {
       try {
         const parsed = JSON.parse(local);
-        if (Object.keys(parsed).length > 0) return parsed;
+        if (parsed && typeof parsed === "object") return sanitizeTradingDataStore(parsed);
       } catch (e) {}
+    }
+    if (user.tradingData && Object.keys(user.tradingData).length > 0) {
+      return sanitizeTradingDataStore(user.tradingData);
     }
     return {};
   });
 
   const [activePopupDay, setActivePopupDay] = useState<number | null>(null);
   const isInitialMount = useRef(true);
+  const lastLocalEditTimeRef = useRef<number>(0);
+  const lastSavedJsonRef = useRef<string>(JSON.stringify(dataStore));
 
   // Synchronously persist settings to eliminate reload flickering
   useEffect(() => {
@@ -177,29 +181,23 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
     } catch {}
   }, [user?.email, yearRange, startMonth, selectedMonth, startingCapital]);
 
-  // Sync prop changes into dataStore cleanly
-  useEffect(() => {
-    if (user.tradingData && Object.keys(user.tradingData).length > 0) {
-      setDataStore((prev) => {
-        if (!prev || Object.keys(prev).length === 0) return user.tradingData!;
-        if (JSON.stringify(prev) === JSON.stringify(user.tradingData)) return prev;
-        return { ...user.tradingData, ...prev };
-      });
-    }
-  }, [user.tradingData, user.email]);
-
-  // Subscribe to real-time Firestore data for user's Gmail
+  // Subscribe to real-time Firestore data for user's Gmail (with echo-loop protection)
   useEffect(() => {
     if (!user?.email) return;
 
     const unsubscribe = subscribeUserDataFromFirestore(user.email, (data) => {
-      if (data?.tradingData && Object.keys(data.tradingData).length > 0) {
-        setDataStore((prev) => {
-          if (JSON.stringify(prev) !== JSON.stringify(data.tradingData)) {
-            return data.tradingData;
-          }
-          return prev;
-        });
+      if (data?.tradingData !== undefined) {
+        const incomingSanitized = sanitizeTradingDataStore(data.tradingData || {});
+        const incomingJson = JSON.stringify(incomingSanitized);
+
+        // Guard against echo-loops: ignore incoming snapshot if it matches what we just saved
+        // or if user is actively making local edits in the last 2000ms
+        const isRecentLocalEdit = Date.now() - lastLocalEditTimeRef.current < 2000;
+        if (incomingJson === lastSavedJsonRef.current) return;
+        if (isRecentLocalEdit) return;
+
+        setDataStore(incomingSanitized);
+        lastSavedJsonRef.current = incomingJson;
       }
       if (data?.yearRange && data.yearRange !== yearRange) setYearRange(data.yearRange);
       if (data?.startMonth !== undefined && data.startMonth !== startMonth) {
@@ -213,21 +211,32 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
     return () => unsubscribe();
   }, [user.email]);
 
-  // Auto save data under user's Gmail (Firestore + localStorage + server API)
+  // Debounced Auto-Save to Firestore + LocalStorage + Server API (400ms debounce)
   useEffect(() => {
     if (!user?.email) return;
 
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      if (Object.keys(dataStore).length === 0) return;
+      return;
     }
 
-    try {
-      localStorage.setItem(`trading_store_${user.email}`, JSON.stringify(dataStore));
-    } catch (e) {}
+    const timer = setTimeout(() => {
+      const sanitized = sanitizeTradingDataStore(dataStore);
+      const jsonString = JSON.stringify(sanitized);
 
-    saveUserDataToFirestore(user.email, dataStore, { yearRange, startMonth, startingCapital });
-    onSaveDataToServer(dataStore);
+      if (jsonString === lastSavedJsonRef.current) return;
+      lastSavedJsonRef.current = jsonString;
+
+      try {
+        localStorage.setItem(`trading_store_${user.email}`, jsonString);
+        localStorage.setItem(`sngx_trading_data_${user.email}`, jsonString);
+      } catch (e) {}
+
+      saveUserDataToFirestore(user.email, sanitized, { yearRange, startMonth, startingCapital });
+      onSaveDataToServer(sanitized);
+    }, 400);
+
+    return () => clearTimeout(timer);
   }, [dataStore, user.email, yearRange, startMonth, startingCapital]);
 
   // Ensure store exists for current year range
@@ -324,6 +333,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
   };
 
   const updateDayRecord = (day: number, updates: Partial<DayRecord>) => {
+    lastLocalEditTimeRef.current = Date.now();
     setDataStore((prev) => {
       const yearObj = prev[yearRange] ? { ...prev[yearRange] } : {};
       const monthObj = yearObj[selectedMonth] ? { ...yearObj[selectedMonth] } : {};
@@ -352,38 +362,31 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
   };
 
   const clearSingleDay = (day: number) => {
+    lastLocalEditTimeRef.current = Date.now();
     setDataStore((prev) => {
       const yearObj = prev[yearRange] ? { ...prev[yearRange] } : {};
       const monthObj = yearObj[selectedMonth] ? { ...yearObj[selectedMonth] } : {};
-
-      const updatedDay: DayRecord = {
-        state: "",
-        amount: "",
-        roi: "",
-        description: "",
-        notes: "",
-        subTrades: undefined,
-      };
+      const newMonthObj = { ...monthObj };
+      delete newMonthObj[day];
 
       return {
         ...prev,
         [yearRange]: {
           ...yearObj,
-          [selectedMonth]: {
-            ...monthObj,
-            [day]: updatedDay,
-          },
+          [selectedMonth]: newMonthObj,
         },
       };
     });
   };
 
   const setRowState = (day: number, state: "green" | "red" | "") => {
+    lastLocalEditTimeRef.current = Date.now();
     updateDayRecord(day, { state });
     setActivePopupDay(null);
   };
 
   const addSubTrade = (day: number) => {
+    lastLocalEditTimeRef.current = Date.now();
     setDataStore((prev) => {
       const yearObj = prev[yearRange] ? { ...prev[yearRange] } : {};
       const monthObj = yearObj[selectedMonth] ? { ...yearObj[selectedMonth] } : {};
@@ -422,6 +425,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
   };
 
   const updateSubTrade = (day: number, tradeIdx: number, updates: Partial<DayRecord>) => {
+    lastLocalEditTimeRef.current = Date.now();
     setDataStore((prev) => {
       const yearObj = prev[yearRange] ? { ...prev[yearRange] } : {};
       const monthObj = yearObj[selectedMonth] ? { ...yearObj[selectedMonth] } : {};
@@ -448,6 +452,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
   };
 
   const removeSubTrade = (day: number, tradeIdx: number) => {
+    lastLocalEditTimeRef.current = Date.now();
     setDataStore((prev) => {
       const yearObj = prev[yearRange] ? { ...prev[yearRange] } : {};
       const monthObj = yearObj[selectedMonth] ? { ...yearObj[selectedMonth] } : {};
@@ -458,7 +463,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
         subTrades.splice(tradeIdx, 1);
       }
 
-      let updatedDay: DayRecord;
+      let updatedDay: DayRecord | undefined;
       if (subTrades.length > 1) {
         updatedDay = recalculateMainDayRecord(subTrades);
       } else if (subTrades.length === 1) {
@@ -472,24 +477,21 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
           subTrades: undefined,
         };
       } else {
-        updatedDay = {
-          state: "",
-          amount: "",
-          roi: "",
-          description: "",
-          notes: "",
-          subTrades: undefined,
-        };
+        updatedDay = undefined;
+      }
+
+      const newMonthObj = { ...monthObj };
+      if (updatedDay) {
+        newMonthObj[day] = updatedDay;
+      } else {
+        delete newMonthObj[day];
       }
 
       return {
         ...prev,
         [yearRange]: {
           ...yearObj,
-          [selectedMonth]: {
-            ...monthObj,
-            [day]: updatedDay,
-          },
+          [selectedMonth]: newMonthObj,
         },
       };
     });
@@ -679,6 +681,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
   const handleExecuteReset = async () => {
     setResetting(true);
     try {
+      lastLocalEditTimeRef.current = Date.now();
+      lastSavedJsonRef.current = "{}";
       setDataStore({});
       localStorage.removeItem(`trading_store_${user.email}`);
       localStorage.removeItem(`sngx_trading_data_${user.email}`);
