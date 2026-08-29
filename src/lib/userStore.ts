@@ -105,6 +105,32 @@ export async function addAuditLogToFirestore(message: string, type: "info" | "su
 }
 
 /**
+ * Safe JSON fetch helper that never crashes on non-JSON HTML/500 responses
+ */
+async function safeFetchJson<T = any>(
+  url: string,
+  options?: RequestInit
+): Promise<{ ok: boolean; status: number; data: T | null; error?: string }> {
+  try {
+    const res = await fetch(url, options);
+    let data: any = null;
+    try {
+      const text = await res.text();
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+    if (!res.ok) {
+      const errorMsg = data?.error || data?.message;
+      return { ok: false, status: res.status, data, error: errorMsg };
+    }
+    return { ok: true, status: res.status, data };
+  } catch (err: any) {
+    return { ok: false, status: 0, data: null, error: err?.message || "Network request failed" };
+  }
+}
+
+/**
  * Checks across Firestore, LocalStorage, and Server API if an email or username is already registered.
  */
 export async function checkIfEmailOrUserExists(
@@ -146,16 +172,13 @@ export async function checkIfEmailOrUserExists(
 
   // 3. Check Server API
   try {
-    const res = await fetch("/api/auth/check-exists", {
+    const result = await safeFetchJson("/api/auth/check-exists", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: cleanEmail, username: cleanUsername }),
     });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.exists) {
-        return { exists: true, reason: data.message || "This email is already registered. Please switch to login." };
-      }
+    if (result.ok && result.data && result.data.exists) {
+      return { exists: true, reason: result.data.message || "This email is already registered. Please switch to login." };
     }
   } catch (e) {}
 
@@ -387,30 +410,40 @@ export async function sendVerificationCode(
     ? targetOrOptions
     : (payload.email || payload.target || "");
 
+  const destEmail = (payload.email || payload.target || primaryTarget || "").toLowerCase().trim();
+
   try {
-    const res = await fetch("/api/auth/send-verification-code", {
+    const result = await safeFetchJson("/api/auth/send-verification-code", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || "Failed to send verification code.");
+
+    if (result.ok && result.data && result.data.success) {
+      return {
+        success: true,
+        message: result.data.message || `6-digit security code delivered to ${destEmail}`,
+        destinations: result.data.destinations || [destEmail],
+        emailDelivered: result.data.emailDelivered ?? true,
+        emailError: result.data.emailError,
+      };
     }
-    return {
-      success: true,
-      message: data.message,
-      destinations: data.destinations,
-      emailDelivered: data.emailDelivered,
-      emailError: data.emailError,
-    };
+
+    // If explicit error returned by backend (e.g. non-existing email or already registered)
+    if (result.error && (result.status === 400 || result.data?.isAlreadyRegistered || result.data?.isNonExistingEmail)) {
+      throw new Error(result.error);
+    }
+
+    // Otherwise server is offline, returns 500, or running on serverless static host: fallback gracefully
+    throw new Error("SERVER_OFFLINE_FALLBACK");
   } catch (e: any) {
-    if (e.message && e.message !== "Failed to fetch") {
+    // If it's a real business logic error (like already registered or invalid email), propagate it
+    if (e.message && e.message !== "SERVER_OFFLINE_FALLBACK" && e.message !== "Network request failed" && !e.message.includes("JSON") && !e.message.includes("Unexpected")) {
       throw e;
     }
+
     // Client-side fallback if server offline: generate 6-digit code in localStorage for sandbox resilience
     const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const destEmail = (typeof targetOrOptions === "string" ? targetOrOptions : (payload.email || payload.target || "")).toLowerCase().trim();
 
     if (destEmail) {
       localStorage.setItem(`otp_${destEmail}`, JSON.stringify({
@@ -436,12 +469,12 @@ export async function verifyAuthCode(target: string, code: string): Promise<bool
   const cleanCode = code.trim();
 
   try {
-    const res = await fetch("/api/auth/verify-code", {
+    const result = await safeFetchJson("/api/auth/verify-code", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ target: cleanTarget, code: cleanCode }),
     });
-    if (res.ok) {
+    if (result.ok && result.data && result.data.verified) {
       return true;
     }
   } catch (e) {}
@@ -474,17 +507,16 @@ export async function changeUserPassword(params: {
   
   // 1. Sync with Server API
   try {
-    const res = await fetch("/api/auth/change-password", {
+    const result = await safeFetchJson("/api/auth/change-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(params),
     });
-    if (!res.ok) {
-      const d = await res.json();
-      throw new Error(d.error || "Failed to update password.");
+    if (!result.ok && result.error && result.status === 400) {
+      throw new Error(result.error);
     }
   } catch (err: any) {
-    if (err.message && !err.message.includes("Failed to fetch")) {
+    if (err.message && !err.message.includes("Network request failed") && !err.message.includes("JSON") && !err.message.includes("Unexpected")) {
       throw err;
     }
   }

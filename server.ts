@@ -437,74 +437,79 @@ app.use((req, res, next) => {
 
   // Send 6-digit Verification Code via Gmail
   app.post("/api/auth/send-verification-code", async (req, res) => {
-    const { target, email, isRegistration } = req.body;
-    
-    const cleanEmail = (email || target || "").toString().trim().toLowerCase();
-    
-    if (!cleanEmail || !cleanEmail.includes("@")) {
-      return res.status(400).json({ error: "A valid Gmail / email address is required for verification." });
-    }
-
-    // If initiating registration, verify that the email is not already registered
-    if (isRegistration) {
-      const currentDb = getDB();
-      const existingUser = currentDb.users.find(
-        (u) => u.email.trim().toLowerCase() === cleanEmail
-      );
-      if (existingUser) {
-        return res.status(400).json({
-          error: "This email is already registered. Please switch to login.",
-          isAlreadyRegistered: true,
-        });
+    try {
+      const { target, email, isRegistration } = req.body || {};
+      
+      const cleanEmail = (email || target || "").toString().trim().toLowerCase();
+      
+      if (!cleanEmail || !cleanEmail.includes("@")) {
+        return res.status(400).json({ error: "A valid Gmail / email address is required for verification." });
       }
-    }
 
-    // Validate email deliverability and domain existence
-    const validation = await validateEmailDeliverability(cleanEmail);
-    if (!validation.valid) {
-      return res.status(400).json({ 
-        error: validation.reason || "This is a non-existing email address. Please enter a valid, working Gmail.",
-        isNonExistingEmail: true
-      });
-    }
+      // If initiating registration, verify that the email is not already registered
+      if (isRegistration) {
+        const currentDb = getDB();
+        const existingUser = currentDb.users.find(
+          (u) => u.email.trim().toLowerCase() === cleanEmail
+        );
+        if (existingUser) {
+          return res.status(400).json({
+            error: "This email is already registered. Please switch to login.",
+            isAlreadyRegistered: true,
+          });
+        }
+      }
 
-    // Generate real 6-digit numeric verification code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-
-    // Attempt real SMTP email dispatch via Gmail first to confirm deliverability
-    const emailResult = await sendRealEmail(cleanEmail, code);
-
-    if (!emailResult.success) {
-      // If SMTP fails because recipient mailbox does not exist
-      if (emailResult.error && (emailResult.error.includes("550") || emailResult.error.includes("Recipient address rejected") || emailResult.error.includes("user unknown") || emailResult.error.includes("does not exist"))) {
-        return res.status(400).json({
-          error: `The email ${cleanEmail} was rejected by the mail server. This is a non-existing email address.`,
+      // Validate email deliverability and domain existence
+      const validation = await validateEmailDeliverability(cleanEmail);
+      if (!validation.valid) {
+        return res.status(400).json({ 
+          error: validation.reason || "This is a non-existing email address. Please enter a valid, working Gmail.",
           isNonExistingEmail: true
         });
       }
+
+      // Generate real 6-digit numeric verification code
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+      // Attempt real SMTP email dispatch via Gmail first to confirm deliverability
+      const emailResult = await sendRealEmail(cleanEmail, code);
+
+      if (!emailResult.success) {
+        // If SMTP fails because recipient mailbox does not exist
+        if (emailResult.error && (emailResult.error.includes("550") || emailResult.error.includes("Recipient address rejected") || emailResult.error.includes("user unknown") || emailResult.error.includes("does not exist"))) {
+          return res.status(400).json({
+            error: `The email ${cleanEmail} was rejected by the mail server. This is a non-existing email address.`,
+            isNonExistingEmail: true
+          });
+        }
+      }
+
+      verificationCodes.set(cleanEmail, {
+        code,
+        expiresAt,
+        target: cleanEmail,
+        type: "email",
+      });
+
+      logActivity(`[AUTH OTP] Dispatched 6-digit code to Gmail: ${cleanEmail}. Code: ${code}`, "info");
+
+      return res.json({
+        success: true,
+        message: emailResult.success
+          ? `6-digit security code delivered to your Gmail inbox!`
+          : `6-digit verification code dispatched.`,
+        emailDelivered: emailResult.success,
+        emailError: emailResult.error,
+        expiresInSeconds: 600,
+        channels: ["email"],
+        destinations: [cleanEmail],
+      });
+    } catch (err: any) {
+      logActivity(`[AUTH ERROR] send-verification-code error: ${err?.message}`, "warn");
+      return res.status(500).json({ error: "Failed to dispatch verification code. Please try again." });
     }
-
-    verificationCodes.set(cleanEmail, {
-      code,
-      expiresAt,
-      target: cleanEmail,
-      type: "email",
-    });
-
-    logActivity(`[AUTH OTP] Dispatched 6-digit code to Gmail: ${cleanEmail}. Code: ${code}`, "info");
-
-    return res.json({
-      success: true,
-      message: emailResult.success
-        ? `6-digit security code delivered to your Gmail inbox!`
-        : `6-digit verification code dispatched.`,
-      emailDelivered: emailResult.success,
-      emailError: emailResult.error,
-      expiresInSeconds: 600,
-      channels: ["email"],
-      destinations: [cleanEmail],
-    });
   });
 
   // Verify 6-digit Code

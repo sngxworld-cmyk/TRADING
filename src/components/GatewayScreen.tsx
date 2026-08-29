@@ -435,7 +435,11 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
         setSuccessMessage(`A 6-digit code has been dispatched to your Gmail (${cleanEmail}).`);
       }
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to send verification code. Please try again.");
+      const msg = err?.message || "";
+      const displayMsg = (msg && !msg.includes("JSON") && !msg.includes("Unexpected") && !msg.includes("token") && !msg.includes("SERVER_OFFLINE"))
+        ? msg
+        : "Failed to dispatch verification code. Please check your Gmail address and try again.";
+      setErrorMessage(displayMsg);
     } finally {
       setLoading(false);
     }
@@ -460,21 +464,12 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
       // Verify code against server endpoint or Firestore
       let verified = false;
       try {
-        const verifyRes = await fetch("/api/auth/verify-code", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ target: cleanEmail, code: verificationCode.trim() }),
-        });
-        const verifyData = await verifyRes.json();
-        if (verifyRes.ok && verifyData.verified) {
-          verified = true;
-        }
-      } catch (e) {}
-
-      if (!verified) {
-        // Fallback check
         const ok = await verifyAuthCode(cleanEmail, verificationCode.trim());
         if (ok) verified = true;
+      } catch (e: any) {
+        if (e.message && !e.message.includes("JSON") && !e.message.includes("Unexpected")) {
+          throw e;
+        }
       }
 
       if (!verified) {
