@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { UserProfile } from "../types";
 import { updateUserProfileInFirestore } from "../lib/userStore";
 import { User, Camera, Trash2, Check, X, LogOut, Phone, ShieldCheck, Sparkles, Tag, DollarSign, BookOpen, Calendar } from "lucide-react";
+import { CountryPhoneInput } from "./CountryPhoneInput";
 
 interface ProfileEditorModalProps {
   user: UserProfile;
@@ -270,18 +271,13 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono">
-                Phone / Telegram Contact
+                Phone Number / Mobile
               </label>
-              <div className="relative">
-                <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
-                <input
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (555) 019-2834 or @trader"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 font-mono"
-                />
-              </div>
+              <CountryPhoneInput
+                value={phone}
+                onChange={setPhone}
+                placeholder="e.g. 555-019-2834"
+              />
             </div>
 
             <div>

@@ -728,11 +728,6 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                 DOB: <strong className="text-slate-200">{new Date(user.dob + "T00:00:00").toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</strong>
               </span>
             )}
-            {user.tradingMarket && (
-              <span className="bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300 font-mono">
-                Market: <strong className="text-amber-400">{user.tradingMarket}</strong>
-              </span>
-            )}
           </div>
         </div>
 

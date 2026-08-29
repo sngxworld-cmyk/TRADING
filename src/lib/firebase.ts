@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore, setLogLevel } from "firebase/firestore";
 import firebaseConfigJson from "../../firebase-applet-config.json";
 
 const metaEnv = (import.meta as any).env || {};
@@ -13,13 +13,27 @@ const firebaseConfig = {
   appId: metaEnv.VITE_FIREBASE_APP_ID || firebaseConfigJson.appId,
 };
 
+// Set Firestore log level to error to avoid noisy timeout/offline warnings in console
+try {
+  setLogLevel("error");
+} catch {}
+
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Get Firestore instance using custom databaseId if specified
-export const db = getFirestore(
-  app,
-  metaEnv.VITE_FIREBASE_DATABASE_ID || firebaseConfigJson.firestoreDatabaseId || "(default)"
-);
+const databaseId = metaEnv.VITE_FIREBASE_DATABASE_ID || firebaseConfigJson.firestoreDatabaseId || "(default)";
+
+// Get or initialize Firestore instance with long polling for sandbox/iframe/proxy stability
+let dbInstance;
+try {
+  dbInstance = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+    experimentalAutoDetectLongPolling: true,
+  }, databaseId);
+} catch {
+  dbInstance = getFirestore(app, databaseId);
+}
+
+export const db = dbInstance;
 
 export default app;
