@@ -26,7 +26,7 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
   // 1. Interactive Button / Action Loader
   if (type === "button-loader" || type === "loader") {
     return (
-      <div className={`relative flex items-center justify-center ${className}`}>
+      <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
         {/* Pulsing Core Aura */}
         <motion.div
           animate={{ scale: [0.85, 1.2, 0.85], opacity: [0.4, 0.8, 0.4] }}
@@ -97,7 +97,7 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
   // 2. Success Animation
   if (type === "success") {
     return (
-      <div className={`relative flex items-center justify-center ${className}`}>
+      <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
         <motion.div
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: [0.8, 1.25, 1], opacity: [0, 0.7, 0.25] }}
@@ -149,15 +149,15 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
   // 3. Verification Code Radar Animation
   if (type === "verify") {
     return (
-      <div className={`relative flex items-center justify-center ${className}`}>
+      <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
         <motion.div
-          animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0.1, 0.6] }}
+          animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           className="absolute inset-0 rounded-full border-2 border-indigo-500/40 bg-indigo-500/10"
         />
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
           className="w-full h-full p-2"
         >
           <svg viewBox="0 0 100 100" className="w-full h-full text-indigo-400" fill="none">
@@ -173,22 +173,42 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
     );
   }
 
-  // 4. Community Live Signals Broadcast & Radar Animation
-  if (type === "community-signal" || type === "signal-radar") {
+  // 4. Community Live Signals Broadcast (Scalable & Responsive)
+  if (type === "community-signal") {
     return (
-      <div className={`relative flex items-center justify-center ${className}`}>
-        {/* Pulsing Wave 1 */}
+      <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
+        {/* Subtle Outer Glow Wave */}
         <motion.div
-          animate={{ scale: [0.6, 1.5, 2], opacity: [0.8, 0.3, 0] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
-          className="absolute inset-0 rounded-full border border-emerald-400/50 bg-emerald-500/10 pointer-events-none"
+          animate={{ scale: [0.9, 1.25, 0.9], opacity: [0.3, 0.7, 0.3] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute inset-0 rounded-xl bg-emerald-500/20 blur-[3px]"
         />
 
-        {/* Pulsing Wave 2 */}
+        {/* Outer Frame with Lightning Signal */}
+        <div className="relative z-10 w-full h-full rounded-xl bg-slate-900 border border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.35)] flex items-center justify-center text-emerald-400 p-1">
+          <motion.svg
+            viewBox="0 0 24 24"
+            className="w-full h-full text-emerald-400 drop-shadow-[0_0_6px_rgba(16,185,129,0.7)]"
+            fill="currentColor"
+            animate={{ scale: [1, 1.12, 1] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </motion.svg>
+        </div>
+      </div>
+    );
+  }
+
+  // 5. High-Tech Signal Radar Sweep (For Empty States & Large Hero Visuals)
+  if (type === "signal-radar") {
+    return (
+      <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
+        {/* Radial Waves */}
         <motion.div
-          animate={{ scale: [0.6, 1.5, 2], opacity: [0.8, 0.3, 0] }}
-          transition={{ duration: 2.2, delay: 0.7, repeat: Infinity, ease: "easeOut" }}
-          className="absolute inset-0 rounded-full border border-cyan-400/50 bg-cyan-500/10 pointer-events-none"
+          animate={{ scale: [0.6, 1.4, 1.8], opacity: [0.6, 0.2, 0] }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
+          className="absolute inset-0 rounded-full border border-emerald-400/40 bg-emerald-500/10 pointer-events-none"
         />
 
         {/* Rotating Radar Sweep */}
@@ -198,7 +218,7 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
           className="w-full h-full absolute inset-0 flex items-center justify-center"
         >
           <svg viewBox="0 0 100 100" className="w-full h-full text-emerald-400" fill="none">
-            <circle cx="50" cy="50" r="38" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="1.5" strokeDasharray="4 6" />
+            <circle cx="50" cy="50" r="38" stroke="rgba(16, 185, 129, 0.25)" strokeWidth="1.5" strokeDasharray="4 6" />
             <path
               d="M50 50 L88 50"
               stroke="url(#radarSweepGrad)"
@@ -214,27 +234,30 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
           </svg>
         </motion.div>
 
-        {/* Center Satellite / Signal Transmitter Core */}
-        <div className="relative z-10 w-9 h-9 rounded-xl bg-slate-900 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center justify-center text-emerald-400">
-          <motion.div
+        {/* Center Satellite Core */}
+        <div className="relative z-10 w-1/2 h-1/2 rounded-xl bg-slate-900 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.4)] flex items-center justify-center text-emerald-400 p-2">
+          <motion.svg
+            viewBox="0 0 24 24"
+            className="w-full h-full"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
             animate={{ scale: [1, 1.15, 1] }}
             transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
           >
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-            </svg>
-          </motion.div>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </motion.svg>
         </div>
       </div>
     );
   }
 
-  // 5. Entering Portal Warp Transition
+  // 6. Entering Portal Warp Transition
   if (type === "entering-portal") {
     return (
-      <div className={`relative flex items-center justify-center ${className}`}>
+      <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
         <motion.div
-          animate={{ scale: [0.8, 1.4, 0.8], rotate: [0, 180, 360] }}
+          animate={{ scale: [0.8, 1.3, 0.8], rotate: [0, 180, 360] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
           className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-indigo-600/40 via-cyan-500/30 to-emerald-500/40 blur-lg"
         />
@@ -261,21 +284,14 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
             transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
             style={{ transformOrigin: "50px 50px" }}
           />
-          <motion.polygon
-            points="50,30 65,65 35,65"
-            fill="#a855f7"
-            animate={{ scale: [0.9, 1.2, 0.9], rotate: [0, 360] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            style={{ transformOrigin: "50px 50px" }}
-          />
         </svg>
       </div>
     );
   }
 
-  // 6. Lock Animation
+  // 7. Lock Animation
   return (
-    <div className={`relative flex items-center justify-center ${className}`}>
+    <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
