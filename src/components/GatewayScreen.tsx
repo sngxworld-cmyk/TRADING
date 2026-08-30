@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { createChart, CandlestickSeries, IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
 import { Eye, EyeOff, Lock, Mail, User, ShieldCheck, Flame, TrendingUp, PhoneCall, ArrowRight, KeyRound, Camera, Phone, Tag, Calendar, MessageSquare, Sparkles, AlertCircle, Smartphone, CheckCircle, Unlock, RefreshCw, Send } from "lucide-react";
 import { UserProfile } from "../types";
-import { registerUserInFirestore, loginUserInFirestore, sendVerificationCode, verifyAuthCode, changeUserPassword, checkIfEmailOrUserExists } from "../lib/userStore";
+import { registerUserInFirestore, loginUserInFirestore, sendVerificationCode, verifyAuthCode, changeUserPassword, checkIfEmailOrUserExists, safeFetchJson } from "../lib/userStore";
 import { getLocalDeviceRegistration, verifyDeviceRegistrationPermission, isHostMasterDevice, setHostMasterDevice } from "../utils/deviceUtils";
 import { AuthLottieAnimation } from "./AuthLottieAnimation";
 import { CountryPhoneInput } from "./CountryPhoneInput";
@@ -490,7 +490,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
       });
 
       // Also sync with server endpoint if backend is available
-      fetch("/api/auth/register", {
+      safeFetchJson("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, username, password, displayName, photoURL, phone, dob, bio, tradingPair }),
@@ -504,7 +504,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
         onLoginSuccess(newUser);
       }, 1600);
     } catch (err: any) {
-      setErrorMessage(err.message || "Invalid 6-digit verification code.");
+      setErrorMessage(err.message || "Invalid 6-digit verification code. Please check your Gmail or click Resend Code.");
     } finally {
       setLoading(false);
     }
@@ -515,11 +515,12 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
     setIsResending(true);
     setErrorMessage(null);
     setSuccessMessage(null);
+    setVerificationCode("");
     try {
       const cleanEmail = email.trim().toLowerCase();
       const res = await sendVerificationCode({ target: cleanEmail, email: cleanEmail, type: "email" as const });
       if (res.emailDelivered) {
-        setSuccessMessage(`✅ Fresh 6-digit code delivered to your Gmail (${cleanEmail}). Please check inbox & spam folder.`);
+        setSuccessMessage(`✅ Fresh 6-digit code delivered to your Gmail (${cleanEmail}). Please check your inbox and spam folder.`);
       } else {
         setSuccessMessage(`A fresh 6-digit verification code has been dispatched to your Gmail (${cleanEmail}).`);
       }

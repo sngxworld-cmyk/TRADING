@@ -10,6 +10,11 @@ service cloud.firestore {
                    || resource == null;
     }
     
+    // Authentication OTP verification codes (auto-expires in 10 mins)
+    match /authVerificationCodes/{emailKey} {
+      allow read, write: if true;
+    }
+
     // Community Live Signals
     match /signals/{signalId} {
       allow read: if true;

@@ -469,8 +469,9 @@ app.use((req, res, next) => {
         });
       }
 
-      // Generate real 6-digit numeric verification code
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      // Use provided 6-digit code or generate new one
+      const rawCode = req.body?.code ? req.body.code.toString().trim() : "";
+      const code = (/^\d{6}$/.test(rawCode)) ? rawCode : Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
       // Attempt real SMTP email dispatch via Gmail first to confirm deliverability
@@ -514,13 +515,17 @@ app.use((req, res, next) => {
 
   // Verify 6-digit Code
   app.post("/api/auth/verify-code", (req, res) => {
-    const { target, code } = req.body;
+    const { target, code } = req.body || {};
     if (!target) {
       return res.status(400).json({ error: "Destination target is required." });
     }
 
-    const cleanTarget = target.trim().toLowerCase();
-    const cleanCode = code ? code.toString().trim() : "";
+    const cleanTarget = target.toString().trim().toLowerCase();
+    const cleanCode = code ? code.toString().trim().replace(/\D/g, "") : "";
+
+    if (!cleanCode || cleanCode.length !== 6) {
+      return res.status(400).json({ error: "Please enter the complete 6-digit verification code." });
+    }
 
     const record = verificationCodes.get(cleanTarget);
     
