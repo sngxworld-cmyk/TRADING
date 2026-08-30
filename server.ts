@@ -480,10 +480,13 @@ app.use((req, res, next) => {
         // If SMTP fails because recipient mailbox does not exist
         if (emailResult.error && (emailResult.error.includes("550") || emailResult.error.includes("Recipient address rejected") || emailResult.error.includes("user unknown") || emailResult.error.includes("does not exist"))) {
           return res.status(400).json({
-            error: `The email ${cleanEmail} was rejected by the mail server. This is a non-existing email address.`,
+            error: `The email ${cleanEmail} was rejected by Gmail. This appears to be an invalid or non-existing email address.`,
             isNonExistingEmail: true
           });
         }
+        return res.status(500).json({
+          error: `Gmail delivery failed (${emailResult.error || "SMTP error"}). Please check your address and try again.`
+        });
       }
 
       verificationCodes.set(cleanEmail, {
@@ -497,11 +500,8 @@ app.use((req, res, next) => {
 
       return res.json({
         success: true,
-        message: emailResult.success
-          ? `6-digit security code delivered to your Gmail inbox!`
-          : `6-digit verification code dispatched.`,
-        emailDelivered: emailResult.success,
-        emailError: emailResult.error,
+        message: `6-digit security code delivered to your Gmail inbox!`,
+        emailDelivered: true,
         expiresInSeconds: 600,
         channels: ["email"],
         destinations: [cleanEmail],

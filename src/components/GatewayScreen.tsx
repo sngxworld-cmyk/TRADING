@@ -514,12 +514,17 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
   const handleResendCode = async () => {
     setIsResending(true);
     setErrorMessage(null);
+    setSuccessMessage(null);
     try {
       const cleanEmail = email.trim().toLowerCase();
-      await sendVerificationCode({ target: cleanEmail, email: cleanEmail, type: "email" as const });
-      setSuccessMessage(`A fresh 6-digit verification code has been dispatched to your Gmail (${cleanEmail}).`);
+      const res = await sendVerificationCode({ target: cleanEmail, email: cleanEmail, type: "email" as const });
+      if (res.emailDelivered) {
+        setSuccessMessage(`✅ Fresh 6-digit code delivered to your Gmail (${cleanEmail}). Please check inbox & spam folder.`);
+      } else {
+        setSuccessMessage(`A fresh 6-digit verification code has been dispatched to your Gmail (${cleanEmail}).`);
+      }
     } catch (err: any) {
-      setErrorMessage(err.message || "Could not resend code.");
+      setErrorMessage(err.message || "Could not resend verification code. Please try again.");
     } finally {
       setIsResending(false);
     }
