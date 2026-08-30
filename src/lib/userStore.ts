@@ -104,34 +104,23 @@ export async function addAuditLogToFirestore(message: string, type: "info" | "su
   }
 }
 
-const CLOUD_RUN_BACKEND = "https://ais-pre-w5gludkougntm7dylomhs3-743558610603.asia-southeast1.run.app";
-
 /**
  * Resolves the appropriate backend base URL for API requests.
  */
 export function getBackendBaseUrl(): string {
-  if (typeof window === "undefined") return "";
-  const host = window.location.hostname;
-  // If running on local development (localhost) or directly on Cloud Run (run.app), relative path works directly
-  if (host === "localhost" || host === "127.0.0.1" || host.includes("run.app")) {
-    return "";
-  }
-  // If running on external deployments like vercel.app, custom domain, etc., point to live Cloud Run backend
-  return CLOUD_RUN_BACKEND;
+  // Always use same-origin relative URLs so it seamlessly routes to Express or Vercel serverless /api
+  return "";
 }
 
 /**
- * Safe JSON fetch helper that never crashes on non-JSON HTML/500 responses and handles cross-domain routing
+ * Safe JSON fetch helper that never crashes on non-JSON HTML/500 responses
  */
 export async function safeFetchJson<T = any>(
   url: string,
   options?: RequestInit
 ): Promise<{ ok: boolean; status: number; data: T | null; error?: string }> {
-  const backendBase = getBackendBaseUrl();
-  const primaryUrl = url.startsWith("/api") && backendBase ? `${backendBase}${url}` : url;
-
   try {
-    const res = await fetch(primaryUrl, options);
+    const res = await fetch(url, options);
     let data: any = null;
     try {
       const text = await res.text();
@@ -141,37 +130,11 @@ export async function safeFetchJson<T = any>(
     }
 
     if (!res.ok) {
-      // If relative URL or external proxy returned 404/502/HTML, retry directly against Cloud Run backend
-      if (!primaryUrl.startsWith("http") && url.startsWith("/api") && CLOUD_RUN_BACKEND) {
-        try {
-          const fbRes = await fetch(`${CLOUD_RUN_BACKEND}${url}`, options);
-          const fbText = await fbRes.text();
-          const fbData = fbText ? JSON.parse(fbText) : null;
-          if (fbRes.ok) {
-            return { ok: true, status: fbRes.status, data: fbData };
-          }
-          const fbError = fbData?.error || fbData?.message;
-          return { ok: false, status: fbRes.status, data: fbData, error: fbError };
-        } catch {}
-      }
-
       const errorMsg = data?.error || data?.message;
       return { ok: false, status: res.status, data, error: errorMsg };
     }
     return { ok: true, status: res.status, data };
   } catch (err: any) {
-    // If primary network request failed and we didn't try Cloud Run backend yet
-    if (!primaryUrl.startsWith("http") && url.startsWith("/api") && CLOUD_RUN_BACKEND) {
-      try {
-        const fbRes = await fetch(`${CLOUD_RUN_BACKEND}${url}`, options);
-        const fbText = await fbRes.text();
-        const fbData = fbText ? JSON.parse(fbText) : null;
-        if (fbRes.ok) {
-          return { ok: true, status: fbRes.status, data: fbData };
-        }
-        return { ok: false, status: fbRes.status, data: fbData, error: fbData?.error || fbData?.message };
-      } catch {}
-    }
     return { ok: false, status: 0, data: null, error: err?.message || "Network request failed" };
   }
 }
