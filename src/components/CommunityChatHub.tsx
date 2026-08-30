@@ -48,6 +48,7 @@ import { CommunityGuidelinesModal } from "./CommunityGuidelinesModal";
 import { UserProfileModal } from "./UserProfileModal";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { SignalGroupDetailView } from "./SignalGroupDetailView";
+import { AuthLottieAnimation } from "./AuthLottieAnimation";
 import { ChatDateDivider, isDifferentChatDay, formatMessageTime } from "../utils/chatDateUtils";
 
 interface CommunityChatHubProps {
@@ -351,9 +352,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
           )}
 
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
-              <MessageSquare className="w-5 h-5" />
-            </div>
+            <AuthLottieAnimation type="community-signal" className="w-9 h-9 shrink-0" />
             <div>
               <h1 className="text-base font-bold text-slate-100 font-mono tracking-tight flex items-center gap-2">
                 TRACKERX COMMUNITY HUB

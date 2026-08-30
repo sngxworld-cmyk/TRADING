@@ -67,6 +67,7 @@ import {
 } from "lucide-react";
 import { CreateSignalModal } from "./CreateSignalModal";
 import { CommunityGuidelinesModal } from "./CommunityGuidelinesModal";
+import { AuthLottieAnimation } from "./AuthLottieAnimation";
 import { ChatDateDivider, isDifferentChatDay, formatMessageTime } from "../utils/chatDateUtils";
 
 interface SignalGroupDetailViewProps {
@@ -850,7 +851,8 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-indigo-400" /> Published Trade Setups ({signals.length})
+              <AuthLottieAnimation type="community-signal" className="w-5 h-5 shrink-0" />
+              <span>Published Trade Setups ({signals.length})</span>
             </h2>
             <span className="text-xs text-slate-500 font-mono">
               Max 10 signals/day • 3-day member voting
@@ -859,12 +861,12 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
           {signals.length === 0 ? (
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-slate-800 text-slate-500 flex items-center justify-center mx-auto">
-                <TrendingUp className="w-6 h-6" />
+              <div className="flex justify-center mx-auto mb-2">
+                <AuthLottieAnimation type="signal-radar" className="w-20 h-20" />
               </div>
-              <h3 className="text-sm font-bold text-slate-300 font-mono">No Trade Signals Yet</h3>
+              <h3 className="text-sm font-bold text-slate-300 font-mono">No Trade Signals Broadcasted Yet</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                The group administrator has not published any trade setups today.
+                The group administrator has not published any live trade setups today.
               </p>
               {isAdmin && (
                 <button

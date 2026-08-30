@@ -722,12 +722,6 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
             <span className="bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800">
               Client Gmail: <strong className="text-indigo-400 font-mono">{user.email}</strong>
             </span>
-            {user.dob && (
-              <span className="bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300 font-mono flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                DOB: <strong className="text-slate-200">{new Date(user.dob + "T00:00:00").toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</strong>
-              </span>
-            )}
           </div>
         </div>
 

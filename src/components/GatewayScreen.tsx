@@ -777,7 +777,10 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                         className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/30 transition-all text-sm flex items-center justify-center gap-2 font-mono uppercase tracking-wider cursor-pointer"
                       >
                         {loading ? (
-                          <span>Verifying Code...</span>
+                          <div className="flex items-center gap-2">
+                            <AuthLottieAnimation type="button-loader" className="w-5 h-5" />
+                            <span>Verifying Code...</span>
+                          </div>
                         ) : (
                           <>
                             <span>Verify & Complete Registration</span>
@@ -1035,10 +1038,13 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/30 transition-all text-sm flex items-center justify-center gap-2 mt-2 font-mono uppercase tracking-wider"
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/30 transition-all text-sm flex items-center justify-center gap-2 mt-2 font-mono uppercase tracking-wider cursor-pointer active:scale-[0.99]"
                   >
                     {loading ? (
-                      <span>Processing...</span>
+                      <div className="flex items-center gap-2.5">
+                        <AuthLottieAnimation type="button-loader" className="w-5 h-5" />
+                        <span>{isRegisterMode ? "Sending 6-Digit Code..." : "Authenticating Terminal..."}</span>
+                      </div>
                     ) : (
                       <>
                         <span>{isRegisterMode ? "Send 6-Digit Code & Register" : "Log In to Trading App"}</span>
