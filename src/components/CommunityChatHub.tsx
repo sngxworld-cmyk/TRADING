@@ -49,6 +49,7 @@ import { UserProfileModal } from "./UserProfileModal";
 import { CreateGroupModal } from "./CreateGroupModal";
 import { SignalGroupDetailView } from "./SignalGroupDetailView";
 import { AuthLottieAnimation } from "./AuthLottieAnimation";
+import { ChatTradingDoodleBackground } from "./ChatTradingDoodleBackground";
 import { ChatDateDivider, isDifferentChatDay, formatMessageTime } from "../utils/chatDateUtils";
 
 interface CommunityChatHubProps {
@@ -450,10 +451,11 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
 
             {/* Messages Feed */}
             <div className="flex-1 relative overflow-hidden flex flex-col">
+              <ChatTradingDoodleBackground />
               <div
                 ref={publicChatContainerRef}
                 onScroll={handlePublicScroll}
-                className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 font-sans"
+                className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 font-sans relative z-10"
               >
                 {chatMessages.map((msg, index) => {
                   const isSelf = msg.senderEmail.toLowerCase() === currentUser.email.toLowerCase();
@@ -1081,10 +1083,11 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
 
                   {/* DM Messages Feed */}
                   <div className="flex-1 relative overflow-hidden flex flex-col">
+                    <ChatTradingDoodleBackground />
                     <div
                       ref={dmContainerRef}
                       onScroll={handleDmScroll}
-                      className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 font-sans"
+                      className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 font-sans relative z-10"
                     >
                       {activeConversation.length === 0 ? (
                         <div className="text-center py-12 text-xs text-slate-500 font-mono">

@@ -9,6 +9,7 @@ import { saveUserDataToFirestore, subscribeUserDataFromFirestore, resetUserTradi
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler, BarElement } from "chart.js";
 import { Line, Bar } from "react-chartjs-2";
 import { exportTradingPlanToExcel } from "../utils/excelExport";
+import { JournalAmbientBackground } from "./JournalAmbientBackground";
 import {
   Download,
   FileSpreadsheet,
@@ -704,7 +705,10 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-slate-950 text-slate-100 p-3 sm:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-[calc(100vh-64px)] bg-slate-950 text-slate-100 p-3 sm:p-6 max-w-7xl mx-auto space-y-6 relative overflow-hidden">
+      {/* Animated Ambient Light Background (50% White, 45% Blue, 5% Purple) */}
+      <JournalAmbientBackground />
+
       {/* Top Banner / Title */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800/80 p-5 rounded-2xl shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/5 rounded-full blur-3xl pointer-events-none"></div>

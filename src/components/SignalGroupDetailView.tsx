@@ -68,6 +68,7 @@ import {
 import { CreateSignalModal } from "./CreateSignalModal";
 import { CommunityGuidelinesModal } from "./CommunityGuidelinesModal";
 import { AuthLottieAnimation } from "./AuthLottieAnimation";
+import { ChatTradingDoodleBackground } from "./ChatTradingDoodleBackground";
 import { ChatDateDivider, isDifferentChatDay, formatMessageTime } from "../utils/chatDateUtils";
 
 interface SignalGroupDetailViewProps {
@@ -1150,10 +1151,11 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
           {/* Chat Messages Feed */}
           <div className="flex-1 relative overflow-hidden flex flex-col">
+            <ChatTradingDoodleBackground />
             <div
               ref={groupChatContainerRef}
               onScroll={handleChatScroll}
-              className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-950/40"
+              className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-950/40 relative z-10"
             >
               {chatMessages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-3 text-slate-500">
