@@ -31,7 +31,7 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
         <motion.div
           animate={{ scale: [0.85, 1.2, 0.85], opacity: [0.4, 0.8, 0.4] }}
           transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-0 rounded-full bg-indigo-500/25 blur-sm"
+          className="absolute inset-0 rounded-full bg-blue-500/25 blur-sm"
         />
 
         <svg viewBox="0 0 50 50" className="w-full h-full" fill="none">
@@ -40,7 +40,7 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
             cx="25"
             cy="25"
             r="19"
-            stroke="rgba(99, 102, 241, 0.2)"
+            stroke="rgba(59, 130, 246, 0.2)"
             strokeWidth="3.5"
           />
 
@@ -153,19 +153,19 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
         <motion.div
           animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-0 rounded-full border-2 border-indigo-500/40 bg-indigo-500/10"
+          className="absolute inset-0 rounded-full border-2 border-blue-500/40 bg-blue-500/10"
         />
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
           className="w-full h-full p-2"
         >
-          <svg viewBox="0 0 100 100" className="w-full h-full text-indigo-400" fill="none">
+          <svg viewBox="0 0 100 100" className="w-full h-full text-blue-400" fill="none">
             <circle cx="50" cy="50" r="42" stroke="currentColor" strokeWidth="3" strokeDasharray="6 8" />
           </svg>
         </motion.div>
         <div className="absolute inset-0 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg viewBox="0 0 24 24" className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
@@ -259,14 +259,14 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
         <motion.div
           animate={{ scale: [0.8, 1.3, 0.8], rotate: [0, 180, 360] }}
           transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-indigo-600/40 via-cyan-500/30 to-emerald-500/40 blur-lg"
+          className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-blue-600/40 via-purple-500/30 to-blue-400/40 blur-lg"
         />
         <svg viewBox="0 0 100 100" className="w-full h-full relative z-10" fill="none">
           <motion.circle
             cx="50"
             cy="50"
             r="36"
-            stroke="#6366f1"
+            stroke="#3b82f6"
             strokeWidth="3"
             strokeDasharray="18 10"
             animate={{ rotate: 360 }}
@@ -277,7 +277,7 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
             cx="50"
             cy="50"
             r="24"
-            stroke="#38bdf8"
+            stroke="#a855f7"
             strokeWidth="2.5"
             strokeDasharray="10 8"
             animate={{ rotate: -360 }}

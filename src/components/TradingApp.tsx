@@ -711,11 +711,11 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
       {/* Top Banner / Title */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800/80 p-5 rounded-2xl shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs font-bold uppercase font-mono tracking-widest text-emerald-400">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse"></span>
+            <span className="text-xs font-bold uppercase font-mono tracking-widest text-blue-400">
               Multi-Year Strategic Trade Journal Terminal
             </span>
           </div>
@@ -724,7 +724,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
           </h1>
           <div className="text-xs text-slate-400 mt-2 flex items-center gap-2.5 flex-wrap">
             <span className="bg-slate-950/80 px-2.5 py-1 rounded-lg border border-slate-800">
-              Client Gmail: <strong className="text-indigo-400 font-mono">{user.email}</strong>
+              Client Gmail: <strong className="text-blue-400 font-mono">{user.email}</strong>
             </span>
           </div>
         </div>
@@ -734,9 +734,9 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
           <button
             onClick={handleExport}
             title="Export complete trade journal data to formatted Excel workbook (.xlsx)"
-            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-950/30 active:scale-95"
+            className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-blue-950/80 hover:bg-blue-900 text-white border border-blue-500/40 text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-950/30 active:scale-95"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> Export Excel Sheet
+            <FileSpreadsheet className="w-4 h-4 text-blue-300" /> Export Excel Sheet
           </button>
 
           <button
@@ -752,7 +752,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
       <div className="bg-slate-900/90 border border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xl grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-[10px] uppercase font-mono font-bold text-slate-400 mb-1.5 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-indigo-400" /> Select Year
+            <Calendar className="w-3.5 h-3.5 text-blue-400" /> Select Year
           </label>
           <select
             value={yearRange}
@@ -766,7 +766,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                 setYearRange(e.target.value);
               }
             }}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer transition-colors"
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500 cursor-pointer transition-colors"
           >
             {["2024", "2025", "2026", "2027", "2028", "2029", "2030", "2031", "2032", "2033", "2034", "2035"]
               .concat(yearRange && !["2024", "2025", "2026", "2027", "2028", "2029", "2030", "2031", "2032", "2033", "2034", "2035"].includes(yearRange) ? [yearRange] : [])
@@ -781,7 +781,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
         <div>
           <label className="block text-[10px] uppercase font-mono font-bold text-slate-400 mb-1.5 flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-indigo-400" /> Starting Month
+            <Layers className="w-3.5 h-3.5 text-blue-400" /> Starting Month
           </label>
           <select
             value={startMonth}
@@ -790,7 +790,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
               setStartMonth(val);
               setSelectedMonth(val);
             }}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500 transition-colors"
           >
             {MONTH_NAMES.map((m, idx) => (
               <option key={m} value={idx}>
@@ -802,12 +802,12 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
         <div>
           <label className="block text-[10px] uppercase font-mono font-bold text-slate-400 mb-1.5 flex items-center gap-1.5">
-            <Activity className="w-3.5 h-3.5 text-indigo-400" /> View Month
+            <Activity className="w-3.5 h-3.5 text-blue-400" /> View Month
           </label>
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500 transition-colors"
           >
             {rollingMonths.map((m) => (
               <option key={m.idx} value={m.idx}>
@@ -824,8 +824,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
           onClick={() => setActiveTab("grid")}
           className={`flex items-center gap-2 px-4 sm:px-6 py-3 rounded-t-xl font-bold text-xs sm:text-sm transition-all border-t border-x shrink-0 whitespace-nowrap ${
             activeTab === "grid"
-              ? "bg-slate-900 border-slate-800 text-indigo-400 border-b-2 border-b-indigo-500 shadow-xl"
-              : "bg-slate-950 border-transparent text-slate-500 hover:text-slate-300"
+              ? "bg-slate-900 border-slate-800 text-blue-400 border-b-2 border-b-blue-500 shadow-xl"
+              : "bg-slate-950 border-transparent text-slate-400 hover:text-white"
           }`}
         >
           <Grid className="w-4 h-4" /> Data Sheet Grid
@@ -835,8 +835,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
           onClick={() => setActiveTab("summary")}
           className={`flex items-center gap-2 px-4 sm:px-6 py-3 rounded-t-xl font-bold text-xs sm:text-sm transition-all border-t border-x shrink-0 whitespace-nowrap ${
             activeTab === "summary"
-              ? "bg-slate-900 border-slate-800 text-indigo-400 border-b-2 border-b-indigo-500 shadow-xl"
-              : "bg-slate-950 border-transparent text-slate-500 hover:text-slate-300"
+              ? "bg-slate-900 border-slate-800 text-blue-400 border-b-2 border-b-blue-500 shadow-xl"
+              : "bg-slate-950 border-transparent text-slate-400 hover:text-white"
           }`}
         >
           <BarChart3 className="w-4 h-4" /> Analytics & Summary
@@ -846,8 +846,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
           onClick={() => setActiveTab("goal")}
           className={`flex items-center gap-2 px-4 sm:px-6 py-3 rounded-t-xl font-bold text-xs sm:text-sm transition-all border-t border-x shrink-0 whitespace-nowrap ${
             activeTab === "goal"
-              ? "bg-slate-900 border-slate-800 text-indigo-400 border-b-2 border-b-indigo-500 shadow-xl"
-              : "bg-slate-950 border-transparent text-slate-500 hover:text-slate-300"
+              ? "bg-slate-900 border-slate-800 text-blue-400 border-b-2 border-b-blue-500 shadow-xl"
+              : "bg-slate-950 border-transparent text-slate-400 hover:text-white"
           }`}
         >
           <Target className="w-4 h-4" /> Trading Goal
@@ -859,25 +859,25 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
         <div className="bg-slate-900 border border-slate-800 rounded-b-2xl rounded-tr-2xl p-3 sm:p-6 shadow-2xl space-y-5">
           {/* Starting Capital Input Block - Render ONLY under Starting Month */}
           {selectedMonth === startMonth && (
-            <div className="bg-gradient-to-r from-indigo-950/70 via-slate-900 to-indigo-950/50 border border-indigo-500/30 p-3.5 sm:p-5 rounded-2xl shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+            <div className="bg-gradient-to-r from-blue-950/70 via-slate-900 to-purple-950/40 border border-blue-500/40 p-3.5 sm:p-5 rounded-2xl shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <DollarSign className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-indigo-300 font-mono">
+                  <DollarSign className="w-4 h-4 text-blue-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-300 font-mono">
                     Starting Capital (Initial Deposit)
                   </span>
-                  <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded font-mono">
+                  <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded font-mono">
                     {MONTH_NAMES[startMonth]} {yearRange}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-300">
                   Set your initial account balance for this trading cycle. Used to calculate equity progression & ROIs.
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2.5">
-                <div className="relative flex items-center bg-slate-950 border border-indigo-500/50 rounded-xl px-3.5 py-2 shadow-inner w-full sm:w-auto">
-                  <span className="text-emerald-400 font-bold font-mono text-sm mr-1">$</span>
+                <div className="relative flex items-center bg-slate-950 border border-blue-500/50 rounded-xl px-3.5 py-2 shadow-inner w-full sm:w-auto">
+                  <span className="text-blue-400 font-bold font-mono text-sm mr-1">$</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -887,7 +887,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                     placeholder="100.00"
                     className="bg-transparent border-none text-right font-mono font-bold text-white text-sm w-full sm:w-28 focus:outline-none"
                   />
-                  <span className="text-xs font-mono text-slate-400 ml-2">USDT</span>
+                  <span className="text-xs font-mono text-blue-200/60 ml-2">USDT</span>
                 </div>
 
                 <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
@@ -897,8 +897,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                       onClick={() => setStartingCapital(preset)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-all active:scale-95 whitespace-nowrap ${
                         startingCapital === preset
-                          ? "bg-indigo-600 border-indigo-400 text-white font-bold"
-                          : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200"
+                          ? "bg-blue-600 border-blue-400 text-white font-bold"
+                          : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
                       }`}
                     >
                       ${preset}
@@ -911,11 +911,11 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
           {/* Table Header & Controls */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <h3 className="text-xs sm:text-sm font-bold text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-indigo-400" />
+            <h3 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-blue-400" />
               {MONTH_NAMES[selectedMonth]} Log ({yearRange})
             </h3>
-            <span className="text-xs text-slate-400 font-mono bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+            <span className="text-xs text-blue-300 font-mono bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
               {getDaysInMonth(selectedMonth)} Days
             </span>
           </div>
@@ -934,7 +934,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                   key={`mobile-${day}`}
                   className={`p-3.5 rounded-xl border transition-all ${
                     dayRec.state === "green"
-                      ? "bg-emerald-950/20 border-emerald-500/40"
+                      ? "bg-blue-950/30 border-blue-500/50"
                       : dayRec.state === "red"
                       ? "bg-rose-950/20 border-rose-500/40"
                       : "bg-slate-950/60 border-slate-800"
@@ -942,11 +942,11 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                 >
                   <div className="flex items-center justify-between gap-2 mb-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold font-mono text-slate-300 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
+                      <span className="text-xs font-bold font-mono text-white bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
                         {paddedDay}/{paddedMonth}
                       </span>
                       {hasSubTrades && (
-                        <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
                           {dayRec.subTrades!.length} TRADES
                         </span>
                       )}
@@ -954,7 +954,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                         <span
                           className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded uppercase ${
                             dayRec.state === "green"
-                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                               : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
                           }`}
                         >
@@ -966,7 +966,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => addSubTrade(day)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold shadow-md shadow-indigo-600/30 transition-all active:scale-95"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold shadow-md shadow-blue-600/30 transition-all active:scale-95"
                         title="Add another trade for this day"
                       >
                         <Plus className="w-3.5 h-3.5" />
@@ -987,8 +987,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
                   {hasSubTrades ? (
                     <div className="space-y-2.5">
-                      <div className="bg-slate-900/90 border border-indigo-500/30 p-2 rounded-lg flex items-center justify-between text-xs font-mono">
-                        <span className="text-indigo-300 font-bold">Daily Aggregated Total:</span>
+                      <div className="bg-slate-900/90 border border-blue-500/30 p-2 rounded-lg flex items-center justify-between text-xs font-mono">
+                        <span className="text-blue-300 font-bold">Daily Aggregated Total:</span>
                         <span className="text-white font-bold">
                           {dayRec.state === "green" ? "+" : dayRec.state === "red" ? "-" : ""}
                           ${dayRec.amount || "0"} ({dayRec.roi || "0"}%)
@@ -998,12 +998,12 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                       {dayRec.subTrades!.map((sub, subIdx) => (
                         <div key={`mob-sub-${day}-${subIdx}`} className="bg-slate-900/80 border border-slate-800 p-2.5 rounded-lg space-y-2">
                           <div className="flex items-center justify-between text-xs font-mono">
-                            <span className="text-indigo-400 font-bold">Trade #{subIdx + 1}</span>
+                            <span className="text-blue-400 font-bold">Trade #{subIdx + 1}</span>
                             <div className="flex items-center gap-1">
                               <button
                                 onClick={() => updateSubTrade(day, subIdx, { state: sub.state === "green" ? "" : "green" })}
                                 className={`w-7 h-7 rounded border font-bold text-xs flex items-center justify-center ${
-                                  sub.state === "green" ? "bg-emerald-500 text-slate-950 font-extrabold" : "bg-slate-950 text-slate-400 border-slate-800"
+                                  sub.state === "green" ? "bg-blue-600 text-white font-extrabold" : "bg-slate-950 text-slate-400 border-slate-800"
                                 }`}
                               >
                                 +
@@ -1027,23 +1027,23 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-[9px] text-slate-500 uppercase block font-mono">Amount (USDT)</label>
+                              <label className="text-[9px] text-slate-400 uppercase block font-mono">Amount (USDT)</label>
                               <input
                                 type="number"
                                 placeholder="0.000"
                                 value={sub.amount}
                                 onChange={(e) => updateSubTrade(day, subIdx, { amount: e.target.value })}
-                                className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:outline-none"
+                                className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
                               />
                             </div>
                             <div>
-                              <label className="text-[9px] text-slate-500 uppercase block font-mono">ROI (%)</label>
+                              <label className="text-[9px] text-slate-400 uppercase block font-mono">ROI (%)</label>
                               <input
                                 type="number"
                                 placeholder="0.00"
                                 value={sub.roi}
                                 onChange={(e) => updateSubTrade(day, subIdx, { roi: e.target.value })}
-                                className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:outline-none"
+                                className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
                               />
                             </div>
                           </div>
@@ -1052,7 +1052,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                             placeholder="Trade notes..."
                             value={sub.description ?? sub.notes ?? ""}
                             onChange={(val) => updateSubTrade(day, subIdx, { description: val, notes: val })}
-                            className="bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-indigo-500/60"
+                            className="bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500/60"
                           />
                         </div>
                       ))}
@@ -1065,10 +1065,10 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                             onClick={() => setRowState(day, dayRec.state === "green" ? "" : "green")}
                             className={`w-9 h-9 rounded-xl font-black text-sm flex items-center justify-center transition-all active:scale-95 ${
                               dayRec.state === "green"
-                                ? "bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30"
-                                : "bg-slate-900 text-slate-400 border border-slate-800 hover:text-emerald-400"
+                                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                                : "bg-slate-900 text-slate-400 border border-slate-800 hover:text-white"
                             }`}
-                            title="Mark Green (Win)"
+                            title="Mark Blue (Win)"
                           >
                             +
                           </button>
@@ -1097,7 +1097,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
                       <div className="grid grid-cols-2 gap-2 mb-2">
                         <div>
-                          <label className="text-[10px] text-slate-500 font-mono uppercase block mb-1">
+                          <label className="text-[10px] text-slate-400 font-mono uppercase block mb-1">
                             Amount (USDT)
                           </label>
                           <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5">
@@ -1111,13 +1111,13 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                               placeholder="0.000"
                               value={dayRec.amount}
                               onChange={(e) => updateDayRecord(day, { amount: e.target.value })}
-                              className="bg-transparent border-none text-right w-full text-slate-100 font-mono text-xs focus:outline-none"
+                              className="bg-transparent border-none text-right w-full text-white font-mono text-xs focus:outline-none"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="text-[10px] text-slate-500 font-mono uppercase block mb-1">
+                          <label className="text-[10px] text-slate-400 font-mono uppercase block mb-1">
                             ROI (%)
                           </label>
                           <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5">
@@ -1131,7 +1131,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                               placeholder="0.00"
                               value={dayRec.roi}
                               onChange={(e) => updateDayRecord(day, { roi: e.target.value })}
-                              className="bg-transparent border-none text-right w-full text-slate-100 font-mono text-xs focus:outline-none"
+                              className="bg-transparent border-none text-right w-full text-white font-mono text-xs focus:outline-none"
                             />
                           </div>
                         </div>
@@ -1144,7 +1144,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                           onChange={(val) =>
                             updateDayRecord(day, { description: val, notes: val })
                           }
-                          className="bg-slate-900 border border-slate-800 focus:border-indigo-500/60 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none"
+                          className="bg-slate-900 border border-slate-800 focus:border-blue-500/60 rounded-lg px-3 py-2 text-xs font-mono text-white placeholder:text-slate-600 focus:outline-none"
                         />
                       </div>
                     </>
@@ -1158,7 +1158,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[750px]">
               <thead>
-                <tr className="bg-slate-950 border-b border-slate-800 text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                <tr className="bg-slate-950 border-b border-slate-800 text-[10px] font-mono text-blue-300 uppercase tracking-wider">
                   <th className="p-3 w-24">Date</th>
                   <th className="p-3 w-16 text-center">P/L</th>
                   <th className="p-3 w-40">Amount (USDT)</th>
@@ -1181,17 +1181,17 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                       <tr
                         className={`hover:bg-slate-800/40 transition-colors ${
                           dayRec.state === "green"
-                            ? "bg-emerald-500/5 text-emerald-400"
+                            ? "bg-blue-500/10 text-blue-300"
                             : dayRec.state === "red"
                             ? "bg-rose-500/5 text-rose-400"
                             : ""
                         } ${hasSubTrades ? "border-b-0 font-semibold" : ""}`}
                       >
-                        <td className="p-3 font-semibold text-slate-300 whitespace-nowrap">
+                        <td className="p-3 font-semibold text-white whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <span>{paddedDay}/{paddedMonth}</span>
                             {hasSubTrades && (
-                              <span className="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded uppercase font-mono">
+                              <span className="text-[9px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 rounded uppercase font-mono">
                                 Total ({dayRec.subTrades!.length})
                               </span>
                             )}
@@ -1204,7 +1204,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                             <div
                               className={`w-8 h-8 rounded-lg border flex items-center justify-center mx-auto shadow-sm font-extrabold text-sm ${
                                 dayRec.state === "green"
-                                  ? "bg-emerald-500 border-emerald-400 text-slate-950"
+                                  ? "bg-blue-600 border-blue-400 text-white"
                                   : dayRec.state === "red"
                                   ? "bg-rose-500 border-rose-400 text-white"
                                   : "border-slate-700 bg-slate-900 text-slate-400"
@@ -1219,7 +1219,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                                 onClick={() => setActivePopupDay(activePopupDay === day ? null : day)}
                                 className={`w-8 h-8 rounded-lg border flex items-center justify-center mx-auto transition-transform active:scale-95 shadow-sm ${
                                   dayRec.state === "green"
-                                    ? "bg-emerald-500 border-emerald-400 text-slate-950 font-extrabold text-sm"
+                                    ? "bg-blue-600 border-blue-400 text-white font-extrabold text-sm"
                                     : dayRec.state === "red"
                                     ? "bg-rose-500 border-rose-400 text-white font-extrabold text-sm"
                                     : "border-slate-700 hover:border-slate-500 bg-slate-950 text-slate-500"
@@ -1232,8 +1232,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                                 <div className="absolute top-10 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 rounded-xl p-2 z-30 shadow-2xl flex items-center gap-2">
                                   <button
                                     onClick={() => setRowState(day, "green")}
-                                    className="w-8 h-8 bg-emerald-500 rounded-lg text-slate-950 font-bold flex items-center justify-center hover:scale-105 text-sm"
-                                    title="Win (+ Green)"
+                                    className="w-8 h-8 bg-blue-600 rounded-lg text-white font-bold flex items-center justify-center hover:scale-105 text-sm"
+                                    title="Win (+ Blue)"
                                   >
                                     +
                                   </button>
@@ -1260,14 +1260,14 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                         {/* Amount Display / Input */}
                         <td className="p-3">
                           {hasSubTrades ? (
-                            <div className="flex items-center gap-1.5 bg-slate-950/80 border border-indigo-500/40 rounded-lg px-2.5 py-1.5 max-w-[160px]">
-                              <span className="text-indigo-400 font-bold text-xs">
+                            <div className="flex items-center gap-1.5 bg-slate-950/80 border border-blue-500/40 rounded-lg px-2.5 py-1.5 max-w-[160px]">
+                              <span className="text-blue-400 font-bold text-xs">
                                 {dayRec.state === "green" ? "+" : dayRec.state === "red" ? "-" : ""}
                               </span>
                               <span className="font-mono font-bold text-xs text-white ml-auto">
                                 {dayRec.amount || "0"}
                               </span>
-                              <span className="text-[10px] text-indigo-300 uppercase font-mono">USDT</span>
+                              <span className="text-[10px] text-blue-300 uppercase font-mono">USDT</span>
                             </div>
                           ) : (
                             <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 max-w-[160px]">
@@ -1281,7 +1281,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                                 placeholder="0.000"
                                 value={dayRec.amount}
                                 onChange={(e) => updateDayRecord(day, { amount: e.target.value })}
-                                className="bg-transparent border-none text-right w-full text-slate-100 focus:outline-none"
+                                className="bg-transparent border-none text-right w-full text-white focus:outline-none"
                               />
                               <span className="text-[10px] text-slate-500 uppercase">USDT</span>
                             </div>
@@ -1291,14 +1291,14 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                         {/* ROI Display / Input */}
                         <td className="p-3">
                           {hasSubTrades ? (
-                            <div className="flex items-center gap-1.5 bg-slate-950/80 border border-indigo-500/40 rounded-lg px-2.5 py-1.5 max-w-[140px]">
-                              <span className="text-indigo-400 font-bold text-xs">
+                            <div className="flex items-center gap-1.5 bg-slate-950/80 border border-blue-500/40 rounded-lg px-2.5 py-1.5 max-w-[140px]">
+                              <span className="text-blue-400 font-bold text-xs">
                                 {dayRec.state === "green" ? "+" : dayRec.state === "red" ? "-" : ""}
                               </span>
                               <span className="font-mono font-bold text-xs text-white ml-auto">
                                 {dayRec.roi || "0"}
                               </span>
-                              <span className="text-[10px] text-indigo-300 font-mono">%</span>
+                              <span className="text-[10px] text-blue-300 font-mono">%</span>
                             </div>
                           ) : (
                             <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 max-w-[140px]">
@@ -1312,7 +1312,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                                 placeholder="0.00"
                                 value={dayRec.roi}
                                 onChange={(e) => updateDayRecord(day, { roi: e.target.value })}
-                                className="bg-transparent border-none text-right w-full text-slate-100 focus:outline-none"
+                                className="bg-transparent border-none text-right w-full text-white focus:outline-none"
                               />
                               <span className="text-[10px] text-slate-500">%</span>
                             </div>
@@ -1327,7 +1327,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                             onChange={(val) =>
                               updateDayRecord(day, { description: val, notes: val })
                             }
-                            className="bg-slate-950 border border-slate-800 focus:border-indigo-500/60 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none transition-colors"
+                            className="bg-slate-950 border border-slate-800 focus:border-blue-500/60 rounded-lg px-3 py-1.5 text-xs font-mono text-white placeholder:text-slate-600 focus:outline-none transition-colors"
                           />
                         </td>
 
@@ -1336,7 +1336,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => addSubTrade(day)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold shadow-md shadow-indigo-600/30 transition-all active:scale-95 whitespace-nowrap"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold shadow-md shadow-blue-600/30 transition-all active:scale-95 whitespace-nowrap"
                               title="Add another trade line for this day"
                             >
                               <Plus className="w-3.5 h-3.5" />
@@ -1363,9 +1363,9 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                             key={`sub-${day}-${subIdx}`}
                             className="bg-slate-950/80 border-b border-slate-800/40 text-xs font-mono transition-colors hover:bg-slate-900/80"
                           >
-                            <td className="p-2.5 pl-6 font-medium text-slate-400 whitespace-nowrap flex items-center gap-1.5">
-                              <span className="text-indigo-400 font-bold">└</span>
-                              <span className="bg-slate-900 border border-slate-800 text-[10px] text-indigo-300 font-bold px-2 py-0.5 rounded">
+                            <td className="p-2.5 pl-6 font-medium text-slate-300 whitespace-nowrap flex items-center gap-1.5">
+                              <span className="text-blue-400 font-bold">└</span>
+                              <span className="bg-slate-900 border border-slate-800 text-[10px] text-blue-300 font-bold px-2 py-0.5 rounded">
                                 Trade #{subIdx + 1}
                               </span>
                             </td>
@@ -1377,10 +1377,10 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                                   onClick={() => updateSubTrade(day, subIdx, { state: sub.state === "green" ? "" : "green" })}
                                   className={`w-6 h-6 rounded border font-bold text-xs flex items-center justify-center transition-all ${
                                     sub.state === "green"
-                                      ? "bg-emerald-500 border-emerald-400 text-slate-950 font-extrabold"
-                                      : "border-slate-800 bg-slate-900 text-slate-500 hover:text-emerald-400"
+                                      ? "bg-blue-600 border-blue-400 text-white font-extrabold"
+                                      : "border-slate-800 bg-slate-900 text-slate-500 hover:text-white"
                                   }`}
-                                  title="Win (+ Green)"
+                                  title="Win (+ Blue)"
                                 >
                                   +
                                 </button>
@@ -1411,9 +1411,9 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                                   placeholder="0.000"
                                   value={sub.amount}
                                   onChange={(e) => updateSubTrade(day, subIdx, { amount: e.target.value })}
-                                  className="bg-transparent border-none text-right w-full text-slate-100 text-xs focus:outline-none"
+                                  className="bg-transparent border-none text-right w-full text-white text-xs focus:outline-none"
                                 />
-                                <span className="text-[9px] text-slate-500 uppercase">USDT</span>
+                                <span className="text-[9px] text-slate-400 uppercase">USDT</span>
                               </div>
                             </td>
 
@@ -1430,9 +1430,9 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                                   placeholder="0.00"
                                   value={sub.roi}
                                   onChange={(e) => updateSubTrade(day, subIdx, { roi: e.target.value })}
-                                  className="bg-transparent border-none text-right w-full text-slate-100 text-xs focus:outline-none"
+                                  className="bg-transparent border-none text-right w-full text-white text-xs focus:outline-none"
                                 />
-                                <span className="text-[9px] text-slate-500">%</span>
+                                <span className="text-[9px] text-slate-400">%</span>
                               </div>
                             </td>
 
@@ -1442,7 +1442,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                                 placeholder={`Trade #${subIdx + 1} notes (e.g. BTC Long OB retest, TP hit...)`}
                                 value={sub.description ?? sub.notes ?? ""}
                                 onChange={(val) => updateSubTrade(day, subIdx, { description: val, notes: val })}
-                                className="bg-slate-900 border border-slate-800/80 focus:border-indigo-500/60 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-200 placeholder:text-slate-600 focus:outline-none"
+                                className="bg-slate-900 border border-slate-800/80 focus:border-blue-500/60 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white placeholder:text-slate-600 focus:outline-none"
                               />
                             </td>
 
@@ -1476,8 +1476,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
               onClick={() => setSummarySubTab("monthly")}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 summarySubTab === "monthly"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                  : "text-slate-400 hover:text-white"
               }`}
             >
               <Calendar className="w-3.5 h-3.5" /> Monthly
@@ -1487,8 +1487,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
               onClick={() => setSummarySubTab("yearly")}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 summarySubTab === "yearly"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                  : "text-slate-400 hover:text-white"
               }`}
             >
               <BarChart3 className="w-3.5 h-3.5" /> Yearly
@@ -1498,8 +1498,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
               onClick={() => setSummarySubTab("overall")}
               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 summarySubTab === "overall"
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                  : "text-slate-400 hover:text-white"
               }`}
             >
               <Globe className="w-3.5 h-3.5" /> Overall
@@ -1511,11 +1511,11 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
             <div className="space-y-6 animate-in fade-in duration-200">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-400 font-mono flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-blue-400 font-mono flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-400" />
                     {MONTH_NAMES[selectedMonth]} {yearRange} Performance Overview
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-300 mt-0.5">
                     Detailed daily statistics & cumulative PnL trajectory for this month
                   </p>
                 </div>
@@ -1524,67 +1524,67 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
               {/* Metric Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center relative overflow-hidden shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     Win Days
                   </span>
-                  <span className="text-2xl font-black text-emerald-400 font-mono mt-1 block">
+                  <span className="text-2xl font-black text-blue-400 font-mono mt-1 block">
                     {metrics.mWins}
                   </span>
-                  <span className="text-[10px] text-emerald-500/80 font-mono mt-1 block">
-                    + Green Trades Logged
+                  <span className="text-[10px] text-blue-300 font-mono mt-1 block">
+                    + Win Trades Logged
                   </span>
                 </div>
 
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center relative overflow-hidden shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     Loss Days
                   </span>
                   <span className="text-2xl font-black text-rose-400 font-mono mt-1 block">
                     {metrics.mLosses}
                   </span>
-                  <span className="text-[10px] text-rose-500/80 font-mono mt-1 block">
-                    - Red Trades Logged
+                  <span className="text-[10px] text-rose-400/80 font-mono mt-1 block">
+                    - Loss Trades Logged
                   </span>
                 </div>
 
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center relative overflow-hidden shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     Net Month PnL
                   </span>
                   <span
                     className={`text-2xl font-black font-mono mt-1 block ${
                       metrics.mAmount > 0
-                        ? "text-emerald-400"
+                        ? "text-blue-400"
                         : metrics.mAmount < 0
                         ? "text-rose-400"
-                        : "text-slate-200"
+                        : "text-white"
                     }`}
                   >
                     {metrics.mAmount > 0 ? "+" : ""}
                     {metrics.mAmount.toFixed(3)} USDT
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono mt-1 block">
+                  <span className="text-[10px] text-slate-400 font-mono mt-1 block">
                     Net Profit / Loss
                   </span>
                 </div>
 
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center relative overflow-hidden shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     ROI For Month
                   </span>
                   <span
                     className={`text-2xl font-black font-mono mt-1 block ${
                       metrics.mRoi > 0
-                        ? "text-emerald-400"
+                        ? "text-blue-400"
                         : metrics.mRoi < 0
                         ? "text-rose-400"
-                        : "text-slate-200"
+                        : "text-white"
                     }`}
                   >
                     {metrics.mRoi > 0 ? "+" : ""}
                     {metrics.mRoi.toFixed(2)}%
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono mt-1 block">
+                  <span className="text-[10px] text-slate-400 font-mono mt-1 block">
                     Monthly Percentage Gain
                   </span>
                 </div>
@@ -1592,8 +1592,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
               {/* Cumulative Month Trajectory Chart */}
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono mb-3 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-white font-mono mb-3 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-blue-400" />
                   Cumulative Month Profit/Loss Trajectory (Daily Profits)
                 </h4>
 
@@ -1605,9 +1605,9 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                         {
                           label: `${MONTH_NAMES[selectedMonth]} Daily Cumulative PnL (USDT)`,
                           data: metrics.mChartPoints,
-                          borderColor: metrics.mAmount >= 0 ? "#10b981" : "#f43f5e",
+                          borderColor: metrics.mAmount >= 0 ? "#3b82f6" : "#f43f5e",
                           backgroundColor:
-                            metrics.mAmount >= 0 ? "rgba(16, 185, 129, 0.12)" : "rgba(244, 63, 94, 0.12)",
+                            metrics.mAmount >= 0 ? "rgba(59, 130, 246, 0.15)" : "rgba(244, 63, 94, 0.12)",
                           borderWidth: 2.5,
                           pointRadius: 3,
                           pointHoverRadius: 6,
@@ -1620,7 +1620,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                       responsive: true,
                       maintainAspectRatio: false,
                       plugins: {
-                        legend: { labels: { color: "#94a3b8", font: { family: "monospace", size: 11 } } },
+                        legend: { labels: { color: "#93c5fd", font: { family: "monospace", size: 11 } } },
                         tooltip: {
                           callbacks: {
                             label: (context) => ` PnL: ${context.parsed.y > 0 ? "+" : ""}${context.parsed.y.toFixed(3)} USDT`,
@@ -1643,11 +1643,11 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
             <div className="space-y-6 animate-in fade-in duration-200">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-400 font-mono flex items-center gap-2">
-                    <BarChart3 className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-blue-400 font-mono flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-blue-400" />
                     Year {yearRange} Performance Overview
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-300 mt-0.5">
                     12-Month rolling performance breakdown for {yearRange}
                   </p>
                 </div>
@@ -1656,67 +1656,67 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
               {/* Metric Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     Yearly Wins
                   </span>
-                  <span className="text-2xl font-black text-emerald-400 font-mono mt-1 block">
+                  <span className="text-2xl font-black text-blue-400 font-mono mt-1 block">
                     {metrics.yWins}
                   </span>
-                  <span className="text-[10px] text-emerald-500/80 font-mono mt-1 block">
+                  <span className="text-[10px] text-blue-300 font-mono mt-1 block">
                     Win Days in {yearRange}
                   </span>
                 </div>
 
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     Yearly Losses
                   </span>
                   <span className="text-2xl font-black text-rose-400 font-mono mt-1 block">
                     {metrics.yLosses}
                   </span>
-                  <span className="text-[10px] text-rose-500/80 font-mono mt-1 block">
+                  <span className="text-[10px] text-rose-400/80 font-mono mt-1 block">
                     Loss Days in {yearRange}
                   </span>
                 </div>
 
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     This Year's Net PnL
                   </span>
                   <span
                     className={`text-2xl font-black font-mono mt-1 block ${
                       metrics.yAmount > 0
-                        ? "text-emerald-400"
+                        ? "text-blue-400"
                         : metrics.yAmount < 0
                         ? "text-rose-400"
-                        : "text-slate-200"
+                        : "text-white"
                     }`}
                   >
                     {metrics.yAmount > 0 ? "+" : ""}
                     {metrics.yAmount.toFixed(3)} USDT
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono mt-1 block">
+                  <span className="text-[10px] text-slate-400 font-mono mt-1 block">
                     Yearly Total Net PnL
                   </span>
                 </div>
 
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     Yearly Total ROI
                   </span>
                   <span
                     className={`text-2xl font-black font-mono mt-1 block ${
                       metrics.yRoi > 0
-                        ? "text-emerald-400"
+                        ? "text-blue-400"
                         : metrics.yRoi < 0
                         ? "text-rose-400"
-                        : "text-slate-200"
+                        : "text-white"
                     }`}
                   >
                     {metrics.yRoi > 0 ? "+" : ""}
                     {metrics.yRoi.toFixed(2)}%
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono mt-1 block">
+                  <span className="text-[10px] text-slate-400 font-mono mt-1 block">
                     Cumulative ROI for {yearRange}
                   </span>
                 </div>
@@ -1724,8 +1724,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
               {/* Yearly Profit/Loss Trajectory Chart (Monthly Profits Included) */}
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono mb-3 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-indigo-400" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-white font-mono mb-3 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-purple-400" />
                   This Year's Profit/Loss Trajectory (Monthly Profits Plotted)
                 </h4>
 
@@ -1737,8 +1737,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                         {
                           label: "Monthly Net PnL (USDT)",
                           data: metrics.yMonthlyAmounts,
-                          borderColor: "#818cf8",
-                          backgroundColor: "rgba(129, 140, 248, 0.15)",
+                          borderColor: "#60a5fa",
+                          backgroundColor: "rgba(96, 165, 250, 0.15)",
                           borderWidth: 2,
                           fill: false,
                           tension: 0.2,
@@ -1746,8 +1746,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                         {
                           label: "Cumulative Yearly Trajectory (USDT)",
                           data: metrics.yCumulativePoints,
-                          borderColor: "#10b981",
-                          backgroundColor: "rgba(16, 185, 129, 0.1)",
+                          borderColor: "#a855f7",
+                          backgroundColor: "rgba(168, 85, 247, 0.12)",
                           borderWidth: 3,
                           fill: true,
                           tension: 0.3,
@@ -1758,7 +1758,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                       responsive: true,
                       maintainAspectRatio: false,
                       plugins: {
-                        legend: { labels: { color: "#94a3b8", font: { family: "monospace", size: 11 } } },
+                        legend: { labels: { color: "#93c5fd", font: { family: "monospace", size: 11 } } },
                         tooltip: {
                           callbacks: {
                             label: (context) => ` ${context.dataset.label}: ${context.parsed.y > 0 ? "+" : ""}${context.parsed.y.toFixed(3)} USDT`,
@@ -1781,11 +1781,11 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
             <div className="space-y-6 animate-in fade-in duration-200">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-indigo-400 font-mono flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-blue-400 font-mono flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-blue-400" />
                     Overall All-Time Portfolio Metrics
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-300 mt-0.5">
                     Complete multi-year trajectory from start month to present
                   </p>
                 </div>
@@ -1794,80 +1794,80 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
               {/* Metric Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     Starting Capital
                   </span>
-                  <span className="text-xl font-black text-indigo-400 font-mono mt-1 block">
+                  <span className="text-xl font-black text-blue-400 font-mono mt-1 block">
                     ${metrics.initCap.toLocaleString()}
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono mt-1 block">
+                  <span className="text-[10px] text-slate-400 font-mono mt-1 block">
                     Initial Deposit
                   </span>
                 </div>
 
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     Current Total Equity
                   </span>
-                  <span className="text-xl font-black text-emerald-400 font-mono mt-1 block">
+                  <span className="text-xl font-black text-white font-mono mt-1 block">
                     ${metrics.currentEquity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
-                  <span className="text-[10px] text-emerald-500/80 font-mono mt-1 block">
+                  <span className="text-[10px] text-blue-300 font-mono mt-1 block">
                     Capital + All-Time PnL
                   </span>
                 </div>
 
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     All-Time Net PnL
                   </span>
                   <span
                     className={`text-xl font-black font-mono mt-1 block ${
                       metrics.oAmount > 0
-                        ? "text-emerald-400"
+                        ? "text-blue-400"
                         : metrics.oAmount < 0
                         ? "text-rose-400"
-                        : "text-slate-200"
+                        : "text-white"
                     }`}
                   >
                     {metrics.oAmount > 0 ? "+" : ""}
                     {metrics.oAmount.toFixed(3)} USDT
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono mt-1 block">
+                  <span className="text-[10px] text-slate-400 font-mono mt-1 block">
                     Total All-Time Net
                   </span>
                 </div>
 
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center shadow-md">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     All-Time W / L Days
                   </span>
-                  <span className="text-xl font-black text-slate-200 font-mono mt-1 block">
-                    <span className="text-emerald-400">{metrics.oWins}W</span> /{" "}
+                  <span className="text-xl font-black text-white font-mono mt-1 block">
+                    <span className="text-blue-400">{metrics.oWins}W</span> /{" "}
                     <span className="text-rose-400">{metrics.oLosses}L</span>
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono mt-1 block">
+                  <span className="text-[10px] text-slate-400 font-mono mt-1 block">
                     Win / Loss Ratio
                   </span>
                 </div>
 
                 <div className="bg-slate-950 border border-slate-800/80 rounded-xl p-4 text-center shadow-md col-span-2 sm:col-span-1">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
                     All-Time Total ROI
                   </span>
                   <span
                     className={`text-xl font-black font-mono mt-1 block ${
                       metrics.oRoi > 0
-                        ? "text-emerald-400"
+                        ? "text-blue-400"
                         : metrics.oRoi < 0
                         ? "text-rose-400"
-                        : "text-slate-200"
+                        : "text-white"
                     }`}
                   >
                     {metrics.oRoi > 0 ? "+" : ""}
                     {metrics.oRoi.toFixed(2)}%
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono mt-1 block">
+                  <span className="text-[10px] text-slate-400 font-mono mt-1 block">
                     Total Portfolio Gain
                   </span>
                 </div>
@@ -1875,8 +1875,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
               {/* Overall Multi-Year All-Time Trajectory Chart */}
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono mb-3 flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-indigo-400" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-white font-mono mb-3 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-blue-400" />
                   Overall All-Time Profit/Loss Progression Trajectory
                 </h4>
 
@@ -1888,8 +1888,8 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                         {
                           label: "All-Time Cumulative Portfolio PnL (USDT)",
                           data: metrics.oCumulativePoints,
-                          borderColor: "#10b981",
-                          backgroundColor: "rgba(16, 185, 129, 0.12)",
+                          borderColor: "#3b82f6",
+                          backgroundColor: "rgba(59, 130, 246, 0.15)",
                           borderWidth: 3,
                           pointRadius: 4,
                           fill: true,
@@ -1901,7 +1901,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                       responsive: true,
                       maintainAspectRatio: false,
                       plugins: {
-                        legend: { labels: { color: "#94a3b8", font: { family: "monospace", size: 11 } } },
+                        legend: { labels: { color: "#93c5fd", font: { family: "monospace", size: 11 } } },
                         tooltip: {
                           callbacks: {
                             label: (context) => ` Overall PnL: ${context.parsed.y > 0 ? "+" : ""}${context.parsed.y.toFixed(3)} USDT`,
@@ -1928,22 +1928,22 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
             <h2 className="text-2xl font-black tracking-wider text-white uppercase font-mono">
               TRADING GOALS & STRATEGY MATRIX
             </h2>
-            <p className="text-xs text-slate-400 mt-1">Rules & Parameters for Compound Portfolio Growth</p>
+            <p className="text-xs text-blue-200 mt-1">Rules & Parameters for Compound Portfolio Growth</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="bg-slate-950 border border-slate-800 p-5 rounded-2xl shadow-md">
-                <h4 className="text-xs font-bold text-amber-400 uppercase tracking-widest font-mono mb-3 flex items-center gap-2">
-                  <Award className="w-4 h-4" /> Core Growth Objectives
+                <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest font-mono mb-3 flex items-center gap-2">
+                  <Award className="w-4 h-4 text-purple-400" /> Core Growth Objectives
                 </h4>
-                <ul className="text-xs text-slate-300 space-y-2.5 font-mono">
+                <ul className="text-xs text-white space-y-2.5 font-mono">
                   <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                    <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
                     Short Term Goal: Target account growth of 20% - 40% per month
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                    <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
                     Long Term Goal: Compound capital to reach $1,000+ USDT within 6-12 months
                   </li>
                 </ul>
@@ -1953,7 +1953,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
                 <h4 className="text-xs font-bold text-rose-400 uppercase tracking-widest font-mono mb-3 flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4" /> Strict Risk Management Rules
                 </h4>
-                <ul className="text-xs text-slate-300 space-y-2.5 font-mono">
+                <ul className="text-xs text-white space-y-2.5 font-mono">
                   <li className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0"></span>
                     Maximum Risk Per Trade: 3% of main balance
@@ -1972,40 +1972,40 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
 
             <div className="space-y-4">
               <div className="bg-slate-950 border border-slate-800 p-5 rounded-2xl shadow-md">
-                <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-widest font-mono mb-3 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" /> Entry, Exit & R:R Rules
+                <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest font-mono mb-3 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-purple-400" /> Entry, Exit & R:R Rules
                 </h4>
-                <ul className="text-xs text-slate-300 space-y-2.5 font-mono">
+                <ul className="text-xs text-white space-y-2.5 font-mono">
                   <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0"></span>
+                    <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
                     Execution Strategy: Smart Money Concepts (SMC) & Order Block Retests
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0"></span>
+                    <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
                     Fixed Minimum Risk-to-Reward Ratio: 2:1
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0"></span>
+                    <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
                     Position sizing adjusted dynamically to match capital balance
                   </li>
                 </ul>
               </div>
 
               <div className="bg-slate-950 border border-slate-800 p-5 rounded-2xl shadow-md">
-                <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest font-mono mb-3 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" /> Trading Psychology
+                <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest font-mono mb-3 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-purple-400" /> Trading Psychology
                 </h4>
-                <ul className="text-xs text-slate-300 space-y-2.5 font-mono">
+                <ul className="text-xs text-white space-y-2.5 font-mono">
                   <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                    <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
                     Strict discipline — log every trade in the Trade Journal
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                    <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
                     Zero tolerance for revenge trading or breaking plan parameters
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                    <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
                     Conduct weekly reviews of setups and execution metrics
                   </li>
                 </ul>
@@ -2030,7 +2030,7 @@ export const TradingApp: React.FC<TradingAppProps> = ({ user, onSaveDataToServer
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed font-mono bg-slate-950/80 p-3.5 rounded-xl border border-slate-800">
-              This will permanently clear all daily trade entries, profit/loss states, sub-trades, and notes across all years and months for <strong className="text-indigo-300">{user.email}</strong>.
+              This will permanently clear all daily trade entries, profit/loss states, sub-trades, and notes across all years and months for <strong className="text-blue-300">{user.email}</strong>.
             </p>
 
             <div className="flex items-center justify-end gap-2.5 pt-2">

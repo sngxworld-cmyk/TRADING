@@ -98,23 +98,23 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-5 bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-5 bg-gradient-to-r from-slate-900 via-blue-950/40 to-purple-950/30 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
               <Plus className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-100 font-mono">
+              <h2 className="text-base font-bold text-white font-mono">
                 Create a Signal Group
               </h2>
-              <p className="text-xs text-slate-400 font-mono">
+              <p className="text-xs text-blue-200/70 font-mono">
                 1 Group Limit per Trader • 20-Year WhatsApp-like Server Archive
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+            className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -124,11 +124,11 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         <form onSubmit={handleCreate} className="p-6 overflow-y-auto space-y-5">
           {/* 1 Group per User Policy Alert */}
           {hasExistingGroup && existingOwnedGroup && (
-            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 space-y-3 font-mono">
+            <div className="p-4 rounded-xl bg-purple-950/30 border border-purple-500/40 space-y-3 font-mono">
               <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-xs text-amber-300 block">
+                  <strong className="text-xs text-purple-300 block">
                     1 Active Signal Group Limit (1/1):
                   </strong>
                   <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
@@ -137,8 +137,8 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-amber-500/20">
-                <span className="text-[10px] text-slate-400">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-purple-500/20">
+                <span className="text-[10px] text-blue-200/60">
                   Current: {existingOwnedGroup.membersCount} members • {existingOwnedGroup.totalSignals} signals
                 </span>
                 <button
@@ -155,10 +155,10 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           )}
 
           {isPendingUser(currentUser) && (
-            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono flex items-start gap-2.5">
-              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/30 text-purple-300 text-xs font-mono flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
               <div>
-                <strong className="block text-amber-300">Creation Restricted:</strong>
+                <strong className="block text-purple-300">Creation Restricted:</strong>
                 Pending & Trial users cannot create signal groups until account approval by Host Admin.
               </div>
             </div>
@@ -172,8 +172,8 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
           {/* Group Name */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono">
-              Group Name <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">
+              Group Name <span className="text-purple-400">*</span>
             </label>
             <input
               type="text"
@@ -182,14 +182,14 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Apex Alpha Signals"
               required
-              className="w-full bg-slate-950 border border-slate-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:border-indigo-500 focus:outline-none font-mono"
+              className="w-full bg-slate-950 border border-slate-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none font-mono"
             />
           </div>
 
           {/* Group Description */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono">
-              Group Strategy & Description <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">
+              Group Strategy & Description <span className="text-purple-400">*</span>
             </label>
             <textarea
               value={description}
@@ -198,13 +198,13 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               rows={2}
               placeholder="Describe your signal strategy, target coins, timeframes, and risk rules..."
               required
-              className="w-full bg-slate-950 border border-slate-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:border-indigo-500 focus:outline-none resize-none font-sans"
+              className="w-full bg-slate-950 border border-slate-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:border-blue-500 focus:outline-none resize-none font-sans"
             />
           </div>
 
           {/* Uploadable Group Logo Picture */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono">
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">
               Group Logo (Upload Picture)
             </label>
             
@@ -219,14 +219,14 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
             {logoUrl ? (
               <div className="flex items-center gap-4 p-3 rounded-xl bg-slate-950 border border-slate-800">
-                <div className="w-14 h-14 rounded-xl border border-indigo-500/40 overflow-hidden bg-slate-900 flex items-center justify-center shrink-0">
+                <div className="w-14 h-14 rounded-xl border border-blue-500/40 overflow-hidden bg-slate-900 flex items-center justify-center shrink-0">
                   <img src={logoUrl} alt="Group Logo Preview" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-xs font-semibold text-emerald-400 font-mono flex items-center gap-1">
+                  <span className="text-xs font-semibold text-blue-400 font-mono flex items-center gap-1">
                     <Check className="w-3.5 h-3.5" /> Logo Picture Uploaded
                   </span>
-                  <p className="text-[10px] text-slate-500 truncate mt-0.5 font-mono">
+                  <p className="text-[10px] text-blue-200/60 truncate mt-0.5 font-mono">
                     Custom group avatar active
                   </p>
                 </div>
@@ -235,7 +235,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
                     type="button"
                     disabled={hasExistingGroup}
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 text-xs font-mono transition-colors disabled:opacity-50"
+                    className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-300 text-xs font-mono transition-colors disabled:opacity-50"
                   >
                     Change
                   </button>
@@ -254,17 +254,17 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               <div
                 onClick={() => !hasExistingGroup && fileInputRef.current?.click()}
                 className={`border-2 border-dashed border-slate-800 rounded-xl p-4 text-center bg-slate-950/60 transition-all flex flex-col items-center justify-center gap-2 ${
-                  hasExistingGroup ? "opacity-50 cursor-not-allowed" : "hover:border-indigo-500/60 hover:bg-slate-950 cursor-pointer"
+                  hasExistingGroup ? "opacity-50 cursor-not-allowed" : "hover:border-blue-500/60 hover:bg-slate-950 cursor-pointer"
                 }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
                   <Upload className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-slate-300 block font-mono">
+                  <span className="text-xs font-medium text-white block font-mono">
                     Click or drop image to upload group logo
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono">
+                  <span className="text-[10px] text-blue-200/60 font-mono">
                     PNG, JPG, WEBP (Max 5MB)
                   </span>
                 </div>
@@ -273,22 +273,22 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           </div>
 
           {/* Permanent Lifetime Server Archival & VIP Policy Notice */}
-          <div className="p-4 rounded-xl bg-indigo-950/20 border border-indigo-500/30 space-y-2 font-mono">
+          <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-500/30 space-y-2 font-mono">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Database className="w-4 h-4 text-indigo-400 shrink-0" />
-                <span className="text-xs font-bold text-slate-200">
+                <Database className="w-4 h-4 text-blue-400 shrink-0" />
+                <span className="text-xs font-bold text-white">
                   Permanent Lifetime WhatsApp-Like Server Vault
                 </span>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950/50 text-purple-300 border border-purple-500/30">
                 Lifetime Vault
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed font-sans">
+            <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
               All signals, group messages, photos, voice memos, and chart attachments are permanently stored with lifetime server retention — no messages or media will ever be deleted, even after 40+ years.
             </p>
-            <div className="flex flex-wrap items-center gap-2 pt-1 text-[10px] text-indigo-300">
+            <div className="flex flex-wrap items-center gap-2 pt-1 text-[10px] text-blue-300">
               <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">1 Group / User Limit</span>
               <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">Lifetime History</span>
               <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">VIP Max $17 USD</span>
@@ -298,10 +298,10 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           {/* Chat Mode Setting: Admin-Only Talk vs Open Member Chat */}
           <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-slate-200 block font-mono">
+              <span className="text-xs font-bold text-white block font-mono">
                 Group Chat Discussion Mode
               </span>
-              <span className="text-[10px] text-slate-500 block mt-0.5">
+              <span className="text-[10px] text-blue-200/60 block mt-0.5">
                 {adminOnlyChat
                   ? "Admin-Only: Only group admin & authorized members can send messages"
                   : "Open Discussion: All members can send messages, photos, and voice notes"}
@@ -313,8 +313,8 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               onClick={() => setAdminOnlyChat(!adminOnlyChat)}
               className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 disabled:opacity-50 ${
                 adminOnlyChat
-                  ? "bg-amber-600/30 text-amber-300 border border-amber-500/40"
-                  : "bg-emerald-600/30 text-emerald-300 border border-emerald-500/40"
+                  ? "bg-purple-950/50 text-purple-300 border border-purple-500/40"
+                  : "bg-blue-950/50 text-blue-300 border border-blue-500/40"
               }`}
             >
               {adminOnlyChat ? (
@@ -332,10 +332,10 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           {/* Privacy & Member Visibility */}
           <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-slate-200 block font-mono">
+              <span className="text-xs font-bold text-white block font-mono">
                 Hide Member List (Privacy)
               </span>
-              <span className="text-[10px] text-slate-500 block mt-0.5">
+              <span className="text-[10px] text-blue-200/60 block mt-0.5">
                 Prevent members from viewing other member contacts
               </span>
             </div>
@@ -345,7 +345,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               onClick={() => setHideMembers(!hideMembers)}
               className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all disabled:opacity-50 ${
                 hideMembers
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-blue-600 text-white"
                   : "bg-slate-800 text-slate-400 hover:text-slate-200"
               }`}
             >
@@ -355,20 +355,20 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
 
           {/* Share & Invite Links */}
           <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-            <div className="flex items-center justify-between text-xs font-mono text-slate-300">
+            <div className="flex items-center justify-between text-xs font-mono text-white">
               <span className="flex items-center gap-1.5">
-                <Share2 className="w-3.5 h-3.5 text-indigo-400" /> Share & Invite Members
+                <Share2 className="w-3.5 h-3.5 text-blue-400" /> Share & Invite Members
               </span>
               <button
                 type="button"
                 onClick={copyInvite}
-                className="text-[10px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1"
               >
-                {copiedLink ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                {copiedLink ? <Check className="w-3 h-3 text-purple-300" /> : <Copy className="w-3 h-3" />}
                 {copiedLink ? "Copied!" : "Copy Link"}
               </button>
             </div>
-            <div className="flex flex-wrap gap-1.5 text-[10px] font-mono text-slate-400">
+            <div className="flex flex-wrap gap-1.5 text-[10px] font-mono text-blue-200/60">
               <span className="px-2 py-1 rounded bg-slate-900 border border-slate-800">WhatsApp</span>
               <span className="px-2 py-1 rounded bg-slate-900 border border-slate-800">TikTok</span>
               <span className="px-2 py-1 rounded bg-slate-900 border border-slate-800">Instagram</span>
@@ -381,7 +381,7 @@ export const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           <button
             type="submit"
             disabled={isPendingUser(currentUser) || hasExistingGroup}
-            className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition-all font-mono"
+            className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition-all font-mono"
           >
             <Plus className="w-4 h-4" />
             {hasExistingGroup

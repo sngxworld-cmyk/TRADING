@@ -150,7 +150,7 @@ export default function App() {
 
   // 2. Render Primary Application with TradingApp
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-600 selection:text-white relative">
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans selection:bg-blue-600 selection:text-white relative">
       {/* 3D Robot First-Login Interactive Tutorial Overlay */}
       {showTutorial && !isTrialExpired && (
         <RobotTutorialOverlay

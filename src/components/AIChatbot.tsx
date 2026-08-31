@@ -118,11 +118,11 @@ export const AIChatbot: React.FC = () => {
       {/* Floating Launcher Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-5 right-5 z-40 w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/40 border border-indigo-400 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+        className="fixed bottom-5 right-5 z-40 w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/40 border border-blue-400 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
         title="Open TrackerX AI Assistant"
       >
         <MessageSquare className="w-5 h-5" />
-        <span className="absolute top-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-950"></span>
+        <span className="absolute top-0 right-0 w-3 h-3 bg-purple-400 rounded-full border-2 border-slate-950"></span>
       </button>
 
       {/* Chatbot Window */}
@@ -131,14 +131,14 @@ export const AIChatbot: React.FC = () => {
           {/* Header */}
           <div className="bg-slate-950 p-3.5 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+              <div className="w-7 h-7 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
                 <Bot className="w-4 h-4" />
               </div>
               <div>
                 <h4 className="text-xs font-bold text-white leading-tight">
                   TrackerX AI Assistant
                 </h4>
-                <p className="text-[10px] text-emerald-400 font-mono">
+                <p className="text-[10px] text-blue-300 font-mono">
                   Online (EN / SI / Singlish)
                 </p>
               </div>
@@ -167,7 +167,7 @@ export const AIChatbot: React.FC = () => {
                   }`}
                 >
                   {m.sender === "bot" && (
-                    <div className="w-6 h-6 rounded-md bg-indigo-600/30 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-md bg-blue-600/30 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
                       <Bot className="w-3.5 h-3.5" />
                     </div>
                   )}
@@ -175,18 +175,18 @@ export const AIChatbot: React.FC = () => {
                   <div
                     className={`max-w-[80%] p-2.5 rounded-xl text-xs leading-relaxed ${
                       m.sender === "user"
-                        ? "bg-indigo-600 text-white rounded-tr-none font-medium"
-                        : "bg-slate-950 text-slate-200 border border-slate-800 rounded-tl-none"
+                        ? "bg-blue-600 text-white rounded-tr-none font-medium"
+                        : "bg-slate-950 text-white border border-slate-800 rounded-tl-none"
                     }`}
                   >
                     <p>{m.text}</p>
-                    <span className="text-[9px] text-slate-400 block text-right mt-1 font-mono">
+                    <span className="text-[9px] text-blue-200/60 block text-right mt-1 font-mono">
                       {m.time}
                     </span>
                   </div>
 
                   {m.sender === "user" && (
-                    <div className="w-6 h-6 rounded-md bg-slate-800 text-slate-300 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-md bg-slate-800 text-white flex items-center justify-center shrink-0 mt-0.5">
                       <User className="w-3.5 h-3.5" />
                     </div>
                   )}
@@ -194,8 +194,8 @@ export const AIChatbot: React.FC = () => {
               ))}
 
               {loading && (
-                <div className="flex gap-2 items-center text-slate-400 text-xs font-mono">
-                  <Bot className="w-4 h-4 text-indigo-400 animate-spin" />
+                <div className="flex gap-2 items-center text-blue-300 text-xs font-mono">
+                  <Bot className="w-4 h-4 text-purple-400 animate-spin" />
                   <span>Thinking...</span>
                 </div>
               )}
@@ -206,7 +206,7 @@ export const AIChatbot: React.FC = () => {
               <button
                 type="button"
                 onClick={() => scrollToBottom("smooth")}
-                className="absolute bottom-2 right-4 z-20 px-2.5 py-1 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-[11px] font-bold flex items-center gap-1 shadow-lg shadow-indigo-600/40 border border-indigo-400/40 transition-all hover:scale-105 active:scale-95"
+                className="absolute bottom-2 right-4 z-20 px-2.5 py-1 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-mono text-[11px] font-bold flex items-center gap-1 shadow-lg shadow-blue-600/40 border border-blue-400/40 transition-all hover:scale-105 active:scale-95"
               >
                 <ArrowDown className="w-3 h-3 animate-bounce" />
                 <span>Jump to latest</span>
@@ -222,12 +222,12 @@ export const AIChatbot: React.FC = () => {
               onChange={(e) => setInputMsg(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder="Ask about login, trade journal, or Sinhala help..."
-              className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-sans"
+              className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-sans"
             />
             <button
               onClick={handleSend}
               disabled={loading || !inputMsg.trim()}
-              className="p-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl transition-all"
+              className="p-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl transition-all"
             >
               <Send className="w-4 h-4" />
             </button>

@@ -40,18 +40,18 @@ export const Robot3D: React.FC<Robot3DProps> = ({
     container.appendChild(renderer.domElement);
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
     scene.add(ambientLight);
 
-    const dirLight1 = new THREE.DirectionalLight(0x6366f1, 3.0); // Indigo key light
+    const dirLight1 = new THREE.DirectionalLight(0x3b82f6, 3.0); // Blue key light
     dirLight1.position.set(3, 4, 5);
     scene.add(dirLight1);
 
-    const dirLight2 = new THREE.DirectionalLight(0x06b6d4, 2.5); // Cyan fill light
+    const dirLight2 = new THREE.DirectionalLight(0xa855f7, 1.8); // Purple fill light
     dirLight2.position.set(-3, -2, 3);
     scene.add(dirLight2);
 
-    const pointLight = new THREE.PointLight(0x38bdf8, 2, 10); // Center core glow
+    const pointLight = new THREE.PointLight(0x60a5fa, 2, 10); // Center blue core glow
     pointLight.position.set(0, -0.2, 1);
     scene.add(pointLight);
 
@@ -73,15 +73,15 @@ export const Robot3D: React.FC<Robot3DProps> = ({
     });
 
     const glowMaterial = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8, // Cyan neon
+      color: 0x60a5fa, // Blue neon
     });
 
     const eyeGlowMaterial = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
+      color: 0x60a5fa,
     });
 
     const earLightMaterial = new THREE.MeshBasicMaterial({
-      color: 0x818cf8,
+      color: 0xc084fc, // Purple neon accent
     });
 
     // --- 1. ROBOT HEAD ---

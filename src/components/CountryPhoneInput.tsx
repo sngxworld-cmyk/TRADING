@@ -168,17 +168,17 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      <div className="flex items-center rounded-xl bg-slate-950 border border-slate-800 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all overflow-hidden">
+      <div className="flex items-center rounded-xl bg-slate-950 border border-slate-800 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all overflow-hidden">
         {/* Country Code Trigger */}
         <button
           type="button"
           disabled={disabled}
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-1.5 px-3 py-2.5 bg-slate-900/80 hover:bg-slate-800 text-slate-200 border-r border-slate-800 transition-colors shrink-0 font-mono text-xs select-none focus:outline-none"
+          className="flex items-center gap-1.5 px-3 py-2.5 bg-slate-900/80 hover:bg-slate-800 text-white border-r border-slate-800 transition-colors shrink-0 font-mono text-xs select-none focus:outline-none"
           title={`${selectedCountry.name} (${selectedCountry.dialCode})`}
         >
           <span className="text-base leading-none">{selectedCountry.flag}</span>
-          <span className="font-semibold text-indigo-300">{selectedCountry.dialCode}</span>
+          <span className="font-semibold text-blue-400">{selectedCountry.dialCode}</span>
           <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
         </button>
 
@@ -191,14 +191,14 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
             disabled={disabled}
             required={required}
             placeholder={placeholder || selectedCountry.format || "Mobile number"}
-            className="w-full bg-transparent px-3 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none font-mono"
+            className="w-full bg-transparent px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none font-mono"
           />
         </div>
       </div>
 
       {/* Searchable Country Picker Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 top-full mt-1.5 w-72 max-w-[90vw] bg-slate-900 border border-indigo-500/30 rounded-xl shadow-2xl shadow-black/80 z-50 overflow-hidden animate-in fade-in zoom-in-95">
+        <div className="absolute left-0 top-full mt-1.5 w-72 max-w-[90vw] bg-slate-900 border border-blue-500/40 rounded-xl shadow-2xl shadow-black/80 z-50 overflow-hidden animate-in fade-in zoom-in-95">
           {/* Search Header */}
           <div className="p-2 border-b border-slate-800 bg-slate-950/60 sticky top-0 z-10">
             <div className="relative">
@@ -209,7 +209,7 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search country or code..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
               />
             </div>
           </div>
@@ -230,17 +230,17 @@ export const CountryPhoneInput: React.FC<CountryPhoneInputProps> = ({
                     onClick={() => handleCountrySelect(country)}
                     className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-mono transition-colors text-left ${
                       isSelected
-                        ? "bg-indigo-600/20 text-indigo-200"
+                        ? "bg-blue-600/20 text-blue-200 border border-blue-500/30"
                         : "text-slate-300 hover:bg-slate-800 hover:text-white"
                     }`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-base">{country.flag}</span>
-                      <span className="truncate">{country.name}</span>
+                      <span className="truncate text-white">{country.name}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0 ml-2 font-semibold text-indigo-400">
+                    <div className="flex items-center gap-1.5 shrink-0 ml-2 font-semibold text-blue-400">
                       <span>{country.dialCode}</span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-indigo-400" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-purple-300" />}
                     </div>
                   </button>
                 );

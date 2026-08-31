@@ -115,10 +115,10 @@ export function getRoleConfig(role: PlatformRole) {
       return {
         label: "SIGNAL PROVIDER",
         rankNumber: 5,
-        badgeClass: "bg-indigo-500/15 text-indigo-300 border-indigo-500/40 shadow-indigo-500/10",
-        pillClass: "bg-indigo-500 text-white",
+        badgeClass: "bg-blue-500/15 text-blue-300 border-blue-500/40 shadow-blue-500/10",
+        pillClass: "bg-blue-500 text-white",
         icon: Star,
-        iconColor: "text-indigo-400",
+        iconColor: "text-blue-400",
         description: "Public / Free Signal Group Creator",
       };
     case "member":

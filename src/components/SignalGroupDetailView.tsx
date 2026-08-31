@@ -585,7 +585,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={onBack}
-              className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+              className="p-2 rounded-xl bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
               title="Back to All Groups"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -593,7 +593,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
             <div 
               onClick={() => group.logoUrl && setZoomedImage(group.logoUrl)}
-              className={`w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center text-slate-300 font-bold font-mono ${group.logoUrl ? "cursor-pointer hover:border-indigo-500 transition-colors" : ""}`}
+              className={`w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center text-slate-300 font-bold font-mono ${group.logoUrl ? "cursor-pointer hover:border-blue-500 transition-colors" : ""}`}
               title={group.logoUrl ? "Click to preview logo" : undefined}
             >
               {group.logoUrl ? (
@@ -603,25 +603,25 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-indigo-400">{group.name.substring(0, 2).toUpperCase()}</span>
+                <span className="text-blue-400">{group.name.substring(0, 2).toUpperCase()}</span>
               )}
             </div>
 
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-lg font-bold text-slate-100 font-mono">{group.name}</h1>
+                <h1 className="text-lg font-bold text-white font-mono">{group.name}</h1>
                 <RoleBadge role={group.adminRole} size="xs" />
                 {group.isVerified ? (
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-mono font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> VERIFIED VIP (≥75% WIN)
+                  <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/40 text-[10px] font-mono font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-purple-400" /> VERIFIED VIP (≥75% WIN)
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 text-[10px] font-mono font-bold">
+                  <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/30 text-[10px] font-mono font-bold">
                     FREE COMMUNITY GROUP
                   </span>
                 )}
                 {group.isPaid && (
-                  <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-mono font-bold flex items-center gap-1">
+                  <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-mono font-bold flex items-center gap-1">
                     <DollarSign className="w-3 h-3" /> VIP ${group.priceUsd}/mo
                   </span>
                 )}
@@ -637,22 +637,22 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                       role: group.adminRole,
                     })
                   }
-                  className="text-indigo-400 hover:underline font-semibold"
+                  className="text-blue-400 hover:underline font-semibold"
                 >
                   {group.adminDisplayName || group.adminUsername}
                 </button>
                 <span>•</span>
                 <button
                   onClick={() => setActiveTab("members")}
-                  className="flex items-center gap-1 text-slate-300 hover:text-indigo-300 transition-colors"
+                  className="flex items-center gap-1 text-slate-300 hover:text-blue-300 transition-colors"
                   title="View group members"
                 >
-                  <Users className="w-3 h-3 text-indigo-400" /> {group.membersCount} members
+                  <Users className="w-3 h-3 text-blue-400" /> {group.membersCount} members
                 </button>
                 <span>•</span>
                 <button
                   onClick={() => setActiveTab("signals")}
-                  className="text-emerald-400 hover:text-emerald-300 font-bold transition-colors"
+                  className="text-blue-400 hover:text-blue-300 font-bold transition-colors"
                   title="View trade signals & win rate"
                 >
                   {group.winRate > 0 ? `${group.winRate}% Win Rate` : "Win Rate calculating..."} ({group.totalSignals} closed)
@@ -667,16 +667,16 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
               onClick={() => setIsGuidelinesOpen(true)}
               className="px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
             >
-              <Info className="w-3.5 h-3.5 text-amber-400" /> Guidelines
+              <Info className="w-3.5 h-3.5 text-purple-400" /> Guidelines
             </button>
 
             {isAdmin && (
               <button
                 onClick={() => setIsAddMemberModalOpen(true)}
-                className="px-3 py-2 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-500/40 text-indigo-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-sm"
+                className="px-3 py-2 rounded-xl bg-blue-950/60 hover:bg-blue-900/80 border border-blue-500/40 text-blue-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-sm"
                 title="Add Members to Signal Group (Group Admin Only)"
               >
-                <UserPlus className="w-3.5 h-3.5 text-indigo-400" /> + Group Members
+                <UserPlus className="w-3.5 h-3.5 text-blue-400" /> + Group Members
               </button>
             )}
 
@@ -690,7 +690,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   setEditHideMembers(group.hideMembers || false);
                   setIsGroupSettingsOpen(true);
                 }}
-                className="px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 text-xs font-mono flex items-center gap-1.5 transition-colors"
+                className="px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-white text-xs font-mono flex items-center gap-1.5 transition-colors"
                 title="Group Settings & Admin Configuration"
               >
                 <Settings className="w-3.5 h-3.5 text-slate-400" /> Group Settings
@@ -700,10 +700,10 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
             {isAdmin && (
               <button
                 onClick={() => setIsVipModalOpen(true)}
-                className="px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-amber-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
+                className="px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-purple-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
                 title="VIP Monetization Settings"
               >
-                <DollarSign className="w-3.5 h-3.5 text-amber-400" /> VIP Subscription
+                <DollarSign className="w-3.5 h-3.5 text-purple-400" /> VIP Subscription
               </button>
             )}
 
@@ -713,7 +713,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 className={`px-3 py-2 rounded-xl border text-xs font-mono flex items-center gap-1.5 transition-colors ${
                   group.isVerified
                     ? "bg-rose-950/40 border-rose-800/60 text-rose-300 hover:bg-rose-900/60"
-                    : "bg-emerald-950/40 border-emerald-800/60 text-emerald-300 hover:bg-emerald-900/60"
+                    : "bg-blue-950/40 border-blue-800/60 text-blue-300 hover:bg-blue-900/60"
                 }`}
                 title="Host Admin VIP Override"
               >
@@ -734,7 +734,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
             {isAdmin && (
               <button
                 onClick={() => setIsCreateSignalOpen(true)}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition-all"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-blue-600/30 transition-all"
               >
                 <Plus className="w-4 h-4" /> Give a Signal
               </button>
@@ -750,22 +750,22 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
         {/* VIP Qualification Progress Banner */}
         <div className="mt-3 p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
           <div className="flex items-center gap-2.5">
-            <Award className={`w-4 h-4 shrink-0 ${group.isVerified ? "text-emerald-400" : "text-amber-400"}`} />
+            <Award className={`w-4 h-4 shrink-0 ${group.isVerified ? "text-blue-400" : "text-purple-400"}`} />
             <div>
-              <span className="font-bold text-slate-200 block">
+              <span className="font-bold text-white block">
                 {group.isVerified
                   ? "VIP Status: Qualified & Verified (75%–85%+ Win Rate)"
                   : "VIP Status Progress Tracker (30 Closed Trades & 75%–85% Win Rate)"}
               </span>
               <span className="text-[11px] text-slate-400">
-                Closed Trades: <strong className="text-indigo-300">{group.totalSignals}/30</strong> • Win Rate: <strong className="text-emerald-400">{group.winRate}%</strong> • Won: {group.wonSignals} | Lost: {group.lostSignals}
+                Closed Trades: <strong className="text-blue-300">{group.totalSignals}/30</strong> • Win Rate: <strong className="text-blue-400">{group.winRate}%</strong> • Won: {group.wonSignals} | Lost: {group.lostSignals}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             {group.isVerified ? (
-              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold">
+              <span className="px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/40 text-[10px] font-bold">
                 VIP Monetization Active
               </span>
             ) : (
@@ -778,8 +778,8 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
         {/* Free Tier Disclaimer Alert */}
         {!group.isVerified && (
-          <div className="mt-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2.5 text-xs text-amber-300 font-mono">
-            <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+          <div className="mt-3 p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center gap-2.5 text-xs text-purple-300 font-mono">
+            <ShieldAlert className="w-4 h-4 text-purple-400 shrink-0" />
             <span>ALERT: THESE AREN'T VERIFIED SIGNALS SO TAKE YOUR OWN RISK</span>
           </div>
         )}
@@ -791,7 +791,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
           onClick={() => setActiveTab("signals")}
           className={`px-3.5 sm:px-4 py-2.5 rounded-xl text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 transition-all shrink-0 whitespace-nowrap ${
             activeTab === "signals"
-              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
               : "bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800"
           }`}
         >
@@ -803,18 +803,18 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
           onClick={() => setActiveTab("chat")}
           className={`px-3.5 sm:px-4 py-2.5 rounded-xl text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 transition-all relative shrink-0 whitespace-nowrap ${
             activeTab === "chat"
-              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
               : "bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800"
           }`}
         >
           <MessageSquare className="w-4 h-4" />
           <span>Group Chat & Talk</span>
           {group.adminOnlyChat ? (
-            <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] border border-amber-500/30 flex items-center gap-1">
+            <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] border border-purple-500/30 flex items-center gap-1">
               <Lock className="w-2.5 h-2.5" /> Admin Only
             </span>
           ) : (
-            <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] border border-emerald-500/30">
+            <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 text-[10px] border border-blue-500/30">
               Open
             </span>
           )}
@@ -824,7 +824,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
           onClick={() => setActiveTab("members")}
           className={`px-3.5 sm:px-4 py-2.5 rounded-xl text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 transition-all shrink-0 whitespace-nowrap ${
             activeTab === "members"
-              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
+              ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
               : "bg-slate-900 hover:bg-slate-800 text-slate-400 border border-slate-800"
           }`}
         >
@@ -834,14 +834,14 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
       </div>
 
       {chatSuccessToast && (
-        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" /> {chatSuccessToast}
+        <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-mono flex items-center gap-2 animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" /> {chatSuccessToast}
         </div>
       )}
 
       {voteMessage && (
-        <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-mono flex items-center gap-2 animate-in fade-in">
-          <Check className="w-4 h-4 text-emerald-400" /> {voteMessage}
+        <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-mono flex items-center gap-2 animate-in fade-in">
+          <Check className="w-4 h-4 text-blue-400" /> {voteMessage}
         </div>
       )}
 
@@ -872,7 +872,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
               {isAdmin && (
                 <button
                   onClick={() => setIsCreateSignalOpen(true)}
-                  className="mt-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold font-mono inline-flex items-center gap-1.5"
+                  className="mt-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono inline-flex items-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5" /> Give First Signal
                 </button>
@@ -896,7 +896,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                       {/* Signal Header */}
                       <div className="p-4 bg-slate-950/80 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-100 font-mono bg-indigo-950/60 border border-indigo-500/30 px-2.5 py-1 rounded-lg">
+                          <span className="text-xs font-bold text-white font-mono bg-blue-950/60 border border-blue-500/30 px-2.5 py-1 rounded-lg">
                             {sig.tradeNumberStr}
                           </span>
                           <span className="text-xs text-slate-400 font-mono">
@@ -909,12 +909,12 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
                       {/* Status Indicator */}
                       {sig.status === "open" && (
-                        <span className="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
-                          <Clock className="w-3 h-3 animate-spin" /> ACTIVE RUNNING
+                        <span className="px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
+                          <Clock className="w-3 h-3 animate-spin text-purple-400" /> ACTIVE RUNNING
                         </span>
                       )}
                       {sig.status === "voting" && (
-                        <span className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
+                        <span className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
                           <Clock className="w-3 h-3" /> 3-DAY FEEDBACK VOTING
                         </span>
                       )}
@@ -922,7 +922,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                         <span
                           className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold flex items-center gap-1 border ${
                             sig.result === "tp"
-                              ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                              ? "bg-blue-500/20 text-blue-300 border-blue-500/40"
                               : sig.result === "sl"
                               ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
                               : "bg-slate-800 text-slate-300 border-slate-700"
@@ -954,10 +954,10 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                               e.stopPropagation();
                               downloadImageToLocal(sig.chartPhotoUrl, `${sig.coin}_${sig.tradeNumberStr.replace(/\s+/g, "_")}_chart.png`);
                             }}
-                            className="px-2.5 py-1.5 rounded-lg bg-slate-950/90 hover:bg-indigo-600 text-slate-200 text-xs font-mono flex items-center gap-1 shadow-lg transition-all border border-slate-800 hover:border-indigo-500"
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-950/90 hover:bg-blue-600 text-slate-200 text-xs font-mono flex items-center gap-1 shadow-lg transition-all border border-slate-800 hover:border-blue-500"
                             title="Download Chart to Local Device"
                           >
-                            <Download className="w-3.5 h-3.5 text-indigo-300" />
+                            <Download className="w-3.5 h-3.5 text-blue-300" />
                             <span className="text-[10px] font-bold">Download</span>
                           </button>
                           <button
@@ -975,7 +975,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                         <div className="grid grid-cols-2 gap-2 text-xs font-mono">
                           <div className="p-2 rounded-xl bg-slate-950 border border-slate-800">
                             <span className="text-[10px] text-slate-500 block">COIN PAIR</span>
-                            <strong className="text-indigo-300 text-sm">{sig.coin}</strong>
+                            <strong className="text-blue-300 text-sm">{sig.coin}</strong>
                           </div>
 
                           <div className="p-2 rounded-xl bg-slate-950 border border-slate-800">
@@ -1096,7 +1096,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
           {/* Chat Mode Control Header */}
           <div className="p-4 bg-slate-950/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
                 <MessageSquare className="w-5 h-5" />
               </div>
               <div>
@@ -1105,11 +1105,11 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                     {group.name} Channel Chat
                   </h3>
                   {group.adminOnlyChat ? (
-                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
                       <Lock className="w-3 h-3" /> ADMIN ONLY TALK
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
                       <Users className="w-3 h-3" /> OPEN DISCUSSION
                     </span>
                   )}
@@ -1130,18 +1130,18 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   onClick={handleQuickToggleAdminOnly}
                   className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 border transition-all ${
                     group.adminOnlyChat
-                      ? "bg-amber-950/40 border-amber-600/50 text-amber-300 hover:bg-amber-900/60"
-                      : "bg-emerald-950/40 border-emerald-600/50 text-emerald-300 hover:bg-emerald-900/60"
+                      ? "bg-purple-950/40 border-purple-600/50 text-purple-300 hover:bg-purple-900/60"
+                      : "bg-blue-950/40 border-blue-600/50 text-blue-300 hover:bg-blue-900/60"
                   }`}
                   title="Toggle Admin-Only Talk Mode"
                 >
                   {group.adminOnlyChat ? (
                     <>
-                      <Lock className="w-3.5 h-3.5 text-amber-400" /> Mode: Admin Talk Only (Click to Open)
+                      <Lock className="w-3.5 h-3.5 text-purple-400" /> Mode: Admin Talk Only (Click to Open)
                     </>
                   ) : (
                     <>
-                      <Unlock className="w-3.5 h-3.5 text-emerald-400" /> Mode: Open Chat (Click for Admin Only)
+                      <Unlock className="w-3.5 h-3.5 text-blue-400" /> Mode: Open Chat (Click for Admin Only)
                     </>
                   )}
                 </button>
@@ -1182,12 +1182,12 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                       <div
                         className={`flex items-start gap-3 group animate-in fade-in duration-200 ${
                           msg.isAnnouncement
-                            ? "p-3.5 rounded-2xl bg-amber-950/20 border border-amber-500/30 my-2"
+                            ? "p-3.5 rounded-2xl bg-purple-950/20 border border-purple-500/30 my-2"
                             : ""
                         }`}
                       >
                         {/* User Avatar */}
-                        <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0 font-mono font-bold text-xs text-indigo-300">
+                        <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0 font-mono font-bold text-xs text-blue-300">
                           {msg.senderPhotoURL ? (
                             <img
                               src={msg.senderPhotoURL}
@@ -1211,18 +1211,18 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                                   role: msg.senderRole,
                                 })
                               }
-                              className="text-xs font-bold text-slate-200 hover:text-indigo-400 font-mono truncate"
+                              className="text-xs font-bold text-slate-200 hover:text-blue-400 font-mono truncate"
                             >
                               {msg.senderDisplayName}
                             </button>
                             <RoleBadge role={msg.senderRole} size="xs" />
                             {isMsgAdmin && (
-                              <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[9px] font-mono font-bold">
+                              <span className="px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[9px] font-mono font-bold">
                                 GROUP ADMIN
                               </span>
                             )}
                             {msg.isAnnouncement && (
-                              <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-mono font-bold flex items-center gap-0.5">
+                              <span className="px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[9px] font-mono font-bold flex items-center gap-0.5">
                                 <Megaphone className="w-2.5 h-2.5" /> ANNOUNCEMENT
                               </span>
                             )}
@@ -1265,10 +1265,10 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                                     e.stopPropagation();
                                     downloadImageToLocal(msg.photoUrl!, `chat_photo_${msg.id}.png`);
                                   }}
-                                  className="px-2.5 py-1 rounded-lg bg-slate-950/90 hover:bg-indigo-600 text-slate-200 text-[10px] font-mono flex items-center gap-1 shadow-lg transition-all border border-slate-800 hover:border-indigo-500"
+                                  className="px-2.5 py-1 rounded-lg bg-slate-950/90 hover:bg-blue-600 text-slate-200 text-[10px] font-mono flex items-center gap-1 shadow-lg transition-all border border-slate-800 hover:border-blue-500"
                                   title="Download Photo to Device"
                                 >
-                                  <Download className="w-3 h-3 text-indigo-300" />
+                                  <Download className="w-3 h-3 text-blue-300" />
                                   <span>Download</span>
                                 </button>
                               </div>
@@ -1277,12 +1277,12 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
                           {/* Audio Note player */}
                         {msg.audioUrl && (
-                          <div className="mt-2 p-2.5 rounded-xl bg-slate-950 border border-indigo-500/30 flex items-center gap-3 max-w-xs">
+                          <div className="mt-2 p-2.5 rounded-xl bg-slate-950 border border-blue-500/30 flex items-center gap-3 max-w-xs">
                             <button
                               onClick={() =>
                                 setPlayingAudioId(playingAudioId === msg.id ? null : msg.id)
                               }
-                              className="w-8 h-8 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shrink-0"
+                              className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shrink-0"
                             >
                               <Volume2 className="w-4 h-4" />
                             </button>
@@ -1292,13 +1292,13 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                                   <div
                                     key={i}
                                     className={`w-1 rounded-full ${
-                                      playingAudioId === msg.id ? "bg-indigo-400 animate-pulse" : "bg-slate-700"
+                                      playingAudioId === msg.id ? "bg-blue-400 animate-pulse" : "bg-slate-700"
                                     }`}
                                     style={{ height: `${h}%` }}
                                   />
                                 ))}
                               </div>
-                              <span className="text-[10px] text-indigo-300 font-mono block mt-1">
+                              <span className="text-[10px] text-blue-300 font-mono block mt-1">
                                 {playingAudioId === msg.id ? "Playing audio..." : "Voice Analysis Note"}
                               </span>
                             </div>
@@ -1317,7 +1317,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
               <button
                 type="button"
                 onClick={() => scrollChatToBottom("smooth")}
-                className="absolute bottom-4 right-6 z-20 px-3.5 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-xl shadow-indigo-600/40 border border-indigo-400/40 transition-all hover:scale-105 active:scale-95"
+                className="absolute bottom-4 right-6 z-20 px-3.5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-xl shadow-blue-600/40 border border-blue-400/40 transition-all hover:scale-105 active:scale-95"
               >
                 <ArrowDown className="w-3.5 h-3.5 animate-bounce" />
                 <span>Jump to latest</span>
@@ -1398,7 +1398,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 transition-colors"
+                      className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-blue-400 transition-colors"
                       title="Attach Chart Photo"
                     >
                       <ImageIcon className="w-4 h-4" />
@@ -1419,8 +1419,8 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                         onClick={() => setIsAnnouncementMode(!isAnnouncementMode)}
                         className={`p-2.5 rounded-xl border text-xs font-mono flex items-center gap-1 transition-all ${
                           isAnnouncementMode
-                            ? "bg-amber-600/30 border-amber-500 text-amber-300"
-                            : "bg-slate-900 border-slate-800 text-slate-400 hover:text-amber-400"
+                            ? "bg-purple-600/30 border-purple-500 text-purple-300"
+                            : "bg-slate-900 border-slate-800 text-slate-400 hover:text-purple-400"
                         }`}
                         title="Broadcast as Official Announcement"
                       >
@@ -1439,13 +1439,13 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                           ? "Type message (You have granted permission)..."
                           : "Send a message or trade analysis to this group..."
                       }
-                      className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 placeholder:text-slate-500 font-mono focus:border-indigo-500 focus:outline-none"
+                      className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 placeholder:text-slate-500 font-mono focus:border-blue-500 focus:outline-none"
                     />
 
                     <button
                       type="submit"
                       disabled={!messageInput.trim() && !photoAttachmentUrl}
-                      className="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white shadow-lg shadow-indigo-600/30 transition-all shrink-0"
+                      className="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white shadow-lg shadow-blue-600/30 transition-all shrink-0"
                     >
                       <Send className="w-4 h-4" />
                     </button>
@@ -1456,9 +1456,9 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
               /* Pending user cannot chat anywhere */
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
                 <div className="flex items-center gap-2.5 text-slate-400">
-                  <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                  <Lock className="w-4 h-4 text-purple-400 shrink-0" />
                   <div>
-                    <span className="font-bold text-amber-300 block">
+                    <span className="font-bold text-purple-300 block">
                       Pending & Trial Account Restriction
                     </span>
                     <span className="text-[11px] text-slate-400">
@@ -1470,7 +1470,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsGuidelinesOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-mono transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-mono transition-all"
                 >
                   View Terms
                 </button>
@@ -1479,7 +1479,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
               /* User DOES NOT have chat permission (Admin-Only Talk Mode) */
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
                 <div className="flex items-center gap-2.5 text-slate-400">
-                  <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                  <Lock className="w-4 h-4 text-purple-400 shrink-0" />
                   <div>
                     <span className="font-bold text-slate-200 block">
                       Admin-Only Talk Mode Enabled
@@ -1493,7 +1493,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 <button
                   type="button"
                   onClick={handleRequestChatAccess}
-                  className="px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-bold font-mono flex items-center gap-1.5 transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 text-xs font-bold font-mono flex items-center gap-1.5 transition-all"
                 >
                   <Key className="w-3.5 h-3.5" /> Request Messaging Access
                 </button>
@@ -1511,7 +1511,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div>
               <h2 className="text-base font-bold text-slate-100 font-mono flex items-center gap-2">
-                <Users className="w-5 h-5 text-indigo-400" /> Group Members & Talk Permissions
+                <Users className="w-5 h-5 text-blue-400" /> Group Members & Talk Permissions
               </h2>
               <p className="text-xs text-slate-400 mt-0.5 font-mono">
                 Manage who is authorized to send messages, signals, and announcements in this group.
@@ -1523,7 +1523,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAddMemberModalOpen(true)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition-all uppercase tracking-wider"
+                  className="px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 transition-all uppercase tracking-wider"
                   title="Add members to group (Group Admin Only)"
                 >
                   <UserPlus className="w-4 h-4" /> + Add Group Members
@@ -1535,17 +1535,17 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   onClick={handleQuickToggleAdminOnly}
                   className={`px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-2 border shadow-lg transition-all ${
                     group.adminOnlyChat
-                      ? "bg-amber-950/40 border-amber-600/50 text-amber-300"
-                      : "bg-emerald-950/40 border-emerald-600/50 text-emerald-300"
+                      ? "bg-purple-950/40 border-purple-600/50 text-purple-300"
+                      : "bg-blue-950/40 border-blue-600/50 text-blue-300"
                   }`}
                 >
                   {group.adminOnlyChat ? (
                     <>
-                      <Lock className="w-4 h-4 text-amber-400" /> Mode: Admin-Only Talk
+                      <Lock className="w-4 h-4 text-purple-400" /> Mode: Admin-Only Talk
                     </>
                   ) : (
                     <>
-                      <Unlock className="w-4 h-4 text-emerald-400" /> Mode: All Members Can Talk
+                      <Unlock className="w-4 h-4 text-blue-400" /> Mode: All Members Can Talk
                     </>
                   )}
                 </button>
@@ -1563,16 +1563,16 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
             </div>
             
             {/* POINT NO 2: Open Discussion Mode with (+ Group Members [Only for Group Admin]) Button */}
-            <div className="space-y-2.5 p-3 rounded-xl bg-slate-900/60 border border-indigo-500/30 shadow-inner">
+            <div className="space-y-2.5 p-3 rounded-xl bg-slate-900/60 border border-blue-500/30 shadow-inner">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-slate-200 block font-bold flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> 2. Open Discussion Mode & Member Access
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400" /> 2. Open Discussion Mode & Member Access
                 </span>
                 {isAdmin && (
                   <button
                     type="button"
                     onClick={() => setIsAddMemberModalOpen(true)}
-                    className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] font-mono uppercase tracking-wider flex items-center gap-1 shadow-md shadow-indigo-600/30 transition-all"
+                    className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] font-mono uppercase tracking-wider flex items-center gap-1 shadow-md shadow-blue-600/30 transition-all"
                     title="Add members to group (Group Admin Only)"
                   >
                     <UserPlus className="w-3 h-3" /> (+group members [only for group admin])
@@ -1586,12 +1586,12 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 <button
                   type="button"
                   onClick={copyInviteLink}
-                  className="text-indigo-400 hover:text-indigo-300 font-mono flex items-center gap-1 transition-colors"
+                  className="text-blue-400 hover:text-blue-300 font-mono flex items-center gap-1 transition-colors"
                 >
                   <Copy className="w-3 h-3" /> {copiedInvite ? "Invite Link Copied!" : "Copy Group Invite Link"}
                 </button>
                 {isAdmin && (
-                  <span className="text-emerald-400 font-bold font-mono">
+                  <span className="text-blue-400 font-bold font-mono">
                     Admin Active: Full Member Control
                   </span>
                 )}
@@ -1605,7 +1605,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
               <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider font-mono flex items-center gap-2">
                 <span>Group Participants ({group.members.length})</span>
                 {isAdmin && (
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 font-normal">
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/30 font-normal">
                     Admin Control
                   </span>
                 )}
@@ -1619,7 +1619,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   value={memberSearchQuery}
                   onChange={(e) => setMemberSearchQuery(e.target.value)}
                   placeholder="Search group members..."
-                  className="bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 font-mono focus:border-indigo-500 focus:outline-none w-56"
+                  className="bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 font-mono focus:border-blue-500 focus:outline-none w-56"
                 />
               </div>
             </div>
@@ -1645,7 +1645,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                       className="p-3.5 flex flex-wrap items-center justify-between gap-3 hover:bg-slate-900/50 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-mono font-bold text-xs text-indigo-300">
+                        <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-mono font-bold text-xs text-blue-300">
                           {memberEmail.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
@@ -1659,17 +1659,17 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                                   displayName: memberEmail.split("@")[0],
                                 })
                               }
-                              className="text-xs font-bold text-slate-200 hover:text-indigo-400 font-mono text-left"
+                              className="text-xs font-bold text-slate-200 hover:text-blue-400 font-mono text-left"
                             >
                               {memberEmail.split("@")[0]}
                             </button>
                             {isMemberAdmin && (
-                              <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[9px] font-mono font-bold">
+                              <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 text-[9px] font-mono font-bold">
                                 ADMIN
                               </span>
                             )}
                             {isMemberWhitelisted && !isMemberAdmin && (
-                              <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-mono font-bold flex items-center gap-1">
+                              <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[9px] font-mono font-bold flex items-center gap-1">
                                 <Sparkles className="w-2.5 h-2.5" /> AUTHORIZED TO CHAT
                               </span>
                             )}
@@ -1684,7 +1684,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                         <span
                           className={`text-[10px] font-mono px-2 py-0.5 rounded ${
                             canCurrentlyTalk
-                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                              ? "bg-blue-500/10 text-blue-400 border border-blue-500/30"
                               : "bg-slate-800 text-slate-500 border border-slate-700"
                           }`}
                         >
@@ -1700,7 +1700,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                               className={`px-3 py-1 rounded-lg text-xs font-mono font-bold flex items-center gap-1 transition-all ${
                                 isMemberWhitelisted
                                   ? "bg-rose-950/40 text-rose-300 border border-rose-800/60 hover:bg-rose-900/60"
-                                  : "bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-600/50"
+                                  : "bg-blue-600/30 text-blue-300 border border-blue-500/40 hover:bg-blue-600/50"
                               }`}
                             >
                               {isMemberWhitelisted ? (
@@ -1743,12 +1743,12 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
           <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
             <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
               <div className="flex items-center gap-2.5">
-                <UserPlus className="w-5 h-5 text-indigo-400" />
+                <UserPlus className="w-5 h-5 text-blue-400" />
                 <div>
                   <h3 className="text-sm font-bold text-slate-100 font-mono">
                     Add Members to Signal Group
                   </h3>
-                  <span className="text-[10px] text-indigo-400 font-mono font-semibold">
+                  <span className="text-[10px] text-blue-400 font-mono font-semibold">
                     (Group Admin Exclusive Control)
                   </span>
                 </div>
@@ -1772,8 +1772,8 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 </div>
               )}
               {addMemberSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-400" />
                   <span>{addMemberSuccess}</span>
                 </div>
               )}
@@ -1788,7 +1788,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   onChange={(e) => setNewMemberInput(e.target.value)}
                   placeholder="e.g. trader@example.com or @trader"
                   required
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none"
                 />
                 <p className="text-[10px] text-slate-500 mt-1">
                   Enter registered trader's email or username to instantly grant group access.
@@ -1810,7 +1810,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   onClick={() => setGrantNewMemberChat(!grantNewMemberChat)}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                     grantNewMemberChat
-                      ? "bg-indigo-600 text-white"
+                      ? "bg-blue-600 text-white"
                       : "bg-slate-800 text-slate-400"
                   }`}
                 >
@@ -1827,7 +1827,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 <button
                   type="button"
                   onClick={copyInviteLink}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-300 text-xs font-bold flex items-center gap-1.5 transition-colors"
                 >
                   <Copy className="w-3 h-3" /> {copiedInvite ? "Copied!" : "Copy Link"}
                 </button>
@@ -1843,7 +1843,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-1.5"
                 >
                   <UserPlus className="w-4 h-4" /> Add Member
                 </button>
@@ -1859,7 +1859,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
           <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
               <div className="flex items-center gap-2.5">
-                <Settings className="w-5 h-5 text-indigo-400" />
+                <Settings className="w-5 h-5 text-blue-400" />
                 <div>
                   <h3 className="text-sm font-bold text-slate-100 font-mono">
                     Group Settings & Administration
@@ -1888,15 +1888,15 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 </div>
               )}
               {settingsSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-blue-400" />
                   <span>{settingsSuccess}</span>
                 </div>
               )}
 
               {/* POINT 1: General Details */}
               <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
-                <div className="text-xs font-bold text-indigo-300 uppercase tracking-wider">
+                <div className="text-xs font-bold text-blue-300 uppercase tracking-wider">
                   Point 1: Strategy & Visual Identity
                 </div>
                 <div>
@@ -1906,7 +1906,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                     value={editGroupName}
                     onChange={(e) => setEditGroupName(e.target.value)}
                     required
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:border-indigo-500 focus:outline-none"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:border-blue-500 focus:outline-none"
                   />
                 </div>
                 <div>
@@ -1915,7 +1915,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                     rows={2}
                     value={editGroupDesc}
                     onChange={(e) => setEditGroupDesc(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:border-indigo-500 focus:outline-none resize-none"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:border-blue-500 focus:outline-none resize-none"
                   />
                 </div>
                 <div>
@@ -1956,9 +1956,9 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
               </div>
 
               {/* POINT 2: Members & Invitations */}
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-indigo-500/30 space-y-3">
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-blue-500/30 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-blue-300 uppercase tracking-wider">
                     Point 2: Members & Invitations
                   </span>
                   <button
@@ -1967,7 +1967,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                       setIsGroupSettingsOpen(false);
                       setIsAddMemberModalOpen(true);
                     }}
-                    className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shadow-md shadow-indigo-600/30 transition-all"
+                    className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] uppercase tracking-wider flex items-center gap-1 shadow-md shadow-blue-600/30 transition-all"
                   >
                     <UserPlus className="w-3 h-3" /> (+group members [only for group admin])
                   </button>
@@ -1985,7 +1985,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                     type="button"
                     onClick={() => setEditHideMembers(!editHideMembers)}
                     className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                      editHideMembers ? "bg-amber-600 text-white" : "bg-slate-800 text-slate-400"
+                      editHideMembers ? "bg-purple-600 text-white" : "bg-slate-800 text-slate-400"
                     }`}
                   >
                     {editHideMembers ? "HIDDEN" : "PUBLIC"}
@@ -2012,7 +2012,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                               {m}
                             </span>
                             {isOwnerOfGroup && (
-                              <span className="text-[9px] px-1 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-bold">
+                              <span className="text-[9px] px-1 py-0.2 rounded bg-blue-500/20 text-blue-300 font-bold">
                                 ADMIN
                               </span>
                             )}
@@ -2039,7 +2039,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
               {/* POINT 3: Communication Rules */}
               <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
-                <div className="text-xs font-bold text-indigo-300 uppercase tracking-wider">
+                <div className="text-xs font-bold text-blue-300 uppercase tracking-wider">
                   Point 3: Discussion & Talk Policy
                 </div>
                 <div className="flex items-center justify-between">
@@ -2053,7 +2053,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                     type="button"
                     onClick={() => setEditAdminOnlyChat(!editAdminOnlyChat)}
                     className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                      editAdminOnlyChat ? "bg-amber-600 text-white" : "bg-emerald-600 text-white"
+                      editAdminOnlyChat ? "bg-purple-600 text-white" : "bg-blue-600 text-white"
                     }`}
                   >
                     {editAdminOnlyChat ? "ADMIN-ONLY" : "OPEN TALK"}
@@ -2064,7 +2064,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
               {/* POINT 4: VIP Monetization */}
               <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-bold text-amber-300 uppercase tracking-wider">
+                  <div className="text-xs font-bold text-purple-300 uppercase tracking-wider">
                     Point 4: VIP Monetization Settings
                   </div>
                   <button
@@ -2073,7 +2073,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                       setIsGroupSettingsOpen(false);
                       setIsVipModalOpen(true);
                     }}
-                    className="px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-[10px] font-bold"
+                    className="px-3 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 text-[10px] font-bold"
                   >
                     Configure VIP Pricing
                   </button>
@@ -2093,7 +2093,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-indigo-600/30 transition-all"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30 transition-all"
                 >
                   Save Group Settings
                 </button>
@@ -2113,7 +2113,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
           <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
             <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
               <div className="flex items-center gap-2.5">
-                <Award className="w-5 h-5 text-amber-400" />
+                <Award className="w-5 h-5 text-purple-400" />
                 <h3 className="text-sm font-bold text-slate-100 font-mono">
                   VIP Monthly Subscription Settings
                 </h3>
@@ -2133,18 +2133,18 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 </div>
               )}
               {vipSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono">
+                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-mono">
                   {vipSuccess}
                 </div>
               )}
 
               {/* Eligibility Check Callout */}
               {!isEligibleVip ? (
-                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1 text-xs font-mono text-amber-300">
+                <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/30 space-y-1 text-xs font-mono text-purple-300">
                   <div className="font-bold flex items-center gap-1.5">
-                    <Lock className="w-4 h-4 text-amber-400" /> Paid Subscriptions Locked
+                    <Lock className="w-4 h-4 text-purple-400" /> Paid Subscriptions Locked
                   </div>
-                  <p className="text-[11px] text-amber-200/80 leading-relaxed">
+                  <p className="text-[11px] text-purple-200/80 leading-relaxed">
                     VIP Monthly subscriptions can only be enabled after completing 30 closed trades with an audited 75%–85%+ win rate calculation.
                   </p>
                   <p className="text-[10px] text-slate-400 pt-1">
@@ -2152,8 +2152,8 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   </p>
                 </div>
               ) : (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono text-emerald-300 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-xs font-mono text-blue-300 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
                   <span>VIP Trader Status Verified! You are authorized to monetize your signal group.</span>
                 </div>
               )}
@@ -2173,7 +2173,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   disabled={!isEligibleVip}
                   onClick={() => setVipPaid(!vipPaid)}
                   className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                    vipPaid ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-400"
+                    vipPaid ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-400"
                   }`}
                 >
                   {vipPaid ? "PAID VIP" : "FREE"}
@@ -2183,11 +2183,11 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
               {/* Price Input */}
               {vipPaid && (
                 <div>
-                  <label className="block text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1 font-mono">
+                  <label className="block text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1 font-mono">
                     Monthly Price in USD ($) (Max Limit: $17.00 USD / 5000 LKR)
                   </label>
                   <div className="relative">
-                    <DollarSign className="w-4 h-4 text-emerald-400 absolute left-3 top-2.5" />
+                    <DollarSign className="w-4 h-4 text-blue-400 absolute left-3 top-2.5" />
                     <input
                       type="number"
                       min="1"
@@ -2196,7 +2196,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                       value={vipPrice}
                       onChange={(e) => setVipPrice(parseFloat(e.target.value) || 0)}
                       required
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-emerald-300 font-mono focus:border-emerald-500 focus:outline-none"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-blue-300 font-mono focus:border-blue-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -2205,7 +2205,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
               <button
                 type="submit"
                 disabled={!isEligibleVip && vipPaid}
-                className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider font-mono shadow-lg shadow-indigo-600/30 transition-all"
+                className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider font-mono shadow-lg shadow-blue-600/30 transition-all"
               >
                 Save Subscription Settings
               </button>
@@ -2226,13 +2226,13 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
           >
             <div className="p-3 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between gap-3">
               <span className="text-xs text-slate-300 font-mono flex items-center gap-1.5">
-                <ImageIcon className="w-4 h-4 text-indigo-400" /> High-Resolution Photo Viewer
+                <ImageIcon className="w-4 h-4 text-blue-400" /> High-Resolution Photo Viewer
               </span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => downloadImageToLocal(zoomedImage, `sngx_chart_${Date.now()}.png`)}
-                  className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 shadow-md transition-all"
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 shadow-md transition-all"
                 >
                   <Download className="w-3.5 h-3.5" /> Download to Device
                 </button>

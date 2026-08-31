@@ -133,14 +133,14 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
               <User className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 Trader Profile & Account Settings
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-blue-200/70">
                 Manage your profile picture, bio, contact details & trading preferences
               </p>
             </div>
@@ -163,8 +163,8 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
           )}
 
           {successMsg && (
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400" />
+            <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-medium flex items-center gap-2">
+              <Check className="w-4 h-4 text-blue-400" />
               <span>Profile updated successfully!</span>
             </div>
           )}
@@ -176,13 +176,13 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                 <img
                   src={photoURL}
                   alt={username}
-                  className="w-20 h-20 rounded-full object-cover border-2 border-indigo-500 shadow-xl"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-blue-500 shadow-xl"
                 />
               ) : (
                 /* WhatsApp-Style Default Profile Logo */
                 <div className="w-20 h-20 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-slate-400 shadow-inner relative overflow-hidden">
-                  <div className="w-10 h-10 rounded-full bg-slate-600/60 mb-[-12px] flex items-center justify-center">
-                    <User className="w-7 h-7 text-slate-300" />
+                  <div className="w-10 h-10 rounded-full bg-blue-900/40 mb-[-12px] flex items-center justify-center">
+                    <User className="w-7 h-7 text-white" />
                   </div>
                 </div>
               )}
@@ -200,14 +200,14 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
 
             <div className="flex-1 text-center sm:text-left space-y-2">
               <div className="flex items-center justify-center sm:justify-start gap-2">
-                <span className="text-sm font-bold text-slate-200">Profile Photo</span>
+                <span className="text-sm font-bold text-white">Profile Photo</span>
                 {user.role === "admin" && (
-                  <span className="text-[10px] bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded font-mono flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3" /> Host Admin
+                  <span className="text-[10px] bg-purple-950/50 text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded font-mono flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-purple-400" /> Host Admin
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-blue-200/70">
                 Upload your picture for chat & Host Admin inspection.
               </p>
 
@@ -222,7 +222,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
                 >
                   <Camera className="w-3.5 h-3.5" /> Upload Photo
                 </button>
@@ -243,7 +243,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
           {/* Input Fields Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono">
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">
                 Full Name / Display Name
               </label>
               <input
@@ -251,12 +251,12 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="e.g. Alex Morgan"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono">
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">
                 Username (@handle)
               </label>
               <input
@@ -265,12 +265,12 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="trader_pro"
                 required
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono">
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">
                 Phone Number / Mobile
               </label>
               <CountryPhoneInput
@@ -281,38 +281,38 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono flex items-center justify-between">
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                  <Calendar className="w-3.5 h-3.5 text-blue-400" />
                   Date of Birth (DOB)
                 </span>
                 {dob && (
-                  <span className="text-[10px] font-mono text-emerald-400">
+                  <span className="text-[10px] font-mono text-purple-300">
                     {new Date(dob + "T00:00:00").toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                   </span>
                 )}
               </label>
               <div className="relative">
-                <Calendar className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                <Calendar className="w-3.5 h-3.5 text-blue-400 absolute left-3 top-3 pointer-events-none" />
                 <input
                   type="date"
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 font-mono cursor-pointer"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono cursor-pointer"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono">
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">
                 Trading Market
               </label>
               <div className="relative">
-                <Tag className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3 pointer-events-none" />
+                <Tag className="w-3.5 h-3.5 text-blue-400 absolute left-3 top-3 pointer-events-none" />
                 <select
                   value={tradingMarket}
                   onChange={(e) => setTradingMarket(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-8 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 font-mono appearance-none cursor-pointer"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-8 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono appearance-none cursor-pointer"
                 >
                   <option value="Crypto Market">Crypto Market</option>
                   <option value="Forex Market">Forex Market</option>
@@ -329,23 +329,23 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono">
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">
               Starting Capital Goal
             </label>
             <div className="relative">
-              <DollarSign className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
+              <DollarSign className="w-3.5 h-3.5 text-blue-400 absolute left-3 top-3" />
               <input
                 type="text"
                 value={startingCapital}
                 onChange={(e) => setStartingCapital(e.target.value)}
                 placeholder="$25,000"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500 font-mono"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono">
+            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono">
               Trading Bio & Strategy Notes
             </label>
             <textarea
@@ -353,19 +353,19 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="e.g. Price Action & ICT Judas Swing model. 1% max risk per setup. Focus on NY Morning Session."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
             />
           </div>
 
           {/* Account Meta Badges */}
           <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800 text-xs font-mono text-slate-400 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <span className="text-slate-500 uppercase tracking-wider block text-[10px]">Email Account</span>
-              <span className="text-slate-200">{user.email}</span>
+              <span className="text-blue-200/60 uppercase tracking-wider block text-[10px]">Email Account</span>
+              <span className="text-white">{user.email}</span>
             </div>
             <div>
-              <span className="text-slate-500 uppercase tracking-wider block text-[10px]">Access Status</span>
-              <span className="text-emerald-400 uppercase font-bold">{user.status}</span>
+              <span className="text-blue-200/60 uppercase tracking-wider block text-[10px]">Access Status</span>
+              <span className="text-purple-300 uppercase font-bold">{user.status}</span>
             </div>
           </div>
 
@@ -390,7 +390,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2"
+                className="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2"
               >
                 {saving ? "Saving..." : "Save Profile Details"}
               </button>

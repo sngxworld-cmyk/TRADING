@@ -348,17 +348,17 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
               onClick={onBackToApp}
               className="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
             >
-              <ArrowLeft className="w-4 h-4" /> Trading Journal
+              <ArrowLeft className="w-4 h-4 text-blue-400" /> Trading Journal
             </button>
           )}
 
           <div className="flex items-center gap-2.5">
             <AuthLottieAnimation type="community-signal" className="w-9 h-9 shrink-0" />
             <div>
-              <h1 className="text-base font-bold text-slate-100 font-mono tracking-tight flex items-center gap-2">
+              <h1 className="text-base font-bold text-white font-mono tracking-tight flex items-center gap-2">
                 TRACKERX COMMUNITY HUB
               </h1>
-              <p className="text-[10px] text-slate-400 font-mono">
+              <p className="text-[10px] text-blue-300 font-mono">
                 Real-Time Trading Signals & Trader Network
               </p>
             </div>
@@ -374,8 +374,8 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
             }}
             className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "chat"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                : "text-slate-400 hover:text-white"
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" /> <span className="hidden xs:inline">Main </span>Chat Room
@@ -385,8 +385,8 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
             onClick={() => setActiveTab("groups")}
             className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "groups"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                : "text-slate-400 hover:text-white"
             }`}
           >
             <TrendingUp className="w-3.5 h-3.5" /> Signal Groups
@@ -399,8 +399,8 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
             }}
             className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
               activeTab === "dms"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                : "text-slate-400 hover:text-white"
             }`}
           >
             <User className="w-3.5 h-3.5" /> Direct Messages
@@ -411,16 +411,16 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsGuidelinesOpen(true)}
-            className="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
           >
-            <Info className="w-3.5 h-3.5 text-amber-400" /> Guidelines
+            <Info className="w-3.5 h-3.5 text-purple-400" /> Guidelines
           </button>
 
           <button
             onClick={() => setSelectedProfileUser(currentUser)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 transition-colors"
           >
-            <span className="text-xs text-slate-300 font-mono font-bold">
+            <span className="text-xs text-white font-mono font-bold">
               {currentUser.displayName || currentUser.username}
             </span>
             <RoleBadge role={userRole} size="xs" />
@@ -438,13 +438,13 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
             {/* Chat Room Subheader */}
             <div className="p-4 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between text-xs font-mono">
               <div className="flex items-center gap-2 text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="font-bold">LIVE PUBLIC CHAT</span>
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                <span className="font-bold text-white">LIVE PUBLIC CHAT</span>
                 <span className="text-slate-500">•</span>
-                <span className="text-slate-400">All registered traders & verified providers</span>
+                <span className="text-blue-200">All registered traders & verified providers</span>
               </div>
-              <div className="text-[10px] text-slate-400 font-mono flex items-center gap-1.5 bg-slate-800/60 px-2.5 py-1 rounded-full border border-slate-700/50">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <div className="text-[10px] text-blue-300 font-mono flex items-center gap-1.5 bg-slate-800/60 px-2.5 py-1 rounded-full border border-blue-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
                 <span>Community Chat</span>
               </div>
             </div>
@@ -479,7 +479,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                               platformRole: msg.senderRole,
                             })
                           }
-                          className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0 hover:border-indigo-500 transition-colors"
+                          className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0 hover:border-blue-500 transition-colors"
                         >
                           {msg.senderPhotoURL ? (
                             <img
@@ -488,7 +488,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <span className="text-xs font-mono font-bold text-slate-300 uppercase">
+                            <span className="text-xs font-mono font-bold text-white uppercase">
                               {msg.senderUsername.substring(0, 2)}
                             </span>
                           )}
@@ -509,11 +509,11 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                                   platformRole: msg.senderRole,
                                 })
                               }
-                              className="font-bold text-slate-200 hover:text-indigo-400"
+                              className="font-bold text-white hover:text-blue-300"
                             >
                               {msg.senderDisplayName || msg.senderUsername}
                             </button>
-                            <span className="text-[10px] text-slate-500">
+                            <span className="text-[10px] text-slate-400">
                               {formatMessageTime(msg.createdAt)}
                             </span>
 
@@ -532,8 +532,8 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                           <div
                             className={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed ${
                               isSelf
-                                ? "bg-indigo-600 text-white rounded-tr-none shadow-md shadow-indigo-600/20"
-                                : "bg-slate-950 border border-slate-800 text-slate-200 rounded-tl-none"
+                                ? "bg-blue-600 text-white rounded-tr-none shadow-md shadow-blue-600/20"
+                                : "bg-slate-950 border border-slate-800 text-white rounded-tl-none"
                             }`}
                           >
                             <p className="break-words">{msg.content}</p>
@@ -554,10 +554,10 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                                       e.stopPropagation();
                                       downloadImageToLocal(msg.photoUrl!, `public_chat_${msg.id}.png`);
                                     }}
-                                    className="px-2.5 py-1 rounded-lg bg-slate-950/90 hover:bg-indigo-600 text-slate-200 text-[10px] font-mono flex items-center gap-1 shadow-lg transition-all border border-slate-800 hover:border-indigo-500"
+                                    className="px-2.5 py-1 rounded-lg bg-slate-950/90 hover:bg-blue-600 text-white text-[10px] font-mono flex items-center gap-1 shadow-lg transition-all border border-slate-800 hover:border-blue-500"
                                     title="Download Photo to Device"
                                   >
-                                    <Download className="w-3 h-3 text-indigo-300" />
+                                    <Download className="w-3 h-3 text-blue-300" />
                                     <span>Download</span>
                                   </button>
                                 </div>
@@ -576,7 +576,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                 <button
                   type="button"
                   onClick={() => scrollPublicToBottom("smooth")}
-                  className="absolute bottom-4 right-6 z-20 px-3.5 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-xl shadow-indigo-600/40 border border-indigo-400/40 transition-all hover:scale-105 active:scale-95"
+                  className="absolute bottom-4 right-6 z-20 px-3.5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-xl shadow-blue-600/40 border border-blue-400/40 transition-all hover:scale-105 active:scale-95"
                 >
                   <ArrowDown className="w-3.5 h-3.5 animate-bounce" />
                   <span>Jump to latest</span>
@@ -604,15 +604,15 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
               {/* Pending / 5-Day Trial User Notice (Slide 2) */}
               {isTrialOrPending ? (
                 <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between gap-3 text-xs font-mono">
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <Lock className="w-4 h-4 text-purple-400 shrink-0" />
                     <span>
-                      <strong className="text-amber-400">Pending / 5-Day Trial Accounts:</strong> You can view all live chat messages, but cannot send text/media until approved.
+                      <strong className="text-purple-300">Pending / 5-Day Trial Accounts:</strong> You can view all live chat messages, but cannot send text/media until approved.
                     </span>
                   </div>
                   <button
                     onClick={() => setIsGuidelinesOpen(true)}
-                    className="text-indigo-400 underline text-xs whitespace-nowrap"
+                    className="text-blue-400 underline text-xs whitespace-nowrap"
                   >
                     View Terms
                   </button>
@@ -621,11 +621,11 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                 <form onSubmit={handleSendMessage} className="space-y-2">
                   {showPhotoInput && photoAttachmentUrl && (
                     <div className="flex items-center gap-3 bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                      <div className="w-12 h-12 rounded-lg bg-slate-950 border border-indigo-500/40 overflow-hidden shrink-0">
+                      <div className="w-12 h-12 rounded-lg bg-slate-950 border border-blue-500/40 overflow-hidden shrink-0">
                         <img src={photoAttachmentUrl} alt="Preview" className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-xs text-indigo-300 font-mono font-semibold block">
+                        <span className="text-xs text-blue-300 font-mono font-semibold block">
                           Photo Selected from Device
                         </span>
                         <span className="text-[10px] text-slate-400 font-mono">
@@ -652,8 +652,8 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                       onClick={() => fileInputRef.current?.click()}
                       className={`p-2.5 rounded-xl border transition-colors ${
                         photoAttachmentUrl
-                          ? "bg-indigo-600 text-white border-indigo-500"
-                          : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                          ? "bg-blue-600 text-white border-blue-500"
+                          : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
                       }`}
                       title="Upload Photo from Local Storage"
                     >
@@ -671,7 +671,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                       className={`p-2.5 rounded-xl border transition-colors ${
                         voiceMemoActive
                           ? "bg-rose-600 text-white border-rose-500"
-                          : "bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200"
+                          : "bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
                       }`}
                       title="Simulate Voice Note"
                     >
@@ -683,13 +683,13 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                       value={messageInput}
                       onChange={(e) => setMessageInput(e.target.value)}
                       placeholder="Type your trade idea or analysis..."
-                      className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-600 focus:border-indigo-500 focus:outline-none font-sans"
+                      className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none font-sans"
                     />
 
                     <button
                       type="submit"
                       disabled={!messageInput.trim() && !photoAttachmentUrl}
-                      className="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white shadow-lg shadow-indigo-600/30 transition-all font-mono"
+                      className="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white shadow-lg shadow-blue-600/30 transition-all font-mono"
                     >
                       <Send className="w-4 h-4" />
                     </button>
@@ -721,8 +721,8 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                       onClick={() => setGroupsSubTab("free")}
                       className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition-all flex items-center gap-2 ${
                         groupsSubTab === "free"
-                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
-                          : "bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800"
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
+                          : "bg-slate-950 text-slate-400 hover:text-white border border-slate-800"
                       }`}
                     >
                       <TrendingUp className="w-4 h-4" /> Free Tier Signals ({freeGroups.length})
@@ -732,11 +732,11 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                       onClick={() => setGroupsSubTab("verified")}
                       className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition-all flex items-center gap-2 ${
                         groupsSubTab === "verified"
-                          ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30"
-                          : "bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800"
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 border border-blue-400/40"
+                          : "bg-slate-950 text-slate-400 hover:text-white border border-slate-800"
                       }`}
                     >
-                      <CheckCircle2 className="w-4 h-4" /> Verified Signal Groups ({verifiedGroups.length})
+                      <CheckCircle2 className="w-4 h-4 text-purple-400" /> Verified Signal Groups ({verifiedGroups.length})
                     </button>
                   </div>
 
@@ -748,13 +748,13 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                         value={groupSearch}
                         onChange={(e) => setGroupSearch(e.target.value)}
                         placeholder="Search signal groups..."
-                        className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:border-indigo-500 focus:outline-none font-mono"
+                        className="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none font-mono"
                       />
                     </div>
 
                     <button
                       onClick={() => setIsCreateGroupOpen(true)}
-                      className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition-all"
+                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-blue-600/30 transition-all"
                     >
                       <Plus className="w-4 h-4" /> + Create a Signal Group for Free
                     </button>
@@ -765,16 +765,16 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                 {groupsSubTab === "free" && (
                   <div className="space-y-4">
                     {/* Slide 4 Disclaimer Alert */}
-                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-wrap items-center justify-between gap-3 text-xs text-amber-300 font-mono shadow-xl">
+                    <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex flex-wrap items-center justify-between gap-3 text-xs text-purple-300 font-mono shadow-xl">
                       <div className="flex items-center gap-3">
-                        <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
+                        <ShieldAlert className="w-5 h-5 text-purple-400 shrink-0" />
                         <span className="font-bold">
                           ALERT: THESE AREN'T VERIFIED SIGNALS SO TAKE YOUR OWN RISK
                         </span>
                       </div>
                       <button
                         onClick={() => setIsGuidelinesOpen(true)}
-                        className="px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 text-[10px]"
+                        className="px-3 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 border border-purple-500/40 text-[10px]"
                       >
                         Read Guidelines
                       </button>
@@ -785,12 +785,12 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                       {freeGroups.map((group) => (
                         <div
                           key={group.id}
-                          className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl hover:border-indigo-500/60 transition-all flex flex-col justify-between space-y-4 group"
+                          className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl hover:border-blue-500/60 transition-all flex flex-col justify-between space-y-4 group"
                         >
                           <div className="space-y-3">
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center font-bold font-mono text-indigo-400">
+                                <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center font-bold font-mono text-blue-400">
                                   {group.logoUrl ? (
                                     <img
                                       src={group.logoUrl}
@@ -802,10 +802,10 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                                   )}
                                 </div>
                                 <div>
-                                  <h3 className="text-sm font-bold text-slate-100 font-mono group-hover:text-indigo-400 transition-colors">
+                                  <h3 className="text-sm font-bold text-white font-mono group-hover:text-blue-400 transition-colors">
                                     {group.name}
                                   </h3>
-                                  <span className="text-[10px] text-slate-500 font-mono block">
+                                  <span className="text-[10px] text-slate-400 font-mono block">
                                     Admin: {group.adminDisplayName || group.adminUsername}
                                   </span>
                                 </div>
@@ -820,170 +820,170 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
 
                             <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
                               <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
-                                <span className="text-slate-500 block">MEMBERS</span>
-                                <strong className="text-slate-200">{group.membersCount} traders</strong>
+                                <span className="text-slate-400 block">MEMBERS</span>
+                                <strong className="text-white">{group.membersCount} traders</strong>
                               </div>
                               <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
-                                <span className="text-slate-500 block">WIN RATE</span>
-                                <strong className="text-amber-400">
+                                <span className="text-slate-400 block">WIN RATE</span>
+                                <strong className="text-blue-400">
                                   {group.winRate > 0 ? `${group.winRate}%` : "In Progress"}
                                 </strong>
                               </div>
                             </div>
                           </div>
 
-                            {/* Actions */}
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => setSelectedGroup(group)}
-                                className="flex-1 py-2.5 rounded-xl bg-slate-950 hover:bg-indigo-600 text-slate-300 hover:text-white border border-slate-800 hover:border-indigo-500 font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md"
-                              >
-                                <span>Open Signal Feed</span>
-                                <ChevronRight className="w-3.5 h-3.5" />
-                              </button>
+                          {/* Actions */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setSelectedGroup(group)}
+                              className="flex-1 py-2.5 rounded-xl bg-slate-950 hover:bg-blue-600 text-white border border-slate-800 hover:border-blue-500 font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md"
+                            >
+                              <span>Open Signal Feed</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
 
-                              {(isHostAdmin || group.adminEmail.toLowerCase() === currentUser.email.toLowerCase()) && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setGroupToDelete(group);
-                                  }}
-                                  className="p-2.5 rounded-xl bg-slate-950 hover:bg-rose-900/40 text-slate-500 hover:text-rose-400 border border-slate-800 hover:border-rose-700/60 transition-colors"
-                                  title={isHostAdmin ? "Host Admin: Delete Any Group" : "Delete My Group"}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                            {(isHostAdmin || group.adminEmail.toLowerCase() === currentUser.email.toLowerCase()) && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setGroupToDelete(group);
+                                }}
+                                className="p-2.5 rounded-xl bg-slate-950 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-700/60 transition-colors"
+                                title={isHostAdmin ? "Host Admin: Delete Any Group" : "Delete My Group"}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* SubTab 2: VERIFIED SIGNAL GROUPS (Slides 4, 11, 12) */}
+                {groupsSubTab === "verified" && (
+                  <div className="space-y-4">
+                    {/* Slide 4 Verified Banner */}
+                    <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex flex-wrap items-center justify-between gap-3 text-xs text-blue-300 font-mono shadow-xl">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0" />
+                        <span className="font-bold text-white">
+                          CONTACT A SIGNAL GROUP OWNER TO GET SIGNALS. EVERY SIGNAL GROUP HAS MORE THAN 85% OF WIN RATE BUT BE CAREFUL, MANAGE YOUR RISK.
+                        </span>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] font-bold">
+                        MAX $17 USD CAP
+                      </span>
+                    </div>
+
+                    {/* Verified Groups Grid with Blur Overlay (Slide 12) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {verifiedGroups.map((group) => {
+                        const isMember =
+                          group.members.includes(currentUser.email) ||
+                          group.adminEmail.toLowerCase() === currentUser.email.toLowerCase() ||
+                          currentUser.email.toLowerCase() === "sngxworld@gmail.com";
+
+                        return (
+                          <div
+                            key={group.id}
+                            className="bg-slate-900 border border-blue-500/30 rounded-2xl p-5 shadow-2xl flex flex-col justify-between space-y-4 relative overflow-hidden"
+                          >
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-12 h-12 rounded-xl bg-slate-950 border border-blue-500/40 overflow-hidden flex items-center justify-center font-bold font-mono text-blue-400">
+                                    {group.logoUrl ? (
+                                      <img
+                                        src={group.logoUrl}
+                                        alt={group.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      group.name.substring(0, 2).toUpperCase()
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h3 className="text-sm font-bold text-white font-mono">
+                                      {group.name}
+                                    </h3>
+                                    <span className="text-[10px] text-blue-400 font-mono font-bold flex items-center gap-1">
+                                      <CheckCircle2 className="w-3 h-3 text-purple-400" /> VERIFIED ≥85% WIN RATE
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <RoleBadge role="verified_signal_provider" size="xs" />
+                              </div>
+
+                              <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                                {group.description}
+                              </p>
+
+                              <div className="grid grid-cols-3 gap-2 text-[10px] font-mono">
+                                <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
+                                  <span className="text-slate-400 block">WIN RATE</span>
+                                  <strong className="text-blue-400 font-bold">{group.winRate}%</strong>
+                                </div>
+                                <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
+                                  <span className="text-slate-400 block">SIGNALS</span>
+                                  <strong className="text-white">{group.totalSignals}</strong>
+                                </div>
+                                <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
+                                  <span className="text-slate-400 block">PRICE</span>
+                                  <strong className="text-blue-300 font-bold">
+                                    ${group.priceUsd > 0 ? `${group.priceUsd}/mo` : "Free"}
+                                  </strong>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Actions based on Membership */}
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                {isMember ? (
+                                  <button
+                                    onClick={() => setSelectedGroup(group)}
+                                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-blue-600/30"
+                                  >
+                                    <span>Enter Verified VIP Feed</span>
+                                    <ChevronRight className="w-3.5 h-3.5" />
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleSendJoinRequestFromGroup(group)}
+                                    className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-blue-600/30"
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5" /> Message Owner to Subscribe
+                                  </button>
+                                )}
+
+                                {(isHostAdmin || group.adminEmail.toLowerCase() === currentUser.email.toLowerCase()) && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setGroupToDelete(group);
+                                    }}
+                                    className="p-2.5 rounded-xl bg-slate-950 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-700/60 transition-colors"
+                                    title={isHostAdmin ? "Host Admin: Delete Any Group" : "Delete My Group"}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+
+                              {!isMember && (
+                                <p className="text-[10px] text-slate-400 text-center font-mono">
+                                  Fee: ${group.priceUsd}.00 USD / mo (Capped under $17 max)
+                                </p>
                               )}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* SubTab 2: VERIFIED SIGNAL GROUPS (Slides 4, 11, 12) */}
-                  {groupsSubTab === "verified" && (
-                    <div className="space-y-4">
-                      {/* Slide 4 Verified Banner */}
-                      <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-300 font-mono shadow-xl">
-                        <div className="flex items-center gap-3">
-                          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-                          <span className="font-bold">
-                            CONTACT A SIGNAL GROUP OWNER TO GET SIGNALS. EVERY SIGNAL GROUP HAS MORE THAN 85% OF WIN RATE BUT BE CAREFUL, MANAGE YOUR RISK.
-                          </span>
-                        </div>
-                        <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold">
-                          MAX $17 USD CAP
-                        </span>
-                      </div>
-
-                      {/* Verified Groups Grid with Blur Overlay (Slide 12) */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {verifiedGroups.map((group) => {
-                          const isMember =
-                            group.members.includes(currentUser.email) ||
-                            group.adminEmail.toLowerCase() === currentUser.email.toLowerCase() ||
-                            currentUser.email.toLowerCase() === "sngxworld@gmail.com";
-
-                          return (
-                            <div
-                              key={group.id}
-                              className="bg-slate-900 border border-emerald-500/30 rounded-2xl p-5 shadow-2xl flex flex-col justify-between space-y-4 relative overflow-hidden"
-                            >
-                              <div className="space-y-3">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-xl bg-emerald-950/60 border border-emerald-500/40 overflow-hidden flex items-center justify-center font-bold font-mono text-emerald-400">
-                                      {group.logoUrl ? (
-                                        <img
-                                          src={group.logoUrl}
-                                          alt={group.name}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      ) : (
-                                        group.name.substring(0, 2).toUpperCase()
-                                      )}
-                                    </div>
-                                    <div>
-                                      <h3 className="text-sm font-bold text-slate-100 font-mono">
-                                        {group.name}
-                                      </h3>
-                                      <span className="text-[10px] text-emerald-400 font-mono font-bold flex items-center gap-1">
-                                        <CheckCircle2 className="w-3 h-3" /> VERIFIED ≥85% WIN RATE
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  <RoleBadge role="verified_signal_provider" size="xs" />
-                                </div>
-
-                                <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
-                                  {group.description}
-                                </p>
-
-                                <div className="grid grid-cols-3 gap-2 text-[10px] font-mono">
-                                  <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
-                                    <span className="text-slate-500 block">WIN RATE</span>
-                                    <strong className="text-emerald-400 font-bold">{group.winRate}%</strong>
-                                  </div>
-                                  <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
-                                    <span className="text-slate-500 block">SIGNALS</span>
-                                    <strong className="text-slate-200">{group.totalSignals}</strong>
-                                  </div>
-                                  <div className="p-2 rounded-lg bg-slate-950 border border-slate-800">
-                                    <span className="text-slate-500 block">PRICE</span>
-                                    <strong className="text-emerald-300 font-bold">
-                                      ${group.priceUsd > 0 ? `${group.priceUsd}/mo` : "Free"}
-                                    </strong>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Actions based on Membership */}
-                              <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                  {isMember ? (
-                                    <button
-                                      onClick={() => setSelectedGroup(group)}
-                                      className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-emerald-600/30"
-                                    >
-                                      <span>Enter Verified VIP Feed</span>
-                                      <ChevronRight className="w-3.5 h-3.5" />
-                                    </button>
-                                  ) : (
-                                    <button
-                                      onClick={() => handleSendJoinRequestFromGroup(group)}
-                                      className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-lg shadow-indigo-600/30"
-                                    >
-                                      <MessageSquare className="w-3.5 h-3.5" /> Message Owner to Subscribe
-                                    </button>
-                                  )}
-
-                                  {(isHostAdmin || group.adminEmail.toLowerCase() === currentUser.email.toLowerCase()) && (
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setGroupToDelete(group);
-                                      }}
-                                      className="p-2.5 rounded-xl bg-slate-950 hover:bg-rose-900/40 text-slate-500 hover:text-rose-400 border border-slate-800 hover:border-rose-700/60 transition-colors"
-                                      title={isHostAdmin ? "Host Admin: Delete Any Group" : "Delete My Group"}
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  )}
-                                </div>
-
-                                {!isMember && (
-                                  <p className="text-[10px] text-slate-500 text-center font-mono">
-                                    Fee: ${group.priceUsd}.00 USD / mo (Capped under $17 max)
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -1000,8 +1000,8 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
             {/* DM Threads Sidebar */}
             <div className={`${activeDmUser ? "hidden md:flex" : "flex"} w-full md:w-1/3 md:min-w-[240px] md:max-w-sm bg-slate-950 border-r border-slate-800 flex flex-col shrink-0`}>
               <div className="p-4 border-b border-slate-800">
-                <h2 className="text-xs font-bold text-slate-200 uppercase tracking-wider font-mono flex items-center gap-2">
-                  <User className="w-4 h-4 text-indigo-400" /> Direct Messages ({uniqueDmUsers.length})
+                <h2 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                  <User className="w-4 h-4 text-blue-400" /> Direct Messages ({uniqueDmUsers.length})
                 </h2>
               </div>
 
@@ -1019,17 +1019,17 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                         key={u.email}
                         onClick={() => setActiveDmUser(u)}
                         className={`w-full p-3.5 text-left flex items-center gap-3 transition-colors ${
-                          isSelected ? "bg-indigo-950/50 border-l-4 border-indigo-500" : "hover:bg-slate-900"
+                          isSelected ? "bg-blue-950/60 border-l-4 border-blue-500 text-white" : "hover:bg-slate-900 text-slate-300"
                         }`}
                       >
-                        <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs font-mono text-indigo-300 shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs font-mono text-blue-300 shrink-0">
                           {u.username.substring(0, 2).toUpperCase()}
                         </div>
                         <div className="overflow-hidden">
-                          <h4 className="text-xs font-bold text-slate-200 font-mono truncate">
+                          <h4 className="text-xs font-bold text-white font-mono truncate">
                             {u.displayName || u.username}
                           </h4>
-                          <span className="text-[10px] text-slate-500 font-mono truncate block">
+                          <span className="text-[10px] text-slate-400 font-mono truncate block">
                             @{u.username}
                           </span>
                         </div>
@@ -1049,19 +1049,19 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                     <div className="flex items-center gap-2 sm:gap-3">
                       <button
                         onClick={() => setActiveDmUser(null)}
-                        className="md:hidden p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800"
+                        className="md:hidden p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800"
                         title="Back to Conversations"
                       >
                         <ArrowLeft className="w-4 h-4" />
                       </button>
-                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs font-mono text-indigo-300 shrink-0">
+                      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs font-mono text-blue-300 shrink-0">
                         {activeDmUser.username.substring(0, 2).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <h3 className="text-xs font-bold text-slate-100 font-mono truncate">
+                        <h3 className="text-xs font-bold text-white font-mono truncate">
                           {activeDmUser.displayName || activeDmUser.username}
                         </h3>
-                        <p className="text-[10px] text-slate-500 font-mono">
+                        <p className="text-[10px] text-slate-400 font-mono">
                           1-on-1 Encrypted Channel
                         </p>
                       </div>
@@ -1075,7 +1075,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                           displayName: activeDmUser.displayName,
                         })
                       }
-                      className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] sm:text-xs font-mono text-slate-300 shrink-0"
+                      className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] sm:text-xs font-mono text-white shrink-0"
                     >
                       View Profile
                     </button>
@@ -1090,7 +1090,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                       className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 font-sans relative z-10"
                     >
                       {activeConversation.length === 0 ? (
-                        <div className="text-center py-12 text-xs text-slate-500 font-mono">
+                        <div className="text-center py-12 text-xs text-slate-400 font-mono">
                           Say hello to start the conversation!
                         </div>
                       ) : (
@@ -1105,8 +1105,8 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                               <div
                                 className={`flex flex-col ${isSelf ? "items-end" : "items-start"}`}
                               >
-                                <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 mb-1">
-                                  <span>{dm.senderDisplayName || dm.senderUsername}</span>
+                                <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 mb-1">
+                                  <span className="text-white font-semibold">{dm.senderDisplayName || dm.senderUsername}</span>
                                   <span>•</span>
                                   <span>
                                     {formatMessageTime(dm.createdAt)}
@@ -1114,7 +1114,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteDmMessage(dm.id)}
-                                    className="text-slate-500 hover:text-rose-400 p-0.5 rounded transition-colors ml-1"
+                                    className="text-slate-400 hover:text-rose-400 p-0.5 rounded transition-colors ml-1"
                                     title="Delete Message"
                                   >
                                     <Trash2 className="w-3 h-3" />
@@ -1124,13 +1124,13 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                                 <div
                                   className={`p-3.5 rounded-2xl max-w-md text-xs sm:text-sm leading-relaxed ${
                                     isSelf
-                                      ? "bg-indigo-600 text-white rounded-tr-none shadow-md shadow-indigo-600/20"
-                                      : "bg-slate-950 border border-slate-800 text-slate-200 rounded-tl-none"
+                                      ? "bg-blue-600 text-white rounded-tr-none shadow-md shadow-blue-600/20"
+                                      : "bg-slate-950 border border-slate-800 text-white rounded-tl-none"
                                   }`}
                                 >
                                   {dm.isJoinRequest && (
-                                    <div className="mb-2 p-2 rounded-lg bg-indigo-950/80 border border-indigo-500/40 text-[10px] font-mono text-indigo-300 flex items-center gap-1.5">
-                                      <Sparkles className="w-3 h-3 text-amber-400" />
+                                    <div className="mb-2 p-2 rounded-lg bg-blue-950/80 border border-blue-500/40 text-[10px] font-mono text-blue-300 flex items-center gap-1.5">
+                                      <Sparkles className="w-3 h-3 text-purple-400" />
                                       <span>SIGNAL GROUP JOIN REQUEST: {dm.targetGroupName}</span>
                                     </div>
                                   )}
@@ -1148,7 +1148,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                       <button
                         type="button"
                         onClick={() => scrollDmToBottom("smooth")}
-                        className="absolute bottom-4 right-6 z-20 px-3.5 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-xl shadow-indigo-600/40 border border-indigo-400/40 transition-all hover:scale-105 active:scale-95"
+                        className="absolute bottom-4 right-6 z-20 px-3.5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 shadow-xl shadow-blue-600/40 border border-blue-400/40 transition-all hover:scale-105 active:scale-95"
                       >
                         <ArrowDown className="w-3.5 h-3.5 animate-bounce" />
                         <span>Jump to latest</span>
@@ -1163,12 +1163,12 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                       value={dmInput}
                       onChange={(e) => setDmInput(e.target.value)}
                       placeholder={`Message ${activeDmUser.displayName || activeDmUser.username}...`}
-                      className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-600 focus:border-indigo-500 focus:outline-none font-sans"
+                      className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none font-sans"
                     />
                     <button
                       type="submit"
                       disabled={!dmInput.trim()}
-                      className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs font-mono uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-indigo-600/30"
+                      className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold text-xs font-mono uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-blue-600/30"
                     >
                       <Send className="w-3.5 h-3.5" /> Send
                     </button>
@@ -1224,7 +1224,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
           <div className="bg-slate-900 border border-rose-500/40 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3 text-rose-400">
               <AlertTriangle className="w-6 h-6 shrink-0" />
-              <h3 className="text-lg font-bold font-mono text-slate-100">
+              <h3 className="text-lg font-bold font-mono text-white">
                 Delete Signal Group?
               </h3>
             </div>
@@ -1256,7 +1256,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                   setGroupToDelete(null);
                   setDeleteGroupError(null);
                 }}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs transition-colors"
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono text-xs transition-colors"
               >
                 Cancel
               </button>
@@ -1289,7 +1289,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                 <button
                   type="button"
                   onClick={() => downloadImageToLocal(zoomedImage, "chat_chart.png")}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold font-mono flex items-center gap-1.5 shadow-md transition-all"
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono flex items-center gap-1.5 shadow-md transition-all"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download to Device</span>

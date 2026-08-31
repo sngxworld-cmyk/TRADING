@@ -170,25 +170,25 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
   if (!selectedLanguage) {
     return (
       <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-300">
-        <div className="max-w-md w-full bg-slate-900 border border-indigo-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden flex flex-col items-center text-center space-y-6">
+        <div className="max-w-md w-full bg-slate-900 border border-blue-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden flex flex-col items-center text-center space-y-6">
           {/* Top Decorative Glow */}
-          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 bg-indigo-600/30 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 bg-blue-600/30 rounded-full blur-3xl pointer-events-none" />
 
           {/* 3D Robot Floating Avatar */}
           <div className="relative group">
-            <div className="absolute inset-0 bg-indigo-500/30 rounded-full blur-2xl animate-pulse" />
+            <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-2xl animate-pulse" />
             <Robot3D size={180} isTalking={true} className="relative z-10" />
           </div>
 
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-mono mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-spin" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-mono mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-spin" />
               TrackerX 3D AI Mentor
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
               සාදරයෙන් පිළිගනිමු! / Welcome!
             </h2>
-            <p className="text-xs text-slate-400 mt-2 font-mono leading-relaxed">
+            <p className="text-xs text-blue-200/70 mt-2 font-mono leading-relaxed">
               කරුණාකර ඔබගේ නිබන්ධන උපදෙස් භාෂාව තෝරන්න
               <br />
               Please select your tutorial guidance language:
@@ -199,30 +199,30 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
           <div className="w-full space-y-3 pt-1">
             <button
               onClick={() => setSelectedLanguage("sinhala")}
-              className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 border border-indigo-400/30 transition-all flex items-center justify-between group active:scale-95"
+              className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold text-sm shadow-xl shadow-blue-600/30 border border-blue-400/30 transition-all flex items-center justify-between group active:scale-95"
             >
               <div className="flex items-center gap-3">
-                <Globe className="w-5 h-5 text-indigo-200" />
+                <Globe className="w-5 h-5 text-blue-200" />
                 <span className="text-left font-sans">සිංහල (Sinhala Guidance)</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-indigo-200 group-hover:translate-x-1 transition-transform" />
+              <ChevronRight className="w-4 h-4 text-blue-200 group-hover:translate-x-1 transition-transform" />
             </button>
 
             <button
               onClick={() => setSelectedLanguage("english")}
-              className="w-full py-3.5 px-5 rounded-2xl bg-slate-950 hover:bg-slate-800 text-slate-200 hover:text-white font-semibold text-sm border border-slate-800 transition-all flex items-center justify-between group active:scale-95"
+              className="w-full py-3.5 px-5 rounded-2xl bg-slate-950 hover:bg-slate-800 text-white font-semibold text-sm border border-slate-800 transition-all flex items-center justify-between group active:scale-95"
             >
               <div className="flex items-center gap-3">
-                <Globe className="w-5 h-5 text-slate-400" />
+                <Globe className="w-5 h-5 text-blue-400" />
                 <span className="text-left">English (English Guidance)</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+              <ChevronRight className="w-4 h-4 text-blue-400 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
 
           <button
             onClick={onSkip}
-            className="text-xs text-slate-500 hover:text-slate-300 font-mono underline transition-colors pt-1"
+            className="text-xs text-slate-400 hover:text-white font-mono underline transition-colors pt-1"
           >
             Skip Tutorial & Start Trading ✕
           </button>
@@ -236,12 +236,12 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="max-w-xl w-full bg-slate-900 border border-indigo-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden flex flex-col space-y-5 animate-in slide-in-from-bottom-4 duration-300">
+      <div className="max-w-xl w-full bg-slate-900 border border-blue-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden flex flex-col space-y-5 animate-in slide-in-from-bottom-4 duration-300">
         {/* Top bar with Step Counter & Skip */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-xs font-bold text-indigo-400 font-mono uppercase tracking-wider">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-ping" />
+            <span className="text-xs font-bold text-blue-400 font-mono uppercase tracking-wider">
               {selectedLanguage === "sinhala"
                 ? `3D AI නිබන්ධනය: පියවර ${currentStep + 1} / ${currentSteps.length}`
                 : `3D AI Tutorial: Step ${currentStep + 1} of ${currentSteps.length}`}
@@ -262,18 +262,18 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
           {/* 3D Robot Avatar */}
           <div className="shrink-0 flex flex-col items-center">
             <div className="relative">
-              <div className="absolute inset-0 bg-indigo-600/20 rounded-full blur-xl animate-pulse" />
+              <div className="absolute inset-0 bg-blue-600/20 rounded-full blur-xl animate-pulse" />
               <Robot3D size={150} isTalking={true} className="relative z-10" />
             </div>
-            <span className="text-[10px] font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 mt-1">
+            <span className="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20 mt-1">
               TrackerX AI
             </span>
           </div>
 
           {/* Explanation Text */}
           <div className="flex-1 text-center sm:text-left space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-[10px] font-mono text-indigo-300">
-              <StepIcon className="w-3.5 h-3.5 text-indigo-400" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-[10px] font-mono text-blue-300">
+              <StepIcon className="w-3.5 h-3.5 text-purple-400" />
               <span>{step.highlightHint}</span>
             </div>
             <h3 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
@@ -292,9 +292,9 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
               key={idx}
               className={`h-1.5 rounded-full transition-all duration-300 flex-1 ${
                 idx === currentStep
-                  ? "bg-indigo-500"
+                  ? "bg-blue-500"
                   : idx < currentStep
-                  ? "bg-emerald-500/80"
+                  ? "bg-purple-500/80"
                   : "bg-slate-800"
               }`}
             />
@@ -309,7 +309,7 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
             className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
               currentStep === 0
                 ? "opacity-30 cursor-not-allowed text-slate-600"
-                : "bg-slate-800 hover:bg-slate-700 text-slate-200"
+                : "bg-slate-800 hover:bg-slate-700 text-white"
             }`}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -319,7 +319,7 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
           {currentStep < currentSteps.length - 1 ? (
             <button
               onClick={() => setCurrentStep((prev) => prev + 1)}
-              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 border border-indigo-400/30 flex items-center gap-1.5 transition-all active:scale-95"
+              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 border border-blue-400/30 flex items-center gap-1.5 transition-all active:scale-95"
             >
               <span>{selectedLanguage === "sinhala" ? "ඊළඟ පියවර" : "Next Step"}</span>
               <ChevronRight className="w-4 h-4" />
@@ -327,7 +327,7 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
           ) : (
             <button
               onClick={onComplete}
-              className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 border border-emerald-400/30 flex items-center gap-2 transition-all active:scale-95"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 border border-blue-400/30 flex items-center gap-2 transition-all active:scale-95"
             >
               <CheckCircle2 className="w-4 h-4 text-white" />
               <span>{selectedLanguage === "sinhala" ? "අවසන් කර ආරම්භ කරන්න" : "Finish & Start"}</span>

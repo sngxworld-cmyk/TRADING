@@ -625,33 +625,33 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4 sm:p-6 relative overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-center items-center p-4 sm:p-6 relative overflow-hidden">
+      {/* Background Glows (45% Blue, 5% Purple) */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="w-full max-w-6xl z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
         {/* Left Column: Brand, Candlestick Chart & Market Tickers */}
         <div className="lg:col-span-7 flex flex-col gap-5">
           {/* Header Title */}
           <div className="text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-widest mb-3">
-              <ShieldCheck className="w-3.5 h-3.5" /> Core Gateway Infrastructure
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-300 text-xs font-semibold uppercase tracking-widest mb-3">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" /> Core Gateway Infrastructure
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white mb-2">
-              Tracker<span className="text-indigo-500">X</span> Pro Journal
+              Tracker<span className="text-blue-500">X</span> Pro Journal
             </h1>
-            <p className="text-sm text-slate-400 max-w-lg">
+            <p className="text-sm text-blue-100/70 max-w-lg">
               Enterprise Multi-Year Trade Journal Tracker Infrastructure.
             </p>
           </div>
 
           {/* Chart Card */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur-md">
+          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl backdrop-blur-md">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-300">
                   Live Market Stream
                 </span>
               </div>
@@ -659,7 +659,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
               <select
                 value={selectedAsset}
                 onChange={(e) => setSelectedAsset(e.target.value as any)}
-                className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500"
+                className="bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500"
               >
                 <option value="BTC">BTC / USDT Live</option>
                 <option value="ETH">ETH / USDT Live</option>
@@ -680,11 +680,11 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                 const isPos = info.change >= 0;
                 return (
                   <div key={asset} className="bg-slate-950/70 border border-slate-800 rounded-lg p-2 text-center">
-                    <span className="text-[10px] text-slate-400 block font-mono">{asset} / USDT</span>
-                    <span className={`text-xs font-bold font-mono ${isPos ? "text-emerald-400" : "text-rose-400"}`}>
+                    <span className="text-[10px] text-blue-200/70 block font-mono">{asset} / USDT</span>
+                    <span className={`text-xs font-bold font-mono ${isPos ? "text-blue-400" : "text-purple-300"}`}>
                       ${info.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
-                    <span className={`block text-[9px] font-mono ${isPos ? "text-emerald-500" : "text-rose-500"}`}>
+                    <span className={`block text-[9px] font-mono ${isPos ? "text-blue-400" : "text-purple-400"}`}>
                       {isPos ? "+" : ""}{info.change.toFixed(2)}%
                     </span>
                   </div>
@@ -698,7 +698,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
 
         {/* Right Column: Geometric Balance Auth Card */}
         <div className="lg:col-span-5">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative">
+          <div className="bg-slate-900/95 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative">
             
             {/* --- VIEW A: 6-Digit Verification Code Screen with Lottie Animation --- */}
             {isVerifying ? (
@@ -707,15 +707,15 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                   <div className="py-8 space-y-4 animate-in fade-in zoom-in duration-300">
                     <AuthLottieAnimation type="success" className="w-24 h-24 mx-auto" loop={false} />
                     <div className="space-y-1">
-                      <h2 className="text-2xl font-bold text-emerald-400 font-mono tracking-wide">
+                      <h2 className="text-2xl font-bold text-blue-400 font-mono tracking-wide">
                         Verified Successfully!
                       </h2>
-                      <p className="text-sm text-slate-300">
+                      <p className="text-sm text-white/90">
                         Preparing your secure workspace...
                       </p>
                     </div>
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono">
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-mono">
+                      <CheckCircle className="w-4 h-4 text-blue-400" />
                       <span>Welcome to TrackerX</span>
                     </div>
                   </div>
@@ -728,12 +728,12 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                     
                     {/* Dynamic Destination Badges */}
                     <div className="max-w-sm mx-auto mb-4 space-y-1.5 text-xs text-slate-300">
-                      <p className="text-slate-400 text-xs">
+                      <p className="text-blue-200/70 text-xs">
                         We've dispatched a 6-digit verification code to:
                       </p>
                       <div className="flex items-center justify-center gap-2">
-                        <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-950/80 border border-indigo-500/40 text-indigo-200 font-mono text-xs shadow-inner">
-                          <Mail className="w-4 h-4 text-indigo-400 shrink-0" />
+                        <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-950/80 border border-blue-500/40 text-blue-200 font-mono text-xs shadow-inner">
+                          <Mail className="w-4 h-4 text-blue-400 shrink-0" />
                           <span className="font-semibold">{verificationTarget || email}</span>
                         </div>
                       </div>
@@ -749,14 +749,14 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                     )}
 
                     {successMessage && (
-                      <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium">
+                      <div className="mb-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-medium">
                         {successMessage}
                       </div>
                     )}
 
                     <form onSubmit={handleConfirmVerificationAndRegister} className="space-y-4">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2 font-mono">
+                        <label className="block text-xs font-semibold text-blue-200 uppercase tracking-widest mb-2 font-mono">
                           6-Digit Security Code
                         </label>
                         <input
@@ -767,14 +767,14 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                           placeholder="000000"
                           autoFocus
                           required
-                          className="w-full bg-slate-950 border-2 border-indigo-500/60 rounded-xl py-3 px-4 text-2xl text-center text-slate-100 font-mono tracking-[0.5em] placeholder-slate-700 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30 transition-all"
+                          className="w-full bg-slate-950 border-2 border-blue-500/60 rounded-xl py-3 px-4 text-2xl text-center text-white font-mono tracking-[0.5em] placeholder-slate-700 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 transition-all"
                         />
                       </div>
 
                       <button
                         type="submit"
                         disabled={loading || verificationCode.length !== 6}
-                        className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/30 transition-all text-sm flex items-center justify-center gap-2 font-mono uppercase tracking-wider cursor-pointer"
+                        className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-600/30 transition-all text-sm flex items-center justify-center gap-2 font-mono uppercase tracking-wider cursor-pointer"
                       >
                         {loading ? (
                           <div className="flex items-center gap-2">
@@ -798,7 +798,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                           setVerificationCode("");
                           setErrorMessage(null);
                         }}
-                        className="text-slate-400 hover:text-slate-200 transition-colors"
+                        className="text-slate-400 hover:text-white transition-colors"
                       >
                         &larr; Back to Form
                       </button>
@@ -807,7 +807,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                         type="button"
                         onClick={handleResendCode}
                         disabled={isResending}
-                        className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                        className="text-blue-400 hover:text-blue-300 flex items-center gap-1.5 transition-colors disabled:opacity-50"
                       >
                         <RefreshCw className={`w-3.5 h-3.5 ${isResending ? "animate-spin" : ""}`} />
                         <span>Resend Code</span>
@@ -823,7 +823,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                   <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
                     {isRegisterMode ? "Create Client Account" : "Welcome Back"}
                   </h2>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-blue-200/70">
                     {isRegisterMode
                       ? "Enter your Gmail to request access to Trade Journal Tracker"
                       : "Login with your Gmail or Username to access app"}
@@ -831,16 +831,16 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                   {isRegisterMode && (
                     <div className="mt-2.5 space-y-2">
                       {deviceInfo.isMasterDevice ? (
-                        <div className="p-3 rounded-xl bg-indigo-950/60 border border-amber-500/40 text-left flex items-start gap-2.5">
-                          <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                          <div className="text-[11px] text-amber-200/90 leading-relaxed font-mono">
-                            <strong className="text-amber-300 font-sans block">👑 Host Admin Master Device Active:</strong>
+                        <div className="p-3 rounded-xl bg-purple-950/50 border border-purple-500/40 text-left flex items-start gap-2.5">
+                          <Sparkles className="w-4 h-4 text-purple-300 shrink-0 mt-0.5" />
+                          <div className="text-[11px] text-purple-200/90 leading-relaxed font-mono">
+                            <strong className="text-white font-sans block">👑 Host Admin Master Device Active:</strong>
                             Unlimited device registrations and test account creation are permitted on this device without restrictions.
                           </div>
                         </div>
                       ) : deviceInfo.isRegistered && deviceInfo.registeredEmail ? (
-                        <div className="p-3 rounded-xl bg-slate-950 border border-amber-500/30 text-left">
-                          <div className="flex items-center gap-1.5 text-amber-400 text-xs font-bold font-mono mb-1">
+                        <div className="p-3 rounded-xl bg-slate-950 border border-blue-500/30 text-left">
+                          <div className="flex items-center gap-1.5 text-blue-400 text-xs font-bold font-mono mb-1">
                             <Smartphone className="w-3.5 h-3.5" />
                             <span>1 Device / 1 Account Limit</span>
                           </div>
@@ -854,7 +854,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                               setEmail(deviceInfo.registeredEmail || "");
                               setErrorMessage(null);
                             }}
-                            className="w-full py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 text-xs font-mono font-bold transition-all text-center"
+                            className="w-full py-1.5 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-300 border border-slate-700 text-xs font-mono font-bold transition-all text-center"
                           >
                             Switch to Login ({deviceInfo.registeredEmail})
                           </button>
@@ -871,25 +871,25 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                 )}
 
                 {successMessage && (
-                  <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium">
+                  <div className="mb-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-medium">
                     {successMessage}
                   </div>
                 )}
 
                 <form onSubmit={isRegisterMode ? handleInitiateRegistration : handleLoginSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 font-mono">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 font-mono">
                       {isRegisterMode ? "Gmail / Email Address" : "Gmail or Username"}
                     </label>
                     <div className="relative">
-                      <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
+                      <Mail className="w-4 h-4 text-blue-400 absolute left-3.5 top-3.5" />
                       <input
                         type={isRegisterMode ? "email" : "text"}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder={isRegisterMode ? "Enter your real Gmail" : "Enter Gmail or Username"}
                         required
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3 py-3 text-sm sm:text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3 py-3 text-sm sm:text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono"
                       />
                     </div>
                   </div>
@@ -903,7 +903,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                             <img
                               src={photoURL}
                               alt="Profile preview"
-                              className="w-12 h-12 rounded-full object-cover border-2 border-indigo-500 shadow-md"
+                              className="w-12 h-12 rounded-full object-cover border-2 border-blue-500 shadow-md"
                             />
                           ) : (
                             <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400">
@@ -912,8 +912,8 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-slate-200">Upload Profile Photo</p>
-                          <p className="text-[10px] text-slate-400">Essential for Chat & Host Admin Inspector</p>
+                          <p className="text-xs font-semibold text-white">Upload Profile Photo</p>
+                          <p className="text-[10px] text-blue-200/70">Essential for Chat & Host Admin Inspector</p>
                           <input
                             type="file"
                             ref={regFileInputRef}
@@ -924,7 +924,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                           <button
                             type="button"
                             onClick={() => regFileInputRef.current?.click()}
-                            className="mt-1 px-2.5 py-1 rounded bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono flex items-center gap-1"
+                            className="mt-1 px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/30 text-[10px] font-mono flex items-center gap-1"
                           >
                             <Camera className="w-3 h-3" /> Select Photo
                           </button>
@@ -932,24 +932,24 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 font-mono">
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 font-mono">
                           Unique Username
                         </label>
                         <div className="relative">
-                          <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
+                          <User className="w-4 h-4 text-blue-400 absolute left-3.5 top-3.5" />
                           <input
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             placeholder="trader_pro"
                             required={isRegisterMode}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3 py-3 text-sm sm:text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono"
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3 py-3 text-sm sm:text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 font-mono">
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 font-mono">
                           Full Name / Display Name
                         </label>
                         <input
@@ -957,14 +957,14 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                           value={displayName}
                           onChange={(e) => setDisplayName(e.target.value)}
                           placeholder="e.g. Alex Morgan"
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono flex items-center justify-between">
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono flex items-center justify-between">
                           <span>Phone Number <span className="text-slate-500 font-normal text-[10px]">(Optional)</span></span>
-                          <span className="text-[10px] text-indigo-400 font-mono">Select Country & Dial Code</span>
+                          <span className="text-[10px] text-blue-400 font-mono">Select Country & Dial Code</span>
                         </label>
                         <CountryPhoneInput
                           value={phone}
@@ -974,13 +974,13 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 font-mono flex items-center justify-between">
+                        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 font-mono flex items-center justify-between">
                           <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                            <Calendar className="w-3.5 h-3.5 text-blue-400" />
                             Date of Birth (DOB)
                           </span>
                           {dob && (
-                            <span className="text-[10px] font-mono text-emerald-400">
+                            <span className="text-[10px] font-mono text-purple-300">
                               {new Date(dob + "T00:00:00").toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                             </span>
                           )}
@@ -989,7 +989,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                           type="date"
                           value={dob}
                           onChange={(e) => setDob(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-xs font-mono text-slate-100 focus:outline-none cursor-pointer"
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none cursor-pointer"
                         />
                       </div>
                     </>
@@ -997,7 +997,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
 
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider font-mono">
+                      <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
                         Security Password
                       </label>
                       {!isRegisterMode && (
@@ -1009,26 +1009,26 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                             setForgotMsg(null);
                             setForgotStep("request");
                           }}
-                          className="text-[11px] font-mono text-indigo-400 hover:text-indigo-300 underline"
+                          className="text-[11px] font-mono text-blue-400 hover:text-blue-300 underline"
                         >
                           Change / Forgot Password?
                         </button>
                       )}
                     </div>
                     <div className="relative">
-                      <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
+                      <Lock className="w-4 h-4 text-blue-400 absolute left-3.5 top-3.5" />
                       <input
                         type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••••••"
                         required
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm sm:text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm sm:text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300 p-1"
+                        className="absolute right-3.5 top-3 text-slate-400 hover:text-white p-1"
                       >
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -1038,7 +1038,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-600/30 transition-all text-sm flex items-center justify-center gap-2 mt-2 font-mono uppercase tracking-wider cursor-pointer active:scale-[0.99]"
+                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-600/30 transition-all text-sm flex items-center justify-center gap-2 mt-2 font-mono uppercase tracking-wider cursor-pointer active:scale-[0.99]"
                   >
                     {loading ? (
                       <div className="flex items-center gap-2.5">
@@ -1061,12 +1061,12 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                       setErrorMessage(null);
                       setSuccessMessage(null);
                     }}
-                    className="text-xs text-slate-400 hover:text-indigo-400 transition-colors font-mono"
+                    className="text-xs text-blue-200/70 hover:text-white transition-colors font-mono"
                   >
                     {isRegisterMode ? (
-                      <span>Already registered? <strong className="text-indigo-400 underline">Log in here</strong></span>
+                      <span>Already registered? <strong className="text-blue-400 underline">Log in here</strong></span>
                     ) : (
-                      <span>Don't have an account? <strong className="text-indigo-400 underline">Register here</strong></span>
+                      <span>Don't have an account? <strong className="text-blue-400 underline">Register here</strong></span>
                     )}
                   </button>
                 </div>
@@ -1075,30 +1075,30 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
 
             {/* Emergency Support Line Badge */}
             <div className="mt-6 p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-center">
-              <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono block">
+              <span className="text-[10px] text-blue-200/60 uppercase tracking-widest font-mono block">
                 Direct Support Line
               </span>
-              <span className="text-xs font-bold text-amber-400 font-mono flex items-center justify-center gap-1.5 mt-0.5">
-                <PhoneCall className="w-3.5 h-3.5" /> +94 75 284 0841
+              <span className="text-xs font-bold text-purple-300 font-mono flex items-center justify-center gap-1.5 mt-0.5">
+                <PhoneCall className="w-3.5 h-3.5 text-purple-400" /> +94 75 284 0841
               </span>
             </div>
 
             {/* Community Chat & Signal Groups Registration Prompt */}
-            <div className="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-indigo-950/80 via-slate-900 to-indigo-950/80 border border-indigo-500/40 shadow-lg shadow-indigo-950/50">
+            <div className="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-blue-950/80 via-slate-900 to-purple-950/60 border border-blue-500/40 shadow-lg shadow-blue-950/50">
               <div className="flex items-center gap-3 mb-2.5">
-                <div className="w-9 h-9 rounded-lg bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shrink-0">
                   <MessageSquare className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-bold text-slate-100 font-mono">
+                    <span className="text-xs font-bold text-white font-mono">
                       Community Chat & Signals
                     </span>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase">
                       Registration Required
                     </span>
                   </div>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">
+                  <span className="text-[10px] text-blue-200/70 block mt-0.5">
                     Register with your true Gmail profile to unlock public chat, direct messages, and VIP signal groups.
                   </span>
                 </div>
@@ -1112,14 +1112,14 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                     setErrorMessage(null);
                     setSuccessMessage("Please fill out the registration form to unlock Community Chat & Signals.");
                   }}
-                  className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-indigo-600/30"
+                  className="w-full py-2 px-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shadow-blue-600/30"
                 >
                   <span>Register Now to Access Community</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               ) : (
-                <div className="text-center py-1 text-[11px] font-mono text-indigo-300 flex items-center justify-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <div className="text-center py-1 text-[11px] font-mono text-blue-300 flex items-center justify-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-300" />
                   <span>Fill in the details above to complete your registration</span>
                 </div>
               )}
@@ -1128,22 +1128,22 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
             <div className="mt-4 pt-3 border-t border-slate-800 flex flex-col items-center gap-1.5 text-center">
               <div className="flex items-center justify-center gap-2 text-[10px] font-mono">
                 {deviceInfo.isMasterDevice ? (
-                  <span className="text-amber-400 font-bold flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/30">
-                    <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span className="text-purple-300 font-bold flex items-center gap-1 bg-purple-500/10 px-2 py-0.5 rounded-lg border border-purple-500/30">
+                    <Sparkles className="w-3 h-3 text-purple-400" />
                     <span>👑 Host Master Device: Unlimited Registrations Active</span>
                   </span>
                 ) : (
                   <button
                     type="button"
                     onClick={() => setShowAdminUnlockModal(true)}
-                    className="text-slate-500 hover:text-amber-400 flex items-center gap-1 transition-colors group cursor-pointer"
+                    className="text-blue-300/70 hover:text-white flex items-center gap-1 transition-colors group cursor-pointer"
                   >
-                    <Smartphone className="w-3 h-3 text-indigo-400 group-hover:text-amber-400" />
-                    <span>Device Security Active &bull; <span className="underline decoration-slate-600 group-hover:decoration-amber-400">Host Master Unlock</span></span>
+                    <Smartphone className="w-3 h-3 text-blue-400 group-hover:text-white" />
+                    <span>Device Security Active &bull; <span className="underline decoration-blue-500/50 group-hover:decoration-white">Host Master Unlock</span></span>
                   </button>
                 )}
               </div>
-              <div className="text-[10px] text-slate-600 font-mono">
+              <div className="text-[10px] text-blue-200/40 font-mono">
                 TrackerX Ecosystem Systems Hub v4.2
               </div>
             </div>
@@ -1154,8 +1154,8 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
       {/* Host Admin Master Device Quick-Unlock Modal */}
       {showAdminUnlockModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
-          <div className="bg-slate-900 border border-amber-500/40 p-6 rounded-2xl max-w-sm w-full shadow-2xl relative">
-            <div className="flex items-center gap-2.5 mb-3 text-amber-400">
+          <div className="bg-slate-900 border border-purple-500/40 p-6 rounded-2xl max-w-sm w-full shadow-2xl relative">
+            <div className="flex items-center gap-2.5 mb-3 text-purple-400">
               <Unlock className="w-5 h-5" />
               <h3 className="font-bold text-white text-base font-mono">Master Device Key Unlock</h3>
             </div>
@@ -1165,7 +1165,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
 
             <form onSubmit={handleUnlockMasterDevice} className="space-y-3">
               <div>
-                <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                <label className="block text-[11px] font-mono text-slate-300 mb-1">
                   Master Key (for unlimited device registration)
                 </label>
                 <input
@@ -1173,14 +1173,14 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                   value={adminUnlockPin}
                   onChange={(e) => setAdminUnlockPin(e.target.value)}
                   placeholder="Enter Master Key"
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500 font-mono"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 font-mono"
                   autoFocus
                   required
                 />
               </div>
 
               {adminUnlockMsg && (
-                <div className={`p-2.5 rounded-lg text-xs font-mono ${adminUnlockMsg.startsWith("✅") ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30" : "bg-rose-500/10 text-rose-300 border border-rose-500/30"}`}>
+                <div className={`p-2.5 rounded-lg text-xs font-mono ${adminUnlockMsg.startsWith("✅") ? "bg-blue-500/10 text-blue-300 border border-blue-500/30" : "bg-rose-500/10 text-rose-300 border border-rose-500/30"}`}>
                   {adminUnlockMsg}
                 </div>
               )}
@@ -1199,7 +1199,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-mono font-bold transition-all shadow-md shadow-amber-500/20"
+                  className="flex-1 py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-mono font-bold transition-all shadow-md shadow-purple-600/25"
                 >
                   Activate Device
                 </button>
@@ -1212,7 +1212,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
       {/* Forgot / Change Password Modal with 6-digit Code & Lottie */}
       {showForgotModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 animate-in fade-in">
-          <div className="bg-slate-900 border border-indigo-500/40 p-6 rounded-2xl max-w-sm w-full shadow-2xl relative text-center">
+          <div className="bg-slate-900 border border-blue-500/40 p-6 rounded-2xl max-w-sm w-full shadow-2xl relative text-center">
             {forgotSuccess ? (
               <AuthLottieAnimation type="success" className="w-20 h-20 mx-auto mb-2" />
             ) : (
@@ -1222,14 +1222,14 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
             <h3 className="font-bold text-white text-lg mb-1">
               {forgotStep === "request" ? "Reset / Change Password" : "Verify & Set New Password"}
             </h3>
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-xs text-blue-200/70 mb-4">
               {forgotStep === "request"
                 ? "Enter your Gmail or Username to receive a 6-digit verification code."
                 : `Enter the 6-digit verification code sent to ${forgotIdent} and your new password.`}
             </p>
 
             {forgotMsg && (
-              <div className={`p-2.5 rounded-lg text-xs font-mono mb-3 ${forgotMsg.startsWith("✅") ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30" : "bg-rose-500/10 text-rose-300 border border-rose-500/30"}`}>
+              <div className={`p-2.5 rounded-lg text-xs font-mono mb-3 ${forgotMsg.startsWith("✅") ? "bg-blue-500/10 text-blue-300 border border-blue-500/30" : "bg-rose-500/10 text-rose-300 border border-rose-500/30"}`}>
                 {forgotMsg}
               </div>
             )}
@@ -1237,18 +1237,18 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
             {forgotStep === "request" ? (
               <form onSubmit={handleForgotRequestCode} className="space-y-3 text-left">
                 <div>
-                  <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                  <label className="block text-[11px] font-mono text-slate-300 mb-1">
                     Gmail / Username
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                    <Mail className="w-4 h-4 text-blue-400 absolute left-3 top-3" />
                     <input
                       type="text"
                       value={forgotIdent}
                       onChange={(e) => setForgotIdent(e.target.value)}
                       placeholder="Enter registered Gmail"
                       required
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-100 font-mono focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white font-mono focus:outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -1267,7 +1267,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono font-bold transition-all shadow-md shadow-indigo-600/30 flex items-center justify-center gap-1"
+                    className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold transition-all shadow-md shadow-blue-600/30 flex items-center justify-center gap-1"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>{loading ? "Sending..." : "Send Code"}</span>
@@ -1277,7 +1277,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
             ) : (
               <form onSubmit={handleForgotSubmitNewPass} className="space-y-3 text-left">
                 <div>
-                  <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                  <label className="block text-[11px] font-mono text-slate-300 mb-1">
                     6-Digit Verification Code
                   </label>
                   <input
@@ -1288,16 +1288,16 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                     placeholder="000000"
                     required
                     autoFocus
-                    className="w-full bg-slate-950 border border-indigo-500/60 rounded-xl py-2 px-3 text-lg text-center font-mono tracking-widest text-slate-100 focus:outline-none focus:border-indigo-400"
+                    className="w-full bg-slate-950 border border-blue-500/60 rounded-xl py-2 px-3 text-lg text-center font-mono tracking-widest text-white focus:outline-none focus:border-blue-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                  <label className="block text-[11px] font-mono text-slate-300 mb-1">
                     New Password
                   </label>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                    <Lock className="w-4 h-4 text-blue-400 absolute left-3 top-3" />
                     <input
                       type="password"
                       value={forgotNewPass}
@@ -1305,7 +1305,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                       placeholder="Minimum 6 characters"
                       required
                       minLength={6}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -1324,7 +1324,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                   <button
                     type="submit"
                     disabled={loading || forgotCode.length !== 6}
-                    className="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-mono font-bold transition-all shadow-md shadow-indigo-600/30 disabled:opacity-50 flex items-center justify-center gap-1"
+                    className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold transition-all shadow-md shadow-blue-600/30 disabled:opacity-50 flex items-center justify-center gap-1"
                   >
                     <CheckCircle className="w-3.5 h-3.5" />
                     <span>{loading ? "Updating..." : "Set Password"}</span>

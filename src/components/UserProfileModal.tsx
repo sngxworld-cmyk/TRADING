@@ -74,7 +74,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header with decorative background */}
-        <div className="h-24 bg-gradient-to-r from-indigo-900 via-slate-800 to-slate-900 relative p-4 flex justify-end">
+        <div className="h-24 bg-gradient-to-r from-blue-900 via-slate-800 to-purple-900/60 relative p-4 flex justify-end">
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-slate-950/60 hover:bg-slate-900 text-slate-300 flex items-center justify-center transition-colors border border-slate-700/50"
@@ -87,7 +87,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
         <div className="px-6 pb-6 pt-0 relative">
           {/* Avatar Photo */}
           <div className="-mt-12 mb-3 flex items-end justify-between">
-            <div className="w-20 h-20 rounded-2xl bg-slate-800 border-4 border-slate-900 overflow-hidden shadow-xl flex items-center justify-center text-slate-400 font-bold text-2xl font-mono">
+            <div className="w-20 h-20 rounded-2xl bg-slate-800 border-4 border-slate-900 overflow-hidden shadow-xl flex items-center justify-center text-white font-bold text-2xl font-mono">
               {targetUser.photoURL ? (
                 <img
                   src={targetUser.photoURL}
@@ -95,7 +95,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-indigo-400 uppercase">
+                <span className="text-blue-400 uppercase">
                   {targetUser.username.substring(0, 2)}
                 </span>
               )}
@@ -109,20 +109,20 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
           {/* Name & Username */}
           <div className="space-y-1">
-            <h3 className="text-lg font-bold text-slate-100 font-mono flex items-center gap-2">
+            <h3 className="text-lg font-bold text-white font-mono flex items-center gap-2">
               {targetUser.displayName || targetUser.username}
               {targetUser.hideIdentity && !isSelf && (
-                <span className="text-[10px] text-slate-500 font-normal font-sans bg-slate-800 px-2 py-0.5 rounded">
+                <span className="text-[10px] text-blue-200/70 font-normal font-sans bg-slate-800 px-2 py-0.5 rounded">
                   (Anonymous)
                 </span>
               )}
             </h3>
-            <p className="text-xs text-slate-400 font-mono">@{targetUser.username}</p>
+            <p className="text-xs text-blue-200/70 font-mono">@{targetUser.username}</p>
           </div>
 
           {/* User Bio / Stats */}
           {targetUser.bio && (
-            <p className="mt-3 text-xs text-slate-300 italic bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
+            <p className="mt-3 text-xs text-slate-200 italic bg-slate-950/60 border border-slate-800/80 rounded-xl p-3">
               "{targetUser.bio}"
             </p>
           )}
@@ -131,15 +131,15 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           {((targetUser as any).dob || (isSelf && currentUser.dob)) && (
             <div className="mt-3 p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between font-mono text-xs">
               <div className="flex items-center gap-2">
-                <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                <Calendar className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Date of Birth</span>
-                  <strong className="text-slate-200">
+                  <span className="text-[10px] text-blue-200/60 uppercase tracking-wider block">Date of Birth</span>
+                  <strong className="text-white">
                     {new Date(((targetUser as any).dob || currentUser.dob) + "T00:00:00").toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                   </strong>
                 </div>
               </div>
-              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
+              <span className="text-[10px] text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded">
                 Verified
               </span>
             </div>
@@ -148,27 +148,27 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           {/* Platform Age & Trading Pair */}
           <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-mono">
             <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <Calendar className="w-3.5 h-3.5 text-blue-400 shrink-0" />
               <div>
-                <span className="text-[10px] text-slate-500 block uppercase">Platform Age</span>
-                <strong className="text-slate-200">{ageString}</strong>
+                <span className="text-[10px] text-blue-200/60 block uppercase">Platform Age</span>
+                <strong className="text-white">{ageString}</strong>
               </div>
             </div>
 
             <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
               <div>
-                <span className="text-[10px] text-slate-500 block uppercase">Trading Market</span>
-                <strong className="text-slate-200">{targetUser.tradingMarket || targetUser.tradingPair || "Crypto Market"}</strong>
+                <span className="text-[10px] text-blue-200/60 block uppercase">Trading Market</span>
+                <strong className="text-white">{targetUser.tradingMarket || targetUser.tradingPair || "Crypto Market"}</strong>
               </div>
             </div>
           </div>
 
           {/* Guideline Banner for Harassment / Conduct */}
-          <div className="mt-3 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/25 flex items-center gap-2 text-[11px] text-rose-300 font-sans">
-            <Shield className="w-4 h-4 text-rose-400 shrink-0" />
+          <div className="mt-3 p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/30 flex items-center gap-2 text-[11px] text-purple-200 font-sans">
+            <Shield className="w-4 h-4 text-purple-400 shrink-0" />
             <span>
-              <strong className="font-semibold text-rose-200">Community Safety Rule:</strong> Harassment of any user leads to an <strong>immediate permanent ban</strong>.
+              <strong className="font-semibold text-white">Community Safety Rule:</strong> Harassment of any user leads to an <strong>immediate permanent ban</strong>.
             </span>
           </div>
 
@@ -185,7 +185,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                       displayName: targetUser.displayName,
                     });
                   }}
-                  className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition-all font-mono"
+                  className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition-all font-mono"
                 >
                   <MessageSquare className="w-4 h-4" /> Direct Message
                 </button>
@@ -196,9 +196,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                       if (onSendJoinRequest) onSendJoinRequest(ownedGroup);
                       onClose();
                     }}
-                    className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all font-mono"
+                    className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-blue-300 border border-blue-500/30 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all font-mono"
                   >
-                    <UserPlus className="w-4 h-4" /> Send Join {ownedGroup.name} Request
+                    <UserPlus className="w-4 h-4 text-blue-400" /> Send Join {ownedGroup.name} Request
                   </button>
                 )}
               </>
@@ -208,10 +208,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             {isSelf && (
               <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5 font-mono">
-                    <EyeOff className="w-3.5 h-3.5 text-indigo-400" /> Hide My Identity
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5 font-mono">
+                    <EyeOff className="w-3.5 h-3.5 text-blue-400" /> Hide My Identity
                   </span>
-                  <span className="text-[10px] text-slate-500 block">
+                  <span className="text-[10px] text-blue-200/70 block">
                     Mask your name & email from public users in the web app
                   </span>
                 </div>
@@ -219,7 +219,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   onClick={handleToggleHideIdentity}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold font-mono transition-all ${
                     hideIdentity
-                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                       : "bg-slate-800 text-slate-400 hover:text-slate-200"
                   }`}
                 >
@@ -229,7 +229,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             )}
 
             {savedNotice && (
-              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs text-center font-mono flex items-center justify-center gap-1">
+              <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs text-center font-mono flex items-center justify-center gap-1">
                 <Check className="w-3.5 h-3.5" /> Privacy preference updated!
               </div>
             )}

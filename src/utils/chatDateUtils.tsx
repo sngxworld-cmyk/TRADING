@@ -117,8 +117,8 @@ export const ChatDateDivider: React.FC<{ date: string | number | Date }> = ({ da
       <div className="absolute inset-0 flex items-center">
         <div className="w-full border-t border-slate-800/80" />
       </div>
-      <div className="relative px-3 py-1 rounded-full bg-slate-900 border border-slate-700/80 text-[10px] font-mono text-slate-300 shadow-md flex items-center gap-1.5 backdrop-blur-md">
-        <Calendar className="w-3 h-3 text-indigo-400" />
+      <div className="relative px-3 py-1 rounded-full bg-slate-900 border border-slate-700/80 text-[10px] font-mono text-slate-200 shadow-md flex items-center gap-1.5 backdrop-blur-md">
+        <Calendar className="w-3 h-3 text-blue-400" />
         <span>{label}</span>
       </div>
     </div>
