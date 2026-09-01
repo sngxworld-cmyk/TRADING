@@ -53,7 +53,10 @@ export default function App() {
 
       const configuredKey = "sngx_journal_configured_" + cleanEmail;
       const localConfigured = localStorage.getItem(configuredKey) === "true";
-      const cloudConfigured = !!currentUser.hasConfiguredJournal;
+      const cloudConfigured =
+        currentUser.hasConfiguredJournal === true ||
+        (!!currentUser.startingCapital && currentUser.startingCapital.trim() !== "") ||
+        (currentUser.tradingData && Object.keys(currentUser.tradingData).length > 0);
 
       if (cloudSeen) {
         try {
@@ -73,14 +76,24 @@ export default function App() {
       } else {
         setShowTutorial(false);
 
-        // If tutorial is already completed, check if mandatory configuration is needed
+        // If tutorial is already completed, check if mandatory configuration is needed.
+        // ONLY show on first login if NEVER configured on this device or in cloud.
         if (!localConfigured && !cloudConfigured) {
           setIsSetupMandatory(true);
           setIsSetupModalOpen(true);
+        } else {
+          setIsSetupMandatory(false);
+          setIsSetupModalOpen(false);
         }
       }
     }
-  }, [currentUser?.email, currentUser?.status, currentUser?.hasSeenTutorial, currentUser?.hasConfiguredJournal]);
+  }, [
+    currentUser?.email,
+    currentUser?.status,
+    currentUser?.hasSeenTutorial,
+    currentUser?.hasConfiguredJournal,
+    currentUser?.startingCapital,
+  ]);
 
   // Complete / Skip Tutorial -> If journal is not configured yet, immediately trigger mandatory setup
   const handleFinishTutorial = async () => {
@@ -100,14 +113,20 @@ export default function App() {
 
       setCurrentUser((prev) => (prev ? { ...prev, hasSeenTutorial: true } : null));
 
-      // After tutorial, if journal is not configured, show mandatory setup
+      // After tutorial, if journal is not configured anywhere, show mandatory setup
       const configuredKey = "sngx_journal_configured_" + cleanEmail;
       const localConfigured = localStorage.getItem(configuredKey) === "true";
-      const cloudConfigured = !!currentUser.hasConfiguredJournal;
+      const cloudConfigured =
+        currentUser.hasConfiguredJournal === true ||
+        (!!currentUser.startingCapital && currentUser.startingCapital.trim() !== "") ||
+        (currentUser.tradingData && Object.keys(currentUser.tradingData).length > 0);
 
       if (!localConfigured && !cloudConfigured) {
         setIsSetupMandatory(true);
         setIsSetupModalOpen(true);
+      } else {
+        setIsSetupMandatory(false);
+        setIsSetupModalOpen(false);
       }
     }
     setShowTutorial(false);
@@ -121,6 +140,23 @@ export default function App() {
   }) => {
     if (!currentUser) return;
     const cleanEmail = currentUser.email.toLowerCase();
+    const configuredKey = "sngx_journal_configured_" + cleanEmail;
+    const tutorialKey = "sngx_tutorial_seen_" + cleanEmail;
+
+    try {
+      localStorage.setItem(configuredKey, "true");
+      localStorage.setItem(tutorialKey, "true");
+      localStorage.setItem(`trading_capital_${cleanEmail}`, config.startingCapital);
+      localStorage.setItem(
+        `trading_settings_${cleanEmail}`,
+        JSON.stringify({
+          yearRange: config.yearRange,
+          startMonth: config.startMonth,
+          selectedMonth: config.startMonth,
+          startingCapital: config.startingCapital,
+        })
+      );
+    } catch {}
 
     try {
       await saveJournalConfigInFirestore(cleanEmail, {
@@ -139,6 +175,7 @@ export default function App() {
             yearRange: config.yearRange,
             startMonth: config.startMonth,
             hasConfiguredJournal: true,
+            hasSeenTutorial: true,
           }
         : null
     );

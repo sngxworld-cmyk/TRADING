@@ -865,23 +865,42 @@ export async function loginUserInFirestore(
     status: matchedData.status || "pending",
     createdAt: matchedData.createdAt,
     lastLogin: new Date().toISOString(),
-    hasSeenTutorial: matchedData.hasSeenTutorial !== undefined ? !!matchedData.hasSeenTutorial : undefined,
-    hasConfiguredJournal: matchedData.hasConfiguredJournal !== undefined ? !!matchedData.hasConfiguredJournal : undefined,
+    hasSeenTutorial: matchedData.hasSeenTutorial !== undefined ? !!matchedData.hasSeenTutorial : (!!matchedData.startingCapital ? true : undefined),
+    hasConfiguredJournal:
+      matchedData.hasConfiguredJournal !== undefined
+        ? !!matchedData.hasConfiguredJournal
+        : (!!matchedData.startingCapital && String(matchedData.startingCapital).trim() !== "") ||
+          (matchedData.tradingData && Object.keys(matchedData.tradingData).length > 0)
+        ? true
+        : undefined,
     yearRange: matchedData.yearRange || "2026",
     startMonth: matchedData.startMonth !== undefined ? Number(matchedData.startMonth) : 0,
     tradingData: matchedData.tradingData || {},
   };
 
+  // Sync configured & tutorial flags to local device cache immediately
+  const cleanEmail = cleanEmailKey(user.email);
+  if (user.hasConfiguredJournal || user.startingCapital) {
+    try {
+      localStorage.setItem(`sngx_journal_configured_${cleanEmail}`, "true");
+    } catch (e) {}
+  }
+  if (user.hasSeenTutorial || user.startingCapital) {
+    try {
+      localStorage.setItem(`sngx_tutorial_seen_${cleanEmail}`, "true");
+    } catch (e) {}
+  }
+
   // Update last login in Firestore if active
   if (!checkQuotaStatus()) {
     try {
       await setDoc(
-        doc(db, "users", cleanEmailKey(user.email)),
+        doc(db, "users", cleanEmail),
         { lastLogin: user.lastLogin },
         { merge: true }
       );
     } catch (e) {
-      handleFirestoreError(e, OperationType.WRITE, `users/${cleanEmailKey(user.email)}`);
+      handleFirestoreError(e, OperationType.WRITE, `users/${cleanEmail}`);
     }
   }
 
