@@ -305,29 +305,6 @@ export default function App() {
   // 2. Render Primary Application with TradingApp
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans selection:bg-blue-600 selection:text-white relative">
-      {/* 3D Robot First-Login Interactive Tutorial Overlay */}
-      {showTutorial && !isTrialExpired && (
-        <RobotTutorialOverlay
-          onComplete={handleFinishTutorial}
-          onSkip={handleFinishTutorial}
-        />
-      )}
-
-      {/* Mandatory / Timeline Setup Modal */}
-      {isSetupModalOpen && currentUser && !showTutorial && (
-        <MandatorySetupModal
-          isOpen={isSetupModalOpen}
-          isMandatory={isSetupMandatory}
-          initialCapital={currentUser.startingCapital || "100"}
-          initialYear={currentUser.yearRange || "2026"}
-          initialMonth={currentUser.startMonth !== undefined ? currentUser.startMonth : 0}
-          onSave={handleSaveJournalSetup}
-          onClose={() => {
-            if (!isSetupMandatory) setIsSetupModalOpen(false);
-          }}
-        />
-      )}
-
       {/* Top Navbar */}
       <Navbar
         user={currentUser}
@@ -421,6 +398,29 @@ export default function App() {
           )}
         </div>
       </div>
+
+      {/* 3D Robot First-Login Interactive Tutorial Overlay */}
+      {showTutorial && !isTrialExpired && (
+        <RobotTutorialOverlay
+          onComplete={handleFinishTutorial}
+          onSkip={handleFinishTutorial}
+        />
+      )}
+
+      {/* Mandatory / Timeline Setup Modal */}
+      {isSetupModalOpen && currentUser && !showTutorial && (
+        <MandatorySetupModal
+          isOpen={isSetupModalOpen}
+          isMandatory={isSetupMandatory}
+          initialCapital={currentUser.startingCapital || "100"}
+          initialYear={currentUser.yearRange || "2026"}
+          initialMonth={currentUser.startMonth !== undefined ? currentUser.startMonth : 0}
+          onSave={handleSaveJournalSetup}
+          onClose={() => {
+            if (!isSetupMandatory) setIsSetupModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

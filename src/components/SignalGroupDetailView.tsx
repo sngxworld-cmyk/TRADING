@@ -1739,7 +1739,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
       {/* Add Group Member Modal (Group Admin / Host Only) */}
       {isAddMemberModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
             <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
               <div className="flex items-center gap-2.5">
@@ -1855,7 +1855,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
       {/* Group Settings Modal (Group Admin / Host Only) */}
       {isGroupSettingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
               <div className="flex items-center gap-2.5">
@@ -2109,7 +2109,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
       {/* VIP Subscription Settings Modal */}
       {isVipModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
             <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
               <div className="flex items-center gap-2.5">
@@ -2217,7 +2217,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
       {/* Zoom Chart / Photo Modal with Local Download */}
       {zoomedImage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md animate-in fade-in"
           onClick={() => setZoomedImage(null)}
         >
           <div
@@ -2258,7 +2258,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
       {/* Remove Member Confirmation Modal */}
       {memberToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in">
           <div className="bg-slate-900 border border-rose-500/40 p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4 font-mono">
             <div className="flex items-center gap-3 text-rose-400">
               <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30">
@@ -2322,7 +2322,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
       {/* Delete Group Confirmation Modal (Host Admin & Group Admin) */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in">
           <div className="bg-slate-900 border border-rose-500/40 p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-4">
             <div className="flex items-center gap-3 text-rose-400">
               <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30">

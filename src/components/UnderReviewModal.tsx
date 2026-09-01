@@ -38,7 +38,7 @@ export const UnderReviewModal: React.FC<UnderReviewModalProps> = ({
   )}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/90 backdrop-blur-lg p-4 animate-in fade-in duration-300">
       <div className="w-full max-w-[560px] bg-slate-900 border border-slate-800 shadow-2xl rounded-2xl overflow-hidden p-6 sm:p-8 flex flex-col items-center text-center relative max-h-[92vh] overflow-y-auto">
         {/* Glow accent */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-2 bg-gradient-to-r from-blue-500 via-white to-purple-500 rounded-b-full shadow-lg shadow-blue-500/50"></div>

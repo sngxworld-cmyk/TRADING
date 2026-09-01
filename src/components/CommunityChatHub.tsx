@@ -1351,7 +1351,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
 
       {/* Delete Group Confirmation Modal */}
       {groupToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="bg-slate-900 border border-rose-500/40 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3 text-rose-400">
               <AlertTriangle className="w-6 h-6 shrink-0" />
@@ -1407,7 +1407,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
       {/* Image Zoom with Local Download Modal */}
       {zoomedImage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
           onClick={() => setZoomedImage(null)}
         >
           <div

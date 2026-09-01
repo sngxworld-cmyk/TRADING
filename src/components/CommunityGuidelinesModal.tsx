@@ -15,7 +15,7 @@ export const CommunityGuidelinesModal: React.FC<CommunityGuidelinesModalProps> =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Header */}
         <div className="p-5 bg-gradient-to-r from-slate-900 via-blue-950/40 to-purple-950/30 border-b border-slate-800 flex items-center justify-between flex-wrap gap-3">

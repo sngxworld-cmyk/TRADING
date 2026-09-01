@@ -169,7 +169,7 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
   // Render Language Selector First
   if (!selectedLanguage) {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-300">
+      <div className="fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-300">
         <div className="max-w-md w-full bg-slate-900 border border-blue-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden flex flex-col items-center text-center space-y-6">
           {/* Top Decorative Glow */}
           <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 bg-blue-600/30 rounded-full blur-3xl pointer-events-none" />
@@ -235,7 +235,7 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
   const StepIcon = step?.icon || Sparkles;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[200] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="max-w-xl w-full bg-slate-900 border border-blue-500/40 rounded-3xl p-6 sm:p-7 shadow-2xl relative overflow-hidden flex flex-col space-y-5 animate-in slide-in-from-bottom-4 duration-300">
         {/* Top bar with Step Counter & Skip */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
