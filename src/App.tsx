@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { UserProfile } from "./types";
 import { Navbar } from "./components/Navbar";
 import { GatewayScreen } from "./components/GatewayScreen";
-import { UnderReviewModal } from "./components/UnderReviewModal";
+import { TrialExpiredModal } from "./components/TrialExpiredModal";
+import { AccountSuspendedModal } from "./components/AccountSuspendedModal";
 import { TradingApp } from "./components/TradingApp";
 import { RobotTutorialOverlay } from "./components/RobotTutorialOverlay";
 import { ProfileEditorModal } from "./components/ProfileEditorModal";
@@ -273,9 +274,12 @@ export default function App() {
     currentUser?.platformRole === "owner" ||
     currentUser?.platformRole === "sub_owner" ||
     currentUser?.email?.toLowerCase() === "sngxworld@gmail.com";
-  const isTrialExpired = !isApprovedUser && checkIsTrialExpired(currentUser);
+  const isSuspendedUser =
+    currentUser?.status === "revoked" || currentUser?.status === "banned";
+  const isTrialExpired =
+    !isApprovedUser && !isSuspendedUser && checkIsTrialExpired(currentUser);
 
-  // Auto-poll approval status every 4 seconds if user is awaiting host admin approval
+  // Auto-poll approval status every 4 seconds if user is awaiting host admin approval or suspended
   useEffect(() => {
     if (!currentUser || isApprovedUser) return;
     const interval = setInterval(handleRefreshStatus, 4000);
@@ -355,19 +359,27 @@ export default function App() {
 
       {/* Main Content Area */}
       <div className="flex-1 relative animate-in fade-in slide-in-from-bottom-2 duration-500">
-        {/* If 5-Day trial is expired and user is not approved, show Modal overlay over blurred background */}
-        {isTrialExpired && (
-          <UnderReviewModal
+        {/* If account is Revoked / Banned by Host Admin, show AccountSuspendedModal gate */}
+        {isSuspendedUser && currentUser && (
+          <AccountSuspendedModal
             user={currentUser}
             onRefreshStatus={handleRefreshStatus}
             onLogout={handleLogout}
-            isTrialExpired={true}
+          />
+        )}
+
+        {/* If 5-Day trial is expired and user is not approved/suspended, show TrialExpiredModal */}
+        {isTrialExpired && currentUser && !isSuspendedUser && (
+          <TrialExpiredModal
+            user={currentUser}
+            onRefreshStatus={handleRefreshStatus}
+            onLogout={handleLogout}
           />
         )}
 
         <div
           className={`transition-all duration-300 ${
-            isTrialExpired || (isSetupMandatory && isSetupModalOpen)
+            isSuspendedUser || isTrialExpired || (isSetupMandatory && isSetupModalOpen)
               ? "opacity-25 blur-md pointer-events-none select-none overflow-hidden max-h-[calc(100vh-64px)]"
               : "opacity-100"
           }`}
@@ -400,7 +412,7 @@ export default function App() {
       </div>
 
       {/* 3D Robot First-Login Interactive Tutorial Overlay */}
-      {showTutorial && !isTrialExpired && (
+      {showTutorial && !isTrialExpired && !isSuspendedUser && (
         <RobotTutorialOverlay
           onComplete={handleFinishTutorial}
           onSkip={handleFinishTutorial}
@@ -408,7 +420,7 @@ export default function App() {
       )}
 
       {/* Mandatory / Timeline Setup Modal */}
-      {isSetupModalOpen && currentUser && !showTutorial && (
+      {isSetupModalOpen && currentUser && !showTutorial && !isTrialExpired && !isSuspendedUser && (
         <MandatorySetupModal
           isOpen={isSetupModalOpen}
           isMandatory={isSetupMandatory}

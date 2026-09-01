@@ -10,7 +10,9 @@ export type LottieAnimationType =
   | "community-signal"
   | "signal-radar"
   | "entering-portal"
-  | "chart-wave";
+  | "chart-wave"
+  | "trial-expired"
+  | "account-suspended";
 
 interface LottieAnimationProps {
   type: LottieAnimationType;
@@ -289,7 +291,94 @@ export const AuthLottieAnimation: React.FC<LottieAnimationProps> = ({
     );
   }
 
-  // 7. Lock Animation
+  // 7. Trial Period Expired Lottie Animation (Hourglass + Rotating Star & Amber Rings)
+  if (type === "trial-expired") {
+    return (
+      <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
+        {/* Amber Pulsing Glow Aura */}
+        <motion.div
+          animate={{ scale: [0.9, 1.25, 0.9], opacity: [0.35, 0.75, 0.35] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute inset-0 rounded-3xl bg-amber-500/25 blur-xl"
+        />
+
+        {/* Orbiting Tech Ring */}
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full text-amber-500/30" fill="none">
+            <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="2" strokeDasharray="6 8" />
+            <circle cx="94" cy="50" r="3.5" fill="#f59e0b" className="shadow-lg shadow-amber-500" />
+            <circle cx="6" cy="50" r="2.5" fill="#fbbf24" />
+          </svg>
+        </motion.div>
+
+        {/* Outer Hexagon / Shield Frame */}
+        <div className="relative z-10 w-full h-full rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-amber-500/50 shadow-[0_0_25px_rgba(245,158,11,0.3)] flex items-center justify-center p-3">
+          {/* Animated Sand Clock / Hourglass Icon */}
+          <motion.div
+            animate={{ rotate: [0, 0, 180, 180, 360], scale: [1, 1.08, 1, 1.08, 1] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+            className="relative flex items-center justify-center text-amber-400"
+          >
+            <svg viewBox="0 0 24 24" className="w-12 h-12 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 22h14M5 2h14m-2 20v-5.172a2 2 0 00-.586-1.414L13.828 13a2 2 0 010-2l2.586-2.414A2 2 0 0017 7.172V2M7 22v-5.172a2 2 0 01.586-1.414L10.172 13a2 2 0 000-2L7.586 8.586A2 2 0 017 7.172V2" />
+            </svg>
+            {/* Falling Sand Glow Point */}
+            <motion.div
+              animate={{ y: [-4, 6], opacity: [1, 0] }}
+              transition={{ duration: 1, repeat: Infinity, ease: "easeIn" }}
+              className="absolute w-1.5 h-1.5 rounded-full bg-amber-300 shadow-sm shadow-amber-300"
+            />
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // 8. Account Suspended / Banned Lottie Animation (Crimson Shield + Alert Pulse)
+  if (type === "account-suspended") {
+    return (
+      <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
+        {/* Red Warning Glow */}
+        <motion.div
+          animate={{ scale: [0.85, 1.25, 0.85], opacity: [0.4, 0.85, 0.4] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute inset-0 rounded-3xl bg-rose-600/30 blur-xl"
+        />
+
+        {/* Counter Orbiting Warning Sparks */}
+        <motion.div
+          animate={{ rotate: -360 }}
+          transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full text-rose-500/40" fill="none">
+            <circle cx="50" cy="50" r="44" stroke="currentColor" strokeWidth="2.5" strokeDasharray="12 12" />
+            <circle cx="50" cy="6" r="3.5" fill="#f43f5e" />
+            <circle cx="50" cy="94" r="3.5" fill="#f43f5e" />
+          </svg>
+        </motion.div>
+
+        {/* Crimson Core Card */}
+        <div className="relative z-10 w-full h-full rounded-2xl bg-gradient-to-b from-slate-900 via-rose-950/40 to-slate-950 border border-rose-500/60 shadow-[0_0_25px_rgba(244,63,94,0.4)] flex items-center justify-center p-3">
+          <motion.div
+            animate={{ scale: [1, 1.12, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            className="text-rose-400 flex items-center justify-center"
+          >
+            <svg viewBox="0 0 24 24" className="w-12 h-12 drop-shadow-[0_0_10px_rgba(244,63,94,0.7)]" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // 9. Lock Animation
   return (
     <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
       <motion.div
