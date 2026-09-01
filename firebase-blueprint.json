@@ -11,6 +11,8 @@
         "status": { "type": "string" },
         "createdAt": { "type": "string" },
         "lastLogin": { "type": "string" },
+        "hasSeenTutorial": { "type": "boolean" },
+        "hasConfiguredJournal": { "type": "boolean" },
         "yearRange": { "type": "string" },
         "startMonth": { "type": "number" }
       },

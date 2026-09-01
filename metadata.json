@@ -1,6 +1,6 @@
 {
-  "name": "TrackerX Trade Journal Pro",
-  "description": "TrackerX Enterprise Multi-Year Strategic Trade Journal Tracker Web Application with Admin Host Access Management Portal",
+  "name": "TrackerX",
+  "description": "TrackerX Professional Multi-Year Strategic Trade Journal Terminal and Performance Analytics Platform",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

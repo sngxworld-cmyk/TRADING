@@ -32,6 +32,10 @@ export interface UserProfile {
   subOwnerNote?: string;
   createdAt?: string;
   lastLogin?: string;
+  hasSeenTutorial?: boolean;
+  hasConfiguredJournal?: boolean;
+  yearRange?: string;
+  startMonth?: number;
   tradingData?: TradingDataStore | null;
 }
 

@@ -36,6 +36,8 @@ interface UserRecord {
   subOwnerNote?: string;
   createdAt: string;
   lastLogin?: string;
+  hasSeenTutorial?: boolean;
+  hasConfiguredJournal?: boolean;
   tradingData?: any;
   yearRange?: string;
   startMonth?: number;
@@ -655,6 +657,10 @@ app.use((req, res, next) => {
           startingCapital: user.startingCapital || "",
           role: user.role,
           status: user.status,
+          hasSeenTutorial: user.hasSeenTutorial ?? false,
+          hasConfiguredJournal: user.hasConfiguredJournal ?? false,
+          yearRange: user.yearRange || "2026",
+          startMonth: user.startMonth ?? 0,
         },
       });
     }
@@ -787,6 +793,7 @@ app.use((req, res, next) => {
         startingCapital: newUser.startingCapital,
         role: newUser.role,
         status: newUser.status,
+        hasSeenTutorial: false,
       },
     });
   });
@@ -894,6 +901,10 @@ app.use((req, res, next) => {
       startingCapital: user.startingCapital || "",
       role: user.role,
       status: user.status,
+      hasSeenTutorial: user.hasSeenTutorial ?? false,
+      hasConfiguredJournal: user.hasConfiguredJournal ?? false,
+      yearRange: user.yearRange || "2026",
+      startMonth: user.startMonth ?? 0,
       tradingData: user.tradingData || null,
     };
 
@@ -949,6 +960,10 @@ app.use((req, res, next) => {
       if (updates.bio !== undefined) user.bio = updates.bio.trim();
       if (updates.tradingPair !== undefined) user.tradingPair = updates.tradingPair.trim();
       if (updates.startingCapital !== undefined) user.startingCapital = updates.startingCapital.trim();
+      if (updates.hasSeenTutorial !== undefined) user.hasSeenTutorial = !!updates.hasSeenTutorial;
+      if (updates.hasConfiguredJournal !== undefined) user.hasConfiguredJournal = !!updates.hasConfiguredJournal;
+      if (updates.yearRange !== undefined) user.yearRange = String(updates.yearRange).trim();
+      if (updates.startMonth !== undefined) user.startMonth = Number(updates.startMonth);
     }
 
     saveDB(currentDb);
@@ -968,6 +983,10 @@ app.use((req, res, next) => {
         startingCapital: user.startingCapital || "",
         role: user.role,
         status: user.status,
+        hasSeenTutorial: user.hasSeenTutorial ?? false,
+        hasConfiguredJournal: user.hasConfiguredJournal ?? false,
+        yearRange: user.yearRange || "2026",
+        startMonth: user.startMonth ?? 0,
       },
     });
   });

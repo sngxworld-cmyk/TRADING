@@ -268,12 +268,14 @@ export async function registerUserInFirestore(params: {
     status,
     createdAt: new Date().toISOString(),
     lastLogin: new Date().toISOString(),
+    hasSeenTutorial: false,
   };
 
   const firestoreRecord: Record<string, any> = {
     ...newUser,
     password: params.password || "",
     deviceId: getDeviceId(),
+    hasSeenTutorial: false,
     tradingData: {},
   };
 
@@ -397,11 +399,125 @@ export async function updateUserProfileInFirestore(
     status: updatedRecord.status || "approved",
     createdAt: updatedRecord.createdAt,
     lastLogin: updatedRecord.lastLogin || new Date().toISOString(),
+    hasSeenTutorial: updatedRecord.hasSeenTutorial !== undefined ? !!updatedRecord.hasSeenTutorial : undefined,
     tradingData: updatedRecord.tradingData || null,
   };
 
   // Update record
   return updatedUser;
+}
+
+/**
+ * Mark tutorial as completed in Firestore, Server, and LocalStorage across all devices
+ */
+export async function markTutorialCompletedInFirestore(email: string): Promise<void> {
+  const cleanEmail = cleanEmailKey(email);
+  if (!cleanEmail) return;
+
+  const tutorialKey = "sngx_tutorial_seen_" + cleanEmail;
+  try {
+    localStorage.setItem(tutorialKey, "true");
+  } catch {}
+
+  // 1. Update Firestore
+  if (!checkQuotaStatus()) {
+    try {
+      await setDoc(
+        doc(db, "users", cleanEmail),
+        { hasSeenTutorial: true, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+    } catch (e) {
+      handleFirestoreError(e, OperationType.WRITE, `users/${cleanEmail}`);
+    }
+  }
+
+  // 2. Update Local Storage Cache
+  try {
+    const localUsers: any[] = JSON.parse(localStorage.getItem("sngx_local_users") || "[]");
+    const idx = localUsers.findIndex((u) => u.email && u.email.toLowerCase() === cleanEmail);
+    if (idx !== -1) {
+      localUsers[idx].hasSeenTutorial = true;
+      localStorage.setItem("sngx_local_users", JSON.stringify(localUsers));
+    }
+  } catch {}
+
+  // 3. Update Server API
+  try {
+    await fetch("/api/user/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: cleanEmail, updates: { hasSeenTutorial: true } }),
+    });
+  } catch {}
+}
+
+/**
+ * Save user journal configuration (starting capital, year range, start month) to Firestore, Server, and LocalStorage
+ */
+export async function saveJournalConfigInFirestore(
+  email: string,
+  config: { startingCapital: string; yearRange: string; startMonth: number; hasConfiguredJournal?: boolean }
+): Promise<void> {
+  const cleanEmail = cleanEmailKey(email);
+  if (!cleanEmail) return;
+
+  const journalConfig = {
+    startingCapital: String(config.startingCapital).trim() || "100",
+    yearRange: String(config.yearRange).trim() || "2026",
+    startMonth: Number(config.startMonth) || 0,
+    hasConfiguredJournal: true,
+  };
+
+  // Local storage
+  try {
+    localStorage.setItem(`trading_capital_${cleanEmail}`, journalConfig.startingCapital);
+    localStorage.setItem(
+      `trading_settings_${cleanEmail}`,
+      JSON.stringify({
+        yearRange: journalConfig.yearRange,
+        startMonth: journalConfig.startMonth,
+        selectedMonth: journalConfig.startMonth,
+        startingCapital: journalConfig.startingCapital,
+      })
+    );
+    localStorage.setItem(`sngx_journal_configured_${cleanEmail}`, "true");
+  } catch {}
+
+  // 1. Update Firestore
+  if (!checkQuotaStatus()) {
+    try {
+      await setDoc(
+        doc(db, "users", cleanEmail),
+        {
+          ...journalConfig,
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+    } catch (e) {
+      handleFirestoreError(e, OperationType.WRITE, `users/${cleanEmail}`);
+    }
+  }
+
+  // 2. Update Local Users Cache
+  try {
+    const localUsers: any[] = JSON.parse(localStorage.getItem("sngx_local_users") || "[]");
+    const idx = localUsers.findIndex((u) => u.email && u.email.toLowerCase() === cleanEmail);
+    if (idx !== -1) {
+      localUsers[idx] = { ...localUsers[idx], ...journalConfig };
+      localStorage.setItem("sngx_local_users", JSON.stringify(localUsers));
+    }
+  } catch {}
+
+  // 3. Update Server API
+  try {
+    await fetch("/api/user/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: cleanEmail, updates: journalConfig }),
+    });
+  } catch {}
 }
 
 /**
@@ -749,6 +865,10 @@ export async function loginUserInFirestore(
     status: matchedData.status || "pending",
     createdAt: matchedData.createdAt,
     lastLogin: new Date().toISOString(),
+    hasSeenTutorial: matchedData.hasSeenTutorial !== undefined ? !!matchedData.hasSeenTutorial : undefined,
+    hasConfiguredJournal: matchedData.hasConfiguredJournal !== undefined ? !!matchedData.hasConfiguredJournal : undefined,
+    yearRange: matchedData.yearRange || "2026",
+    startMonth: matchedData.startMonth !== undefined ? Number(matchedData.startMonth) : 0,
     tradingData: matchedData.tradingData || {},
   };
 

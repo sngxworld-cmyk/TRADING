@@ -43,6 +43,7 @@ import {
   Check,
   ArrowDown,
   Database,
+  ChevronDown,
 } from "lucide-react";
 import { CommunityGuidelinesModal } from "./CommunityGuidelinesModal";
 import { UserProfileModal } from "./UserProfileModal";
@@ -55,15 +56,70 @@ import { ChatDateDivider, isDifferentChatDay, formatMessageTime } from "../utils
 interface CommunityChatHubProps {
   currentUser: UserProfile;
   onBackToApp?: () => void;
+  activeTab?: "chat" | "groups" | "dms";
+  onTabChange?: (tab: "chat" | "groups" | "dms") => void;
+  isGuidelinesOpen?: boolean;
+  onOpenGuidelines?: () => void;
+  onCloseGuidelines?: () => void;
 }
 
 export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
   currentUser,
   onBackToApp,
+  activeTab: propActiveTab,
+  onTabChange,
+  isGuidelinesOpen: propIsGuidelinesOpen,
+  onOpenGuidelines,
+  onCloseGuidelines,
 }) => {
-  // Navigation Tabs
-  const [activeTab, setActiveTab] = useState<"chat" | "groups" | "dms">("chat");
+  // Navigation Tabs (supports controlled or uncontrolled state)
+  const [internalTab, setInternalTab] = useState<"chat" | "groups" | "dms">("chat");
+  const activeTab = propActiveTab !== undefined ? propActiveTab : internalTab;
+  const setActiveTab = (tab: "chat" | "groups" | "dms") => {
+    setInternalTab(tab);
+    if (onTabChange) onTabChange(tab);
+  };
+  const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
+  const viewDropdownRef = useRef<HTMLDivElement>(null);
   const [groupsSubTab, setGroupsSubTab] = useState<"free" | "verified">("free");
+
+  // Guidelines state
+  const [internalGuidelinesOpen, setInternalGuidelinesOpen] = useState(false);
+  const isGuidelinesOpen = propIsGuidelinesOpen !== undefined ? propIsGuidelinesOpen : internalGuidelinesOpen;
+  const setIsGuidelinesOpen = (open: boolean) => {
+    setInternalGuidelinesOpen(open);
+    if (open && onOpenGuidelines) onOpenGuidelines();
+    if (!open && onCloseGuidelines) onCloseGuidelines();
+  };
+
+  // Close view dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (viewDropdownRef.current && !viewDropdownRef.current.contains(e.target as Node)) {
+        setViewDropdownOpen(false);
+      }
+    };
+    if (viewDropdownOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+    }
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [viewDropdownOpen]);
+
+  // Listen for custom events to open guidelines or switch tabs from outside
+  useEffect(() => {
+    const handleOpenGuidelinesEvent = () => setIsGuidelinesOpen(true);
+    const handleSwitchTabEvent = (e: any) => {
+      if (e.detail?.tab && ["chat", "groups", "dms"].includes(e.detail.tab)) {
+        setActiveTab(e.detail.tab);
+      }
+    };
+    window.addEventListener("trackerx:open-guidelines", handleOpenGuidelinesEvent);
+    window.addEventListener("trackerx:switch-community-tab" as any, handleSwitchTabEvent);
+    return () => {
+      window.removeEventListener("trackerx:open-guidelines", handleOpenGuidelinesEvent);
+      window.removeEventListener("trackerx:switch-community-tab" as any, handleSwitchTabEvent);
+    };
+  }, []);
 
   // Public Chat Room State & Scroll Control
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(getChatMessages);
@@ -95,7 +151,6 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
 
   // Modals & Popups
-  const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(false);
   const [selectedProfileUser, setSelectedProfileUser] = useState<any | null>(null);
   const [groupToDelete, setGroupToDelete] = useState<SignalGroup | null>(null);
   const [deleteGroupError, setDeleteGroupError] = useState<string | null>(null);
@@ -341,7 +396,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Top Header / Bar */}
-      <header className="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-3 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 shadow-md shadow-black/30">
         <div className="flex items-center gap-3">
           {onBackToApp && (
             <button
@@ -353,72 +408,148 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
           )}
 
           <div className="flex items-center gap-2.5">
-            <AuthLottieAnimation type="community-signal" className="w-9 h-9 shrink-0" />
+            <AuthLottieAnimation type="community-signal" className="w-8 h-8 sm:w-9 sm:h-9 shrink-0" />
             <div>
-              <h1 className="text-base font-bold text-white font-mono tracking-tight flex items-center gap-2">
+              <h1 className="text-sm sm:text-base font-bold text-white font-mono tracking-tight flex items-center gap-2">
                 TRACKERX COMMUNITY HUB
               </h1>
-              <p className="text-[10px] text-blue-300 font-mono">
+              <p className="text-[10px] text-blue-300 font-mono hidden xs:block">
                 Real-Time Trading Signals & Trader Network
               </p>
             </div>
           </div>
         </div>
 
-        {/* Navigation Tabs - Responsive Scroll/Wrap */}
-        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono overflow-x-auto no-scrollbar max-w-full">
-          <button
-            onClick={() => {
-              setActiveTab("chat");
-              setSelectedGroup(null);
-            }}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
-              activeTab === "chat"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <MessageSquare className="w-3.5 h-3.5" /> <span className="hidden xs:inline">Main </span>Chat Room
-          </button>
+        {/* Right Controls: Main View Dropdown Switcher + Guidelines + User Profile */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Main View Dropdown Button */}
+          <div className="relative" ref={viewDropdownRef}>
+            <button
+              id="community-main-dropdown-btn"
+              onClick={() => setViewDropdownOpen((prev) => !prev)}
+              className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border font-mono text-xs font-bold transition-all shadow-md active:scale-95 ${
+                viewDropdownOpen
+                  ? "bg-slate-800 border-blue-400 text-white shadow-blue-500/20"
+                  : "bg-slate-950 hover:bg-slate-900 border-slate-800 hover:border-blue-500/50 text-slate-200 hover:text-white"
+              }`}
+            >
+              {activeTab === "chat" && (
+                <>
+                  <MessageSquare className="w-4 h-4 text-blue-400 shrink-0" />
+                  <span>Chat Room</span>
+                </>
+              )}
+              {activeTab === "groups" && (
+                <>
+                  <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Signal Groups</span>
+                </>
+              )}
+              {activeTab === "dms" && (
+                <>
+                  <User className="w-4 h-4 text-purple-400 shrink-0" />
+                  <span>Direct Messages</span>
+                </>
+              )}
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                  viewDropdownOpen ? "rotate-180 text-blue-400" : ""
+                }`}
+              />
+            </button>
 
-          <button
-            onClick={() => setActiveTab("groups")}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
-              activeTab === "groups"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <TrendingUp className="w-3.5 h-3.5" /> Signal Groups
-          </button>
+            {/* Dropdown Menu */}
+            {viewDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-64 bg-slate-900/98 border border-slate-700 rounded-2xl shadow-2xl shadow-black/90 backdrop-blur-2xl p-1.5 z-[100] text-white space-y-1 font-mono text-xs animate-in fade-in zoom-in-95 duration-150">
+                <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Select Community View
+                </div>
 
-          <button
-            onClick={() => {
-              setActiveTab("dms");
-              setSelectedGroup(null);
-            }}
-            className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
-              activeTab === "dms"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <User className="w-3.5 h-3.5" /> Direct Messages
-          </button>
-        </div>
+                <button
+                  id="dropdown-tab-chat"
+                  onClick={() => {
+                    setActiveTab("chat");
+                    setSelectedGroup(null);
+                    setViewDropdownOpen(false);
+                  }}
+                  className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between transition-colors ${
+                    activeTab === "chat"
+                      ? "bg-blue-600/20 text-blue-300 border border-blue-500/40 font-bold"
+                      : "hover:bg-slate-800 text-slate-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <MessageSquare className="w-4 h-4 text-blue-400 shrink-0" />
+                    <div>
+                      <div className="font-bold">Live Chat Room</div>
+                      <div className="text-[10px] text-slate-400 font-sans">Public trader discussion</div>
+                    </div>
+                  </div>
+                  {activeTab === "chat" && <Check className="w-4 h-4 text-blue-400" />}
+                </button>
 
-        {/* Current User Info & Guidelines */}
-        <div className="flex items-center gap-2">
+                <button
+                  id="dropdown-tab-groups"
+                  onClick={() => {
+                    setActiveTab("groups");
+                    setViewDropdownOpen(false);
+                  }}
+                  className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between transition-colors ${
+                    activeTab === "groups"
+                      ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-bold"
+                      : "hover:bg-slate-800 text-slate-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <div>
+                      <div className="font-bold">Signal Groups</div>
+                      <div className="text-[10px] text-slate-400 font-sans">Free & Verified VIP Signals</div>
+                    </div>
+                  </div>
+                  {activeTab === "groups" && <Check className="w-4 h-4 text-emerald-400" />}
+                </button>
+
+                <button
+                  id="dropdown-tab-dms"
+                  onClick={() => {
+                    setActiveTab("dms");
+                    setSelectedGroup(null);
+                    setViewDropdownOpen(false);
+                  }}
+                  className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between transition-colors ${
+                    activeTab === "dms"
+                      ? "bg-purple-600/20 text-purple-300 border border-purple-500/40 font-bold"
+                      : "hover:bg-slate-800 text-slate-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <User className="w-4 h-4 text-purple-400 shrink-0" />
+                    <div>
+                      <div className="font-bold">Direct Messages</div>
+                      <div className="text-[10px] text-slate-400 font-sans">1-on-1 Trader Inboxes</div>
+                    </div>
+                  </div>
+                  {activeTab === "dms" && <Check className="w-4 h-4 text-purple-400" />}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Guidelines Button */}
           <button
+            id="community-guidelines-header-btn"
             onClick={() => setIsGuidelinesOpen(true)}
-            className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
           >
-            <Info className="w-3.5 h-3.5 text-purple-400" /> Guidelines
+            <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden sm:inline">Guidelines</span>
           </button>
 
+          {/* Current User Info */}
           <button
             onClick={() => setSelectedProfileUser(currentUser)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 transition-colors"
+            className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 transition-colors"
           >
             <span className="text-xs text-white font-mono font-bold">
               {currentUser.displayName || currentUser.username}
@@ -429,23 +560,23 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
       </header>
 
       {/* Main Hub Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col relative z-0">
         {/* ============================================================ */}
         {/* 1. MAIN PUBLIC CHAT ROOM VIEW (Slide 1, 2, 10, 14)           */}
         {/* ============================================================ */}
         {activeTab === "chat" && (
           <div className="flex-1 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl h-[calc(100vh-140px)]">
-            {/* Chat Room Subheader */}
-            <div className="p-4 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between text-xs font-mono">
-              <div className="flex items-center gap-2 text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                <span className="font-bold text-white">LIVE PUBLIC CHAT</span>
+            {/* Frozen Chat Room Subheader */}
+            <div className="sticky top-0 z-10 shrink-0 px-4 py-3 sm:px-5 sm:py-3.5 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs font-mono select-none shadow-md shadow-black/50">
+              <div className="flex items-center gap-2 text-slate-300 flex-wrap">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
+                <span className="font-bold text-white tracking-wide">LIVE PUBLIC CHAT</span>
                 <span className="text-slate-500">•</span>
-                <span className="text-blue-200">All registered traders & verified providers</span>
+                <span className="text-blue-200 text-[11px] sm:text-xs">All registered traders & verified providers</span>
               </div>
-              <div className="text-[10px] text-blue-300 font-mono flex items-center gap-1.5 bg-slate-800/60 px-2.5 py-1 rounded-full border border-blue-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-                <span>Community Chat</span>
+              <div className="text-[10px] text-blue-300 font-mono flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-full border border-blue-500/30 shrink-0 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping"></span>
+                <span className="font-bold text-blue-300">Community Chat</span>
               </div>
             </div>
 
