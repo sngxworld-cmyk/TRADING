@@ -909,10 +909,7 @@ export async function loginUserInFirestore(
     recordDeviceRegistration(user.email, user.createdAt);
   } catch (e) {}
 
-  if (user.status === "revoked") {
-    throw new Error("Access Revoked. Your access to this portal has been revoked by Host Admin.");
-  }
-
+  // Return user object even if status is revoked or banned so the dedicated AccountSuspendedModal is rendered
   return { user, status: user.status };
 }
 
@@ -1304,6 +1301,34 @@ export async function grantUserAccessInFirestore(email: string) {
     );
     localStorage.setItem("sngx_local_users", JSON.stringify(updated));
   } catch (e) {}
+
+  // Add to local pre-approved emails cache
+  try {
+    const preList: string[] = JSON.parse(localStorage.getItem("sngx_preapproved_emails") || "[]");
+    if (!preList.some((e) => e.toLowerCase() === cleanEmail)) {
+      preList.push(cleanEmail);
+      localStorage.setItem("sngx_preapproved_emails", JSON.stringify(preList));
+    }
+  } catch (e) {}
+
+  // Also add to preApprovedEmails in Firestore
+  if (!checkQuotaStatus()) {
+    try {
+      await setDoc(doc(db, "preApprovedEmails", cleanEmail), {
+        email,
+        approvedAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch (e) {}
+  }
+
+  // Sync to backend
+  try {
+    fetch("/api/admin/approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: cleanEmail }),
+    }).catch(() => {});
+  } catch (e) {}
 }
 
 /**
@@ -1316,11 +1341,22 @@ export async function revokeUserAccessInFirestore(email: string) {
   if (!checkQuotaStatus()) {
     try {
       await setDoc(doc(db, "users", cleanEmail), { status: "revoked" }, { merge: true });
+      // Remove from preApprovedEmails in Firestore
+      try {
+        await deleteDoc(doc(db, "preApprovedEmails", cleanEmail));
+      } catch (e) {}
       await addAuditLogToFirestore(`Access REVOKED for user: ${cleanEmail}`, "warning");
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `users/${cleanEmail}`);
     }
   }
+
+  // Remove from local pre-approved emails cache
+  try {
+    const preList: string[] = JSON.parse(localStorage.getItem("sngx_preapproved_emails") || "[]");
+    const filtered = preList.filter((e) => e.trim().toLowerCase() !== cleanEmail);
+    localStorage.setItem("sngx_preapproved_emails", JSON.stringify(filtered));
+  } catch (e) {}
 
   // Update local storage
   try {
@@ -1330,6 +1366,91 @@ export async function revokeUserAccessInFirestore(email: string) {
     );
     localStorage.setItem("sngx_local_users", JSON.stringify(updated));
   } catch (e) {}
+
+  // Sync to backend
+  try {
+    fetch("/api/admin/reject", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: cleanEmail }),
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+/**
+ * Ban user in Firestore
+ */
+export async function banUserInFirestore(email: string) {
+  const cleanEmail = cleanEmailKey(email);
+  if (!cleanEmail) return;
+
+  if (!checkQuotaStatus()) {
+    try {
+      await setDoc(doc(db, "users", cleanEmail), { status: "banned" }, { merge: true });
+      // Remove from preApprovedEmails in Firestore
+      try {
+        await deleteDoc(doc(db, "preApprovedEmails", cleanEmail));
+      } catch (e) {}
+      await addAuditLogToFirestore(`User BANNED: ${cleanEmail}`, "warning");
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `users/${cleanEmail}`);
+    }
+  }
+
+  // Remove from local pre-approved emails cache
+  try {
+    const preList: string[] = JSON.parse(localStorage.getItem("sngx_preapproved_emails") || "[]");
+    const filtered = preList.filter((e) => e.trim().toLowerCase() !== cleanEmail);
+    localStorage.setItem("sngx_preapproved_emails", JSON.stringify(filtered));
+  } catch (e) {}
+
+  // Update local storage
+  try {
+    const localUsers: AdminUserRecord[] = JSON.parse(localStorage.getItem("sngx_local_users") || "[]");
+    const updated = localUsers.map((u) =>
+      u.email.toLowerCase() === cleanEmail ? { ...u, status: "banned" as const } : u
+    );
+    localStorage.setItem("sngx_local_users", JSON.stringify(updated));
+  } catch (e) {}
+
+  // Sync to backend
+  try {
+    fetch("/api/admin/ban", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: cleanEmail }),
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+/**
+ * Fetch latest user status and profile fields directly from Firestore
+ */
+export async function fetchUserStatusFromFirestore(email: string): Promise<Partial<UserProfile> | null> {
+  const cleanEmail = cleanEmailKey(email);
+  if (!cleanEmail) return null;
+
+  if (!checkQuotaStatus()) {
+    try {
+      const docSnap = await getDoc(doc(db, "users", cleanEmail));
+      if (docSnap.exists()) {
+        const d = docSnap.data();
+        return {
+          status: d.status,
+          role: d.role,
+          platformRole: d.platformRole,
+          hasSeenTutorial: d.hasSeenTutorial,
+          hasConfiguredJournal: d.hasConfiguredJournal,
+          yearRange: d.yearRange,
+          startMonth: d.startMonth,
+          startingCapital: d.startingCapital,
+        };
+      }
+    } catch (e) {
+      handleFirestoreError(e, OperationType.GET, `users/${cleanEmail}`);
+    }
+  }
+  return null;
 }
 
 /**

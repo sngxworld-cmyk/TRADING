@@ -3,7 +3,7 @@ import { createChart, CandlestickSeries, IChartApi, ISeriesApi, UTCTimestamp } f
 import { Eye, EyeOff, Lock, Mail, User, ShieldCheck, Flame, TrendingUp, PhoneCall, ArrowRight, KeyRound, Camera, Phone, Tag, Calendar, MessageSquare, Sparkles, AlertCircle, Smartphone, CheckCircle, Unlock, RefreshCw, Send } from "lucide-react";
 import { UserProfile } from "../types";
 import { registerUserInFirestore, loginUserInFirestore, sendVerificationCode, verifyAuthCode, changeUserPassword, checkIfEmailOrUserExists, safeFetchJson } from "../lib/userStore";
-import { getLocalDeviceRegistration, verifyDeviceRegistrationPermission, isHostMasterDevice, setHostMasterDevice } from "../utils/deviceUtils";
+import { getLocalDeviceRegistration, verifyDeviceRegistrationPermission, isHostMasterDevice, setHostMasterDevice, checkIsTrialExpired } from "../utils/deviceUtils";
 import { AuthLottieAnimation } from "./AuthLottieAnimation";
 import { CountryPhoneInput } from "./CountryPhoneInput";
 
@@ -555,7 +555,26 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
         body: JSON.stringify({ identifier: email, password }),
       }).catch(() => {});
 
-      setSuccessMessage("Login successful! Entering TrackerX...");
+      const isSuspended =
+        loggedInUser.email.toLowerCase() !== "sngxworld@gmail.com" &&
+        (loggedInUser.status === "revoked" ||
+          loggedInUser.status === "banned" ||
+          loggedInUser.status === "rejected");
+
+      const isTrialOver =
+        !isSuspended &&
+        loggedInUser.status !== "approved" &&
+        loggedInUser.role !== "admin" &&
+        loggedInUser.platformRole !== "owner" &&
+        checkIsTrialExpired(loggedInUser);
+
+      if (isSuspended) {
+        setSuccessMessage("Account access suspended / under review. Loading status portal...");
+      } else if (isTrialOver) {
+        setSuccessMessage("5-Day trial ended. Loading subscription portal...");
+      } else {
+        setSuccessMessage("Login successful! Entering TrackerX...");
+      }
       setTimeout(() => onLoginSuccess(loggedInUser), 600);
     } catch (err: any) {
       setErrorMessage(err.message || "An error occurred during login.");

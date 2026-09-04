@@ -10,7 +10,7 @@ import { ProfileEditorModal } from "./components/ProfileEditorModal";
 import { MandatorySetupModal } from "./components/MandatorySetupModal";
 import { CommunityChatHub } from "./components/CommunityChatHub";
 import { checkIsTrialExpired } from "./utils/deviceUtils";
-import { markTutorialCompletedInFirestore, saveJournalConfigInFirestore } from "./lib/userStore";
+import { markTutorialCompletedInFirestore, saveJournalConfigInFirestore, fetchUserStatusFromFirestore } from "./lib/userStore";
 
 export default function App() {
   const [activeView, setActiveView] = useState<"journal" | "community">("journal");
@@ -46,7 +46,7 @@ export default function App() {
 
   // Check tutorial status and mandatory journal configuration status whenever an approved user logs in
   useEffect(() => {
-    if (currentUser && (currentUser.status === "approved" || currentUser.role === "admin")) {
+    if (currentUser && isApprovedUser) {
       const cleanEmail = currentUser.email.toLowerCase();
       const tutorialKey = "sngx_tutorial_seen_" + cleanEmail;
       const localSeen = localStorage.getItem(tutorialKey) === "true";
@@ -190,12 +190,12 @@ export default function App() {
     setShowTutorial(true);
   };
 
-  // Refresh review status from local state & server
+  // Refresh review status from local state, Firestore & server
   const handleRefreshStatus = async () => {
     if (!currentUser) return;
     const cleanEmail = currentUser.email.trim().toLowerCase();
 
-    // Check local pre-approved list & stored users
+    // Check local stored users cache
     const localUsers: any[] = JSON.parse(localStorage.getItem("sngx_local_users") || "[]");
     const matchedLocal = localUsers.find((u) => u.email && u.email.trim().toLowerCase() === cleanEmail);
 
@@ -208,18 +208,39 @@ export default function App() {
     let newStartMonth = matchedLocal?.startMonth;
     let newStartingCapital = matchedLocal?.startingCapital;
 
-    const preApprovedList: string[] = JSON.parse(localStorage.getItem("sngx_preapproved_emails") || "[]");
-    if (cleanEmail === "sngxworld@gmail.com" || preApprovedList.some((e: string) => e.toLowerCase() === cleanEmail)) {
+    // Master Host Admin is always approved
+    if (cleanEmail === "sngxworld@gmail.com") {
       newStatus = "approved";
     }
 
+    // 1. Fetch live ground-truth status from Firestore
+    try {
+      const liveFsUser = await fetchUserStatusFromFirestore(cleanEmail);
+      if (liveFsUser) {
+        if (liveFsUser.status) newStatus = liveFsUser.status;
+        if (liveFsUser.role) newRole = liveFsUser.role;
+        if (liveFsUser.platformRole) newPlatformRole = liveFsUser.platformRole;
+        if (liveFsUser.hasSeenTutorial !== undefined) newHasSeenTutorial = liveFsUser.hasSeenTutorial;
+        if (liveFsUser.hasConfiguredJournal !== undefined) newHasConfiguredJournal = liveFsUser.hasConfiguredJournal;
+        if (liveFsUser.yearRange) newYearRange = liveFsUser.yearRange;
+        if (liveFsUser.startMonth !== undefined) newStartMonth = liveFsUser.startMonth;
+        if (liveFsUser.startingCapital) newStartingCapital = liveFsUser.startingCapital;
+      }
+    } catch (e) {}
+
+    // 2. Fetch from backend /api/auth/status
     try {
       const res = await fetch(`/api/auth/status/${encodeURIComponent(currentUser.email)}`);
       const isJson = res.headers.get("content-type")?.includes("application/json");
       if (res.ok && isJson) {
         const data = await res.json();
         if (data.status) {
-          newStatus = data.status;
+          // If the account was marked banned/revoked/rejected, enforce that status
+          if (newStatus !== "banned" && newStatus !== "revoked" && newStatus !== "rejected") {
+            newStatus = data.status;
+          } else if (data.status === "banned" || data.status === "revoked" || data.status === "rejected") {
+            newStatus = data.status;
+          }
           if (data.role) newRole = data.role;
           if (data.platformRole) newPlatformRole = data.platformRole;
           if (data.user?.hasSeenTutorial !== undefined) {
@@ -235,6 +256,15 @@ export default function App() {
       }
     } catch (err) {
       console.warn("Server status refresh notice:", err);
+    }
+
+    // Safety: If user is suspended (revoked/banned/rejected), purge from pre-approved local storage cache
+    if (newStatus === "revoked" || newStatus === "banned" || newStatus === "rejected") {
+      try {
+        const preList: string[] = JSON.parse(localStorage.getItem("sngx_preapproved_emails") || "[]");
+        const filtered = preList.filter((e) => e.trim().toLowerCase() !== cleanEmail);
+        localStorage.setItem("sngx_preapproved_emails", JSON.stringify(filtered));
+      } catch (e) {}
     }
 
     if (
@@ -267,19 +297,29 @@ export default function App() {
     }
   };
 
-  // Calculate 5-Day Trial Status (strict device & user account check)
-  const isApprovedUser =
-    currentUser?.status === "approved" ||
-    currentUser?.role === "admin" ||
-    currentUser?.platformRole === "owner" ||
-    currentUser?.platformRole === "sub_owner" ||
-    currentUser?.email?.toLowerCase() === "sngxworld@gmail.com";
+  // Strict Suspension check (Revoked, Banned, or Rejected by Host Admin)
   const isSuspendedUser =
-    currentUser?.status === "revoked" || currentUser?.status === "banned";
+    currentUser?.email?.toLowerCase() !== "sngxworld@gmail.com" &&
+    (currentUser?.status === "revoked" ||
+      currentUser?.status === "banned" ||
+      currentUser?.status === "rejected");
+
+  // Strict Approval check (Suspended users can NEVER be considered approved)
+  const isApprovedUser =
+    !isSuspendedUser &&
+    (currentUser?.email?.toLowerCase() === "sngxworld@gmail.com" ||
+      currentUser?.status === "approved" ||
+      (currentUser?.role === "admin" &&
+        currentUser?.status !== "revoked" &&
+        currentUser?.status !== "banned" &&
+        currentUser?.status !== "rejected") ||
+      currentUser?.platformRole === "owner");
+
+  // Calculate 5-Day Trial Status (strict device & user account check)
   const isTrialExpired =
     !isApprovedUser && !isSuspendedUser && checkIsTrialExpired(currentUser);
 
-  // Auto-poll approval status every 4 seconds if user is awaiting host admin approval or suspended
+  // Auto-poll approval status every 4 seconds if user is awaiting host admin approval, suspended, or trial expired
   useEffect(() => {
     if (!currentUser || isApprovedUser) return;
     const interval = setInterval(handleRefreshStatus, 4000);
@@ -360,55 +400,53 @@ export default function App() {
       {/* Main Content Area */}
       <div className="flex-1 relative animate-in fade-in slide-in-from-bottom-2 duration-500">
         {/* If account is Revoked / Banned by Host Admin, show AccountSuspendedModal gate */}
-        {isSuspendedUser && currentUser && (
+        {isSuspendedUser && currentUser ? (
           <AccountSuspendedModal
             user={currentUser}
             onRefreshStatus={handleRefreshStatus}
             onLogout={handleLogout}
           />
-        )}
-
-        {/* If 5-Day trial is expired and user is not approved/suspended, show TrialExpiredModal */}
-        {isTrialExpired && currentUser && !isSuspendedUser && (
+        ) : isTrialExpired && currentUser ? (
+          /* If 5-Day trial is expired and user is not approved/suspended, show TrialExpiredModal */
           <TrialExpiredModal
             user={currentUser}
             onRefreshStatus={handleRefreshStatus}
             onLogout={handleLogout}
           />
-        )}
-
-        <div
-          className={`transition-all duration-300 ${
-            isSuspendedUser || isTrialExpired || (isSetupMandatory && isSetupModalOpen)
-              ? "opacity-25 blur-md pointer-events-none select-none overflow-hidden max-h-[calc(100vh-64px)]"
-              : "opacity-100"
-          }`}
-        >
-          {activeView === "community" ? (
-            <CommunityChatHub
-              currentUser={currentUser}
-              onBackToApp={() => setActiveView("journal")}
-              activeTab={communityTab}
-              onTabChange={(tab) => setCommunityTab(tab)}
-              isGuidelinesOpen={isGuidelinesOpen}
-              onOpenGuidelines={() => setIsGuidelinesOpen(true)}
-              onCloseGuidelines={() => setIsGuidelinesOpen(false)}
-            />
-          ) : (
-            <main className="container max-w-7xl mx-auto px-4 sm:px-6 py-6">
-              <TradingApp
-                user={currentUser}
-                onSaveDataToServer={(newData) => {
-                  setCurrentUser((prev) => (prev ? { ...prev, tradingData: newData } : null));
-                }}
-                onOpenSetup={() => {
-                  setIsSetupMandatory(false);
-                  setIsSetupModalOpen(true);
-                }}
+        ) : (
+          <div
+            className={`transition-all duration-300 ${
+              isSetupMandatory && isSetupModalOpen
+                ? "opacity-25 blur-md pointer-events-none select-none overflow-hidden max-h-[calc(100vh-64px)]"
+                : "opacity-100"
+            }`}
+          >
+            {activeView === "community" ? (
+              <CommunityChatHub
+                currentUser={currentUser}
+                onBackToApp={() => setActiveView("journal")}
+                activeTab={communityTab}
+                onTabChange={(tab) => setCommunityTab(tab)}
+                isGuidelinesOpen={isGuidelinesOpen}
+                onOpenGuidelines={() => setIsGuidelinesOpen(true)}
+                onCloseGuidelines={() => setIsGuidelinesOpen(false)}
               />
-            </main>
-          )}
-        </div>
+            ) : (
+              <main className="container max-w-7xl mx-auto px-4 sm:px-6 py-6">
+                <TradingApp
+                  user={currentUser}
+                  onSaveDataToServer={(newData) => {
+                    setCurrentUser((prev) => (prev ? { ...prev, tradingData: newData } : null));
+                  }}
+                  onOpenSetup={() => {
+                    setIsSetupMandatory(false);
+                    setIsSetupModalOpen(true);
+                  }}
+                />
+              </main>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 3D Robot First-Login Interactive Tutorial Overlay */}

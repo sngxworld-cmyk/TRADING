@@ -1,5 +1,5 @@
 export type UserRole = "admin" | "client";
-export type UserStatus = "pending" | "approved" | "rejected" | "revoked";
+export type UserStatus = "pending" | "approved" | "rejected" | "revoked" | "banned";
 
 export type PlatformRole =
   | "owner"

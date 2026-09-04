@@ -29,7 +29,7 @@ interface UserRecord {
     | "signal_provider"
     | "member"
     | "pending_user";
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "revoked" | "banned";
   subOwnerExpiresAt?: string;
   subOwnerAssignedAt?: string;
   subOwnerDurationDays?: number;
@@ -638,7 +638,15 @@ app.use((req, res, next) => {
       currentDb.preApprovedEmails.some((e) => e.trim().toLowerCase() === clean);
 
     if (user) {
-      if (isPreApproved && user.status !== "approved") {
+      if (user.status === "revoked" || user.status === "banned" || user.status === "rejected") {
+        // User is suspended/revoked/banned. Ensure they are NOT in preApprovedEmails and DO NOT auto-approve!
+        if (clean !== "sngxworld@gmail.com") {
+          currentDb.preApprovedEmails = currentDb.preApprovedEmails.filter(
+            (e) => e.trim().toLowerCase() !== clean
+          );
+          saveDB(currentDb);
+        }
+      } else if (isPreApproved && user.status !== "approved") {
         user.status = "approved";
         saveDB(currentDb);
       }
@@ -872,7 +880,14 @@ app.use((req, res, next) => {
         user.email.toLowerCase() === "sngxworld@gmail.com" ||
         currentDb.preApprovedEmails.some((e) => e.trim().toLowerCase() === user!.email.trim().toLowerCase());
 
-      if (isPreApproved && user.status !== "approved") {
+      if (user.status === "revoked" || user.status === "banned" || user.status === "rejected") {
+        // Must NEVER auto-approve suspended accounts
+        if (user.email.toLowerCase() !== "sngxworld@gmail.com") {
+          currentDb.preApprovedEmails = currentDb.preApprovedEmails.filter(
+            (e) => e.trim().toLowerCase() !== user!.email.trim().toLowerCase()
+          );
+        }
+      } else if (isPreApproved && user.status !== "approved") {
         user.status = "approved";
       }
 
@@ -918,11 +933,14 @@ app.use((req, res, next) => {
       });
     }
 
-    if (user.status === "rejected") {
+    if (user.status === "rejected" || user.status === "revoked" || user.status === "banned") {
       return res.status(403).json({
         success: false,
-        status: "rejected",
-        message: "Access for this Gmail account has been revoked or declined by the Host Admin.",
+        status: user.status,
+        message:
+          user.status === "banned"
+            ? "Your account has been banned by the Host Admin."
+            : "Access for this Gmail account has been revoked or declined by the Host Admin.",
         user: fullUserObj,
       });
     }
@@ -1190,23 +1208,51 @@ app.use((req, res, next) => {
     const targetUser = currentDb.users.find((u) => u.id === userId || u.email.trim().toLowerCase() === (email || "").trim().toLowerCase());
 
     if (targetUser) {
-      if (targetUser.role === "admin") {
+      if (targetUser.role === "admin" && targetUser.email.toLowerCase() === "sngxworld@gmail.com") {
         return res.status(400).json({ error: "Cannot revoke master host admin account." });
       }
-      targetUser.status = "rejected";
+      targetUser.status = "revoked";
     }
 
-    if (email) {
-      const cleanReqEmail = email.trim().toLowerCase();
+    const cleanReqEmail = (email || targetUser?.email || "").trim().toLowerCase();
+    if (cleanReqEmail) {
       currentDb.preApprovedEmails = currentDb.preApprovedEmails.filter((e) => e.trim().toLowerCase() !== cleanReqEmail);
     }
 
     saveDB(currentDb);
-    logActivity(`Admin REVOKED access for Gmail: ${email || targetUser?.email}`, "warn");
+    logActivity(`Admin REVOKED access for Gmail: ${cleanReqEmail}`, "warn");
 
     return res.json({
       success: true,
-      message: `Access revoked for ${email || targetUser?.email}.`,
+      message: `Access revoked for ${cleanReqEmail}.`,
+    });
+  });
+
+  // ADMIN: Ban user access
+  app.post("/api/admin/ban", (req, res) => {
+    const { userId, email } = req.body;
+    const currentDb = getDB();
+
+    const targetUser = currentDb.users.find((u) => u.id === userId || u.email.trim().toLowerCase() === (email || "").trim().toLowerCase());
+
+    if (targetUser) {
+      if (targetUser.role === "admin" && targetUser.email.toLowerCase() === "sngxworld@gmail.com") {
+        return res.status(400).json({ error: "Cannot ban master host admin account." });
+      }
+      targetUser.status = "banned";
+    }
+
+    const cleanReqEmail = (email || targetUser?.email || "").trim().toLowerCase();
+    if (cleanReqEmail) {
+      currentDb.preApprovedEmails = currentDb.preApprovedEmails.filter((e) => e.trim().toLowerCase() !== cleanReqEmail);
+    }
+
+    saveDB(currentDb);
+    logActivity(`Admin BANNED user: ${cleanReqEmail}`, "warn");
+
+    return res.json({
+      success: true,
+      message: `User ${cleanReqEmail} has been banned.`,
     });
   });
 
@@ -1811,6 +1857,13 @@ app.use((req, res, next) => {
       return res.status(404).json({ error: "User not found." });
     }
 
+    if (
+      user.email.toLowerCase() !== "sngxworld@gmail.com" &&
+      (user.status === "banned" || user.status === "revoked" || user.status === "rejected")
+    ) {
+      return res.status(403).json({ error: "Access denied. Your account is revoked or banned by host administrator." });
+    }
+
     if (tradingData !== undefined && typeof tradingData === "object") {
       user.tradingData = tradingData;
     }
@@ -1847,6 +1900,13 @@ app.use((req, res, next) => {
 
     if (!user) {
       return res.status(404).json({ error: "User not found." });
+    }
+
+    if (
+      user.email.toLowerCase() !== "sngxworld@gmail.com" &&
+      (user.status === "banned" || user.status === "revoked" || user.status === "rejected")
+    ) {
+      return res.status(403).json({ error: "Access denied. Your account is revoked or banned by host administrator." });
     }
 
     return res.json({
@@ -1911,6 +1971,15 @@ app.use((req, res, next) => {
     const msg = req.body;
     if (!msg || (!msg.content && !msg.photoUrl && !msg.audioUrl)) {
       return res.status(400).json({ error: "Message content or media is required." });
+    }
+
+    const senderEmail = (msg.senderEmail || msg.sender?.email || "").trim().toLowerCase();
+    if (senderEmail && senderEmail !== "sngxworld@gmail.com") {
+      const currentDb = getDB();
+      const senderUser = currentDb.users.find((u) => u.email.trim().toLowerCase() === senderEmail);
+      if (senderUser && (senderUser.status === "banned" || senderUser.status === "revoked" || senderUser.status === "rejected")) {
+        return res.status(403).json({ error: "Access denied. Your account is revoked or banned." });
+      }
     }
 
     if (!communityGroupChatMessages[groupId]) {
@@ -2003,6 +2072,14 @@ app.use((req, res, next) => {
 
     if (!resolvedEmail && !resolvedContent && !resolvedPhoto && !resolvedAudio) {
       return res.status(400).json({ error: "Sender and message content or media are required." });
+    }
+
+    if (resolvedEmail && resolvedEmail.toLowerCase() !== "sngxworld@gmail.com") {
+      const currentDb = getDB();
+      const senderUser = currentDb.users.find((u) => u.email.trim().toLowerCase() === resolvedEmail.trim().toLowerCase());
+      if (senderUser && (senderUser.status === "banned" || senderUser.status === "revoked" || senderUser.status === "rejected")) {
+        return res.status(403).json({ error: "Access denied. Your account is revoked or banned." });
+      }
     }
 
     const newMessage = {
@@ -2427,6 +2504,14 @@ app.use((req, res, next) => {
     const adminEmail = (admin.email || "").trim().toLowerCase();
     const isHost = adminEmail === "sngxworld@gmail.com";
 
+    if (!isHost && adminEmail) {
+      const currentDb = getDB();
+      const adminUser = currentDb.users.find((u) => u.email.trim().toLowerCase() === adminEmail);
+      if (adminUser && (adminUser.status === "banned" || adminUser.status === "revoked" || adminUser.status === "rejected")) {
+        return res.status(403).json({ error: "Access denied. Your account is revoked or banned." });
+      }
+    }
+
     // Enforce 1 Active Signal Group per User Rule
     const existingGroup = communitySignalGroups.find(
       (g) => (g.adminEmail || "").toLowerCase() === adminEmail || (g.adminUsername || "").toLowerCase() === (admin.username || "").toLowerCase()
@@ -2489,6 +2574,15 @@ app.use((req, res, next) => {
     const { sender, receiver, content, isJoinRequest, targetGroupName, targetGroupId } = req.body;
     if (!sender || !receiver || !content) {
       return res.status(400).json({ error: "Sender, receiver, and message content are required." });
+    }
+
+    const senderEmail = (sender.email || "").trim().toLowerCase();
+    if (senderEmail && senderEmail !== "sngxworld@gmail.com") {
+      const currentDb = getDB();
+      const senderUser = currentDb.users.find((u) => u.email.trim().toLowerCase() === senderEmail);
+      if (senderUser && (senderUser.status === "banned" || senderUser.status === "revoked" || senderUser.status === "rejected")) {
+        return res.status(403).json({ error: "Access denied. Your account is revoked or banned." });
+      }
     }
 
     const newDm = {

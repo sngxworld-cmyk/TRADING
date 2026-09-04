@@ -81,10 +81,15 @@ export const Navbar: React.FC<NavbarProps> = ({
     effectiveRole === "owner" ||
     user?.email.toLowerCase() === "sngxworld@gmail.com" ||
     user?.username.toLowerCase() === "sngxadmin009";
-  const isApproved = user?.status === "approved" || isOwner;
+  const isSuspended =
+    !isOwner &&
+    (user?.status === "revoked" ||
+      user?.status === "banned" ||
+      user?.status === "rejected");
+  const isApproved = (user?.status === "approved" || isOwner) && !isSuspended;
   const createdTime = user?.createdAt ? new Date(user.createdAt).getTime() : Date.now();
   const remainingMs = Math.max(0, 5 * 24 * 60 * 60 * 1000 - (now - createdTime));
-  const isTrialActive = !isApproved && remainingMs > 0;
+  const isTrialActive = !isApproved && !isSuspended && remainingMs > 0;
 
   const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
   const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -107,8 +112,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </div>
 
-        {/* View Switcher Tabs */}
-        {onToggleView && (
+        {/* View Switcher Tabs (Only available when account is active) */}
+        {onToggleView && !isSuspended && (isApproved || isTrialActive) && (
           <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 ml-1 sm:ml-2 font-mono text-[11px] sm:text-xs shrink-0">
             <button
               id="nav-tab-journal"
@@ -165,6 +170,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <UserCheck className="w-3 h-3" /> Full Access
                 </span>
               </>
+            ) : user.status === "banned" ? (
+              <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
+                <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                <span>Account Banned</span>
+              </div>
+            ) : user.status === "revoked" ? (
+              <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[10px] font-semibold uppercase">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                <span>Access Revoked</span>
+              </div>
+            ) : user.status === "rejected" ? (
+              <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
+                <div className="w-2 h-2 rounded-full bg-rose-500" />
+                <span>Access Declined</span>
+              </div>
             ) : isTrialActive ? (
               <div className="flex items-center gap-1 sm:gap-1.5 text-blue-300 font-mono text-[10px] sm:text-[11px] font-semibold">
                 <Clock className="w-3.5 h-3.5 text-blue-400 animate-pulse shrink-0" />
@@ -242,24 +262,39 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </span>
                   ) : user?.status === "approved" ? (
                     <span className="text-[10px] font-bold text-blue-300 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-500/30">
-                      Approved Full
+                      Full Access
+                    </span>
+                  ) : user?.status === "banned" ? (
+                    <span className="text-[10px] font-bold text-rose-300 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-500/30">
+                      Banned
+                    </span>
+                  ) : user?.status === "revoked" ? (
+                    <span className="text-[10px] font-bold text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30">
+                      Revoked
+                    </span>
+                  ) : user?.status === "rejected" ? (
+                    <span className="text-[10px] font-bold text-rose-300 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-500/30">
+                      Declined
                     </span>
                   ) : isTrialActive ? (
                     <span className="text-[10px] font-bold text-blue-300 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-500/30">
                       {days}d {hours}h {minutes}m
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold text-rose-300 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-500/30">
+                    <span className="text-[10px] font-bold text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-700">
                       Trial Ended
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* ========================================================= */}
-              {/* COMMUNITY HUB SPECIFIC 3-DOTS OPTIONS                      */}
-              {/* ========================================================= */}
-              {activeView === "community" ? (
+              {/* Only show navigation and actions if account is active */}
+              {!isSuspended && (isApproved || isTrialActive) && (
+                <>
+                  {/* ========================================================= */}
+                  {/* COMMUNITY HUB SPECIFIC 3-DOTS OPTIONS                      */}
+                  {/* ========================================================= */}
+                  {activeView === "community" ? (
                 <>
                   <div className="px-2 pt-1 pb-0.5 text-[10px] font-bold text-blue-400 uppercase tracking-wider">
                     Community Navigation
@@ -508,6 +543,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 </button>
               )}
+            </>
+          )}
 
               {/* Logout */}
               <button
