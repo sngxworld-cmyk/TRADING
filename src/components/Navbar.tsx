@@ -24,7 +24,7 @@ import {
   UserX,
 } from "lucide-react";
 import { getEffectiveRole } from "../utils/roleUtils";
-import { getTrialRemainingMs } from "../utils/deviceUtils";
+import { getTrialRemainingMs, isUserExemptFromTrial } from "../utils/deviceUtils";
 import { cleanEmailKey } from "../lib/userStore";
 
 interface NavbarProps {
@@ -94,18 +94,20 @@ export const Navbar: React.FC<NavbarProps> = ({
       (typeof window !== "undefined" && localStorage.getItem(`sngx_was_approved_${cleanEmail}`) === "true")
   );
 
-  const remainingMs = user ? getTrialRemainingMs(user) : 0;
+  const isExempt = user ? isUserExemptFromTrial(user) : false;
+  const remainingMs = user && !isExempt ? getTrialRemainingMs(user) : 0;
   const isBanned = !isOwner && user?.status === "banned";
   const isRevokedSubscribed = !isOwner && !isBanned && user?.status === "revoked" && isSubscribedUser;
-  const isRevokedTrialActive = !isOwner && !isBanned && user?.status === "revoked" && !isSubscribedUser && remainingMs > 0;
-  const isTrialActive = !isOwner && !isBanned && user?.status !== "approved" && remainingMs > 0;
   const isSuspended = isBanned || isRevokedSubscribed || (!isOwner && user?.status === "rejected");
-  const isApproved = (user?.status === "approved" || isOwner) && !isSuspended;
+  const isApproved = (user?.status === "approved" || isOwner || isExempt || isSubscribedUser) && !isSuspended;
+  const isRevokedTrialActive = !isOwner && !isBanned && user?.status === "revoked" && !isSubscribedUser && remainingMs > 0;
+  const isTrialActive = !isOwner && !isExempt && !isBanned && !isSuspended && !isApproved && remainingMs > 0;
 
-  const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((remainingMs % (1000 * 60)) / (1000 * 60));
-  const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+  const validMs = isFinite(remainingMs) && remainingMs > 0 ? remainingMs : 0;
+  const days = Math.floor(validMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((validMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((validMs % (1000 * 60)) / (1000 * 60));
+  const seconds = Math.floor((validMs % (1000 * 60)) / 1000);
 
   return (
     <nav
@@ -174,6 +176,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <ShieldCheck className="w-3 h-3 text-purple-400" /> <span className="hidden sm:inline">Host </span>Master Admin
                 </span>
               </>
+            ) : user.role === "admin" || effectiveRole === "sub_owner" || effectiveRole === "moderator" ? (
+              <>
+                <div className="w-2 h-2 rounded-full bg-blue-400" />
+                <span className="text-blue-300 font-medium uppercase tracking-wider text-[10px] flex items-center gap-1 font-mono">
+                  <ShieldCheck className="w-3 h-3 text-blue-400" /> Admin
+                </span>
+              </>
             ) : isBanned ? (
               <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
                 <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
@@ -191,7 +200,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   Revoked (Trial: <span className="text-white font-bold">{days}d {hours}h</span>)
                 </span>
               </div>
-            ) : user.status === "approved" ? (
+            ) : isApproved || user.status === "approved" || isSubscribedUser || isExempt ? (
               <>
                 <div className="w-2 h-2 rounded-full bg-blue-400" />
                 <span className="text-blue-300 font-medium uppercase tracking-wider text-[10px] flex items-center gap-1 font-mono">

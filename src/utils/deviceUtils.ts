@@ -242,25 +242,40 @@ export async function verifyDeviceRegistrationPermission(
 }
 
 /**
+ * Check if a user account is exempt from the 5-day trial (Master Admin, Admins, Approved, or Subscribed)
+ */
+export function isUserExemptFromTrial(user?: Partial<UserProfile> | null): boolean {
+  if (!user) return false;
+  const cleanEmail = user.email ? user.email.trim().toLowerCase() : "";
+  const isMasterOwner = cleanEmail === "sngxworld@gmail.com" || (user as any).username?.toLowerCase() === "sngxadmin009";
+  const isAdmin = user.role === "admin" || user.platformRole === "owner" || (user as any).role === "owner";
+  const isApproved = user.status === "approved";
+  const isSubscribed = Boolean(
+    user.subscribed ||
+      user.isSubscribed ||
+      user.hasSubscribed ||
+      user.wasApproved ||
+      (typeof window !== "undefined" && localStorage.getItem(`sngx_was_approved_${cleanEmail}`) === "true")
+  );
+  return isMasterOwner || isAdmin || isApproved || isSubscribed;
+}
+
+/**
  * Calculate the exact remaining milliseconds in the 5-day trial period.
- * Supports trialStartDate, trialExpiresAt, user createdAt, and local device binding.
+ * Guarantees a safe, finite number between 0 and 5 days (never Infinity or NaN).
  */
 export function getTrialRemainingMs(user?: Partial<UserProfile> | null): number {
   if (!user) return 0;
-  // Master Admin role, Approved status, or Host Master Device never expire
-  if (
-    user.role === "admin" ||
-    user.status === "approved" ||
-    user.email?.toLowerCase() === "sngxworld@gmail.com" ||
-    isHostMasterDevice()
-  ) {
-    return Infinity;
+  
+  // Exempt users (Owner, Admins, Approved, Subscribed) are NOT on trial
+  if (isUserExemptFromTrial(user)) {
+    return 0;
   }
 
   // Explicit trial expiry timestamp set by host admin
   if ((user as any).trialExpiresAt) {
     const exp = new Date((user as any).trialExpiresAt).getTime();
-    if (!isNaN(exp)) {
+    if (!isNaN(exp) && isFinite(exp)) {
       return Math.max(0, exp - Date.now());
     }
   }
@@ -268,33 +283,41 @@ export function getTrialRemainingMs(user?: Partial<UserProfile> | null): number 
   const trialDurationMs = 5 * 24 * 60 * 60 * 1000; // 5 days in ms
 
   // Prefer trialStartDate if set by host admin (+5d or force expire)
-  let regTime = (user as any).trialStartDate
-    ? new Date((user as any).trialStartDate).getTime()
-    : user.createdAt
-    ? new Date(user.createdAt).getTime()
-    : 0;
+  let regTime = 0;
+  if ((user as any).trialStartDate) {
+    const t = new Date((user as any).trialStartDate).getTime();
+    if (!isNaN(t) && isFinite(t)) regTime = t;
+  }
+  if (!regTime && user.createdAt) {
+    const t = new Date(user.createdAt).getTime();
+    if (!isNaN(t) && isFinite(t)) regTime = t;
+  }
 
   const localReg = getLocalDeviceRegistration();
   if (localReg.registeredAt && !(user as any).trialStartDate) {
     const devTime = new Date(localReg.registeredAt).getTime();
-    if (!isNaN(devTime) && (regTime === 0 || devTime < regTime)) {
+    if (!isNaN(devTime) && isFinite(devTime) && (regTime === 0 || devTime < regTime)) {
       regTime = devTime;
     }
   }
 
-  if (regTime === 0) {
+  if (regTime === 0 || isNaN(regTime) || !isFinite(regTime)) {
     regTime = Date.now();
   }
 
-  return Math.max(0, trialDurationMs - (Date.now() - regTime));
+  const elapsed = Date.now() - regTime;
+  const remaining = trialDurationMs - elapsed;
+  if (isNaN(remaining) || !isFinite(remaining) || remaining <= 0) {
+    return 0;
+  }
+  return Math.min(trialDurationMs, Math.max(0, remaining));
 }
 
 /**
  * Format remaining trial milliseconds into human readable format (e.g., '1d 22h', '3h 15m')
  */
 export function formatTrialRemaining(ms: number): string {
-  if (ms === Infinity) return "Full Access";
-  if (ms <= 0) return "Trial Ended";
+  if (!isFinite(ms) || ms <= 0) return "Trial Ended";
 
   const totalSeconds = Math.floor(ms / 1000);
   const days = Math.floor(totalSeconds / 86400);
@@ -315,13 +338,7 @@ export function formatTrialRemaining(ms: number): string {
  */
 export function checkIsTrialExpired(user?: Partial<UserProfile> | null): boolean {
   if (!user) return false;
-  // Admin role, approved accounts, or Host Master Device never expire
-  if (
-    user.role === "admin" ||
-    user.status === "approved" ||
-    user.email?.toLowerCase() === "sngxworld@gmail.com" ||
-    isHostMasterDevice()
-  ) {
+  if (isUserExemptFromTrial(user)) {
     return false;
   }
 

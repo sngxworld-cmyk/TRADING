@@ -9,7 +9,7 @@ import { RobotTutorialOverlay } from "./components/RobotTutorialOverlay";
 import { ProfileEditorModal } from "./components/ProfileEditorModal";
 import { MandatorySetupModal } from "./components/MandatorySetupModal";
 import { CommunityChatHub } from "./components/CommunityChatHub";
-import { checkIsTrialExpired, getTrialRemainingMs } from "./utils/deviceUtils";
+import { checkIsTrialExpired, getTrialRemainingMs, isUserExemptFromTrial } from "./utils/deviceUtils";
 import {
   markTutorialCompletedInFirestore,
   saveJournalConfigInFirestore,
@@ -352,9 +352,10 @@ export default function App() {
 
   const cleanEmail = cleanEmailKey(currentUser?.email || "");
   const isMasterOwner = cleanEmail === "sngxworld@gmail.com";
+  const isExemptUser = currentUser ? isUserExemptFromTrial(currentUser) : false;
 
-  // Calculate trial remaining time in ms
-  const trialRemainingMs = currentUser ? getTrialRemainingMs(currentUser) : 0;
+  // Calculate trial remaining time in ms (only for non-exempt users)
+  const trialRemainingMs = currentUser && !isExemptUser ? getTrialRemainingMs(currentUser) : 0;
 
   // Subscribed flag (explicit subscription or previously approved in history)
   const isSubscribedUser = Boolean(
@@ -392,7 +393,10 @@ export default function App() {
     !isRejectedUser &&
     (isMasterOwner ||
       currentUser?.status === "approved" ||
-      currentUser?.platformRole === "owner");
+      currentUser?.role === "admin" ||
+      currentUser?.platformRole === "owner" ||
+      isSubscribedUser ||
+      isExemptUser);
 
   // 6. Trial Expired Check
   // Expired if not approved, not banned, not revoked-subscribed, and trial remaining <= 0!
