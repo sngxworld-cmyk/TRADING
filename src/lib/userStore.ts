@@ -875,6 +875,14 @@ export async function loginUserInFirestore(
         : undefined,
     yearRange: matchedData.yearRange || "2026",
     startMonth: matchedData.startMonth !== undefined ? Number(matchedData.startMonth) : 0,
+    trialStartDate: matchedData.trialStartDate,
+    trialExpiresAt: matchedData.trialExpiresAt,
+    subscribed: !!(matchedData.subscribed || matchedData.isSubscribed || matchedData.hasSubscribed),
+    isSubscribed: !!(matchedData.isSubscribed || matchedData.subscribed || matchedData.hasSubscribed),
+    hasSubscribed: !!(matchedData.hasSubscribed || matchedData.subscribed || matchedData.isSubscribed),
+    wasApproved: matchedData.wasApproved !== undefined ? matchedData.wasApproved : (matchedData.status === "approved"),
+    bannedReason: matchedData.bannedReason || matchedData.banReason || "",
+    banAppeal: matchedData.banAppeal || null,
     tradingData: matchedData.tradingData || {},
   };
 
@@ -1435,15 +1443,34 @@ export async function fetchUserStatusFromFirestore(email: string): Promise<Parti
       const docSnap = await getDoc(doc(db, "users", cleanEmail));
       if (docSnap.exists()) {
         const d = docSnap.data();
+
+        // Check if user is also present in preApprovedEmails whitelist
+        let status = d.status;
+        try {
+          const preSnap = await getDoc(doc(db, "preApprovedEmails", cleanEmail));
+          if (preSnap.exists() && status !== "banned" && status !== "revoked" && status !== "rejected") {
+            status = "approved";
+          }
+        } catch {}
+
         return {
-          status: d.status,
+          status,
           role: d.role,
           platformRole: d.platformRole,
+          trialStartDate: d.trialStartDate,
+          trialExpiresAt: d.trialExpiresAt,
+          subscribed: !!(d.subscribed || d.isSubscribed || d.hasSubscribed),
+          isSubscribed: !!(d.isSubscribed || d.subscribed || d.hasSubscribed),
+          hasSubscribed: !!(d.hasSubscribed || d.subscribed || d.isSubscribed),
+          wasApproved: d.wasApproved !== undefined ? d.wasApproved : (d.status === "approved"),
+          bannedReason: d.bannedReason || d.banReason || "",
+          banAppeal: d.banAppeal || null,
           hasSeenTutorial: d.hasSeenTutorial,
           hasConfiguredJournal: d.hasConfiguredJournal,
           yearRange: d.yearRange,
           startMonth: d.startMonth,
           startingCapital: d.startingCapital,
+          createdAt: d.createdAt,
         };
       }
     } catch (e) {
@@ -1451,6 +1478,53 @@ export async function fetchUserStatusFromFirestore(email: string): Promise<Parti
     }
   }
   return null;
+}
+
+/**
+ * Submit a ban appeal to Firestore and Server API
+ */
+export async function submitBanAppealToFirestore(
+  email: string,
+  username: string,
+  reason: string
+): Promise<{ success: boolean; message: string }> {
+  const cleanEmail = cleanEmailKey(email);
+  if (!cleanEmail) throw new Error("Email is required.");
+
+  const appealData = {
+    email: cleanEmail,
+    username: username || cleanEmail.split("@")[0],
+    reason: reason.trim(),
+    submittedAt: new Date().toISOString(),
+    status: "pending" as const,
+  };
+
+  // 1. Write to Firestore banAppeals collection and update users collection
+  if (!checkQuotaStatus()) {
+    try {
+      await setDoc(doc(db, "banAppeals", cleanEmail), appealData);
+      await setDoc(doc(db, "users", cleanEmail), { banAppeal: appealData }, { merge: true });
+      await addAuditLogToFirestore(`Ban appeal submitted by: ${cleanEmail}`, "info");
+    } catch (e) {
+      handleFirestoreError(e, OperationType.WRITE, `banAppeals/${cleanEmail}`);
+    }
+  }
+
+  // 2. Submit to Server API
+  try {
+    await fetch("/api/admin/ban-appeals/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(appealData),
+    });
+  } catch (e) {}
+
+  // 3. Cache locally
+  try {
+    localStorage.setItem(`sngx_ban_appeal_${cleanEmail}`, JSON.stringify(appealData));
+  } catch (e) {}
+
+  return { success: true, message: "Your ban appeal has been submitted for administrative review." };
 }
 
 /**

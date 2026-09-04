@@ -9,8 +9,13 @@ import { RobotTutorialOverlay } from "./components/RobotTutorialOverlay";
 import { ProfileEditorModal } from "./components/ProfileEditorModal";
 import { MandatorySetupModal } from "./components/MandatorySetupModal";
 import { CommunityChatHub } from "./components/CommunityChatHub";
-import { checkIsTrialExpired } from "./utils/deviceUtils";
-import { markTutorialCompletedInFirestore, saveJournalConfigInFirestore, fetchUserStatusFromFirestore } from "./lib/userStore";
+import { checkIsTrialExpired, getTrialRemainingMs } from "./utils/deviceUtils";
+import {
+  markTutorialCompletedInFirestore,
+  saveJournalConfigInFirestore,
+  fetchUserStatusFromFirestore,
+  cleanEmailKey,
+} from "./lib/userStore";
 
 export default function App() {
   const [activeView, setActiveView] = useState<"journal" | "community">("journal");
@@ -199,7 +204,8 @@ export default function App() {
     const localUsers: any[] = JSON.parse(localStorage.getItem("sngx_local_users") || "[]");
     const matchedLocal = localUsers.find((u) => u.email && u.email.trim().toLowerCase() === cleanEmail);
 
-    let newStatus = matchedLocal?.status;
+    const isLocallyBanned = localStorage.getItem(`sngx_banned_${cleanEmail}`) === "true";
+    let newStatus = isLocallyBanned ? "banned" : matchedLocal?.status || currentUser.status;
     let newRole = matchedLocal?.role;
     let newPlatformRole = matchedLocal?.platformRole;
     let newHasSeenTutorial = matchedLocal?.hasSeenTutorial;
@@ -207,6 +213,10 @@ export default function App() {
     let newYearRange = matchedLocal?.yearRange;
     let newStartMonth = matchedLocal?.startMonth;
     let newStartingCapital = matchedLocal?.startingCapital;
+    let newSubscribed = matchedLocal?.subscribed;
+    let newWasApproved = matchedLocal?.wasApproved;
+    let newBannedReason = matchedLocal?.bannedReason;
+    let newBanAppeal = matchedLocal?.banAppeal;
 
     // Master Host Admin is always approved
     if (cleanEmail === "sngxworld@gmail.com") {
@@ -217,7 +227,15 @@ export default function App() {
     try {
       const liveFsUser = await fetchUserStatusFromFirestore(cleanEmail);
       if (liveFsUser) {
-        if (liveFsUser.status) newStatus = liveFsUser.status;
+        if (liveFsUser.status) {
+          newStatus = liveFsUser.status;
+          if (newStatus === "banned") {
+            localStorage.setItem(`sngx_banned_${cleanEmail}`, "true");
+          } else if (newStatus === "approved") {
+            localStorage.removeItem(`sngx_banned_${cleanEmail}`);
+            localStorage.setItem(`sngx_was_approved_${cleanEmail}`, "true");
+          }
+        }
         if (liveFsUser.role) newRole = liveFsUser.role;
         if (liveFsUser.platformRole) newPlatformRole = liveFsUser.platformRole;
         if (liveFsUser.hasSeenTutorial !== undefined) newHasSeenTutorial = liveFsUser.hasSeenTutorial;
@@ -225,6 +243,10 @@ export default function App() {
         if (liveFsUser.yearRange) newYearRange = liveFsUser.yearRange;
         if (liveFsUser.startMonth !== undefined) newStartMonth = liveFsUser.startMonth;
         if (liveFsUser.startingCapital) newStartingCapital = liveFsUser.startingCapital;
+        if (liveFsUser.subscribed !== undefined) newSubscribed = liveFsUser.subscribed;
+        if (liveFsUser.wasApproved !== undefined) newWasApproved = liveFsUser.wasApproved;
+        if (liveFsUser.bannedReason !== undefined) newBannedReason = liveFsUser.bannedReason;
+        if (liveFsUser.banAppeal !== undefined) newBanAppeal = liveFsUser.banAppeal;
       }
     } catch (e) {}
 
@@ -235,10 +257,14 @@ export default function App() {
       if (res.ok && isJson) {
         const data = await res.json();
         if (data.status) {
-          // If the account was marked banned/revoked/rejected, enforce that status
-          if (newStatus !== "banned" && newStatus !== "revoked" && newStatus !== "rejected") {
-            newStatus = data.status;
-          } else if (data.status === "banned" || data.status === "revoked" || data.status === "rejected") {
+          if (data.status === "banned") {
+            newStatus = "banned";
+            localStorage.setItem(`sngx_banned_${cleanEmail}`, "true");
+          } else if (data.status === "approved") {
+            newStatus = "approved";
+            localStorage.removeItem(`sngx_banned_${cleanEmail}`);
+            localStorage.setItem(`sngx_was_approved_${cleanEmail}`, "true");
+          } else if (newStatus !== "banned") {
             newStatus = data.status;
           }
           if (data.role) newRole = data.role;
@@ -252,6 +278,8 @@ export default function App() {
           if (data.user?.yearRange) newYearRange = data.user.yearRange;
           if (data.user?.startMonth !== undefined) newStartMonth = data.user.startMonth;
           if (data.user?.startingCapital) newStartingCapital = data.user.startingCapital;
+          if (data.user?.subscribed !== undefined) newSubscribed = data.user.subscribed;
+          if (data.user?.bannedReason !== undefined) newBannedReason = data.user.bannedReason;
         }
       }
     } catch (err) {
@@ -267,6 +295,24 @@ export default function App() {
       } catch (e) {}
     }
 
+    // Update cached user in sngx_local_users to prevent desync
+    try {
+      const idx = localUsers.findIndex((u) => u.email && u.email.trim().toLowerCase() === cleanEmail);
+      if (idx !== -1) {
+        localUsers[idx] = {
+          ...localUsers[idx],
+          status: newStatus,
+          role: newRole || localUsers[idx].role,
+          platformRole: newPlatformRole || localUsers[idx].platformRole,
+          subscribed: newSubscribed !== undefined ? newSubscribed : localUsers[idx].subscribed,
+          wasApproved: newWasApproved !== undefined ? newWasApproved : localUsers[idx].wasApproved,
+          bannedReason: newBannedReason || localUsers[idx].bannedReason,
+          banAppeal: newBanAppeal || localUsers[idx].banAppeal,
+        };
+        localStorage.setItem("sngx_local_users", JSON.stringify(localUsers));
+      }
+    } catch (e) {}
+
     if (
       newStatus &&
       (newStatus !== currentUser.status ||
@@ -276,7 +322,10 @@ export default function App() {
         (newHasConfiguredJournal !== undefined && newHasConfiguredJournal !== currentUser.hasConfiguredJournal) ||
         (newYearRange && newYearRange !== currentUser.yearRange) ||
         (newStartMonth !== undefined && newStartMonth !== currentUser.startMonth) ||
-        (newStartingCapital && newStartingCapital !== currentUser.startingCapital))
+        (newStartingCapital && newStartingCapital !== currentUser.startingCapital) ||
+        (newSubscribed !== undefined && newSubscribed !== currentUser.subscribed) ||
+        (newBannedReason !== undefined && newBannedReason !== currentUser.bannedReason) ||
+        (newBanAppeal !== undefined && newBanAppeal !== currentUser.banAppeal))
     ) {
       setCurrentUser((prev) =>
         prev
@@ -291,33 +340,71 @@ export default function App() {
               yearRange: newYearRange || prev.yearRange,
               startMonth: newStartMonth !== undefined ? newStartMonth : prev.startMonth,
               startingCapital: newStartingCapital || prev.startingCapital,
+              subscribed: newSubscribed !== undefined ? newSubscribed : prev.subscribed,
+              wasApproved: newWasApproved !== undefined ? newWasApproved : prev.wasApproved,
+              bannedReason: newBannedReason || prev.bannedReason,
+              banAppeal: newBanAppeal || prev.banAppeal,
             }
           : null
       );
     }
   };
 
-  // Strict Suspension check (Revoked, Banned, or Rejected by Host Admin)
-  const isSuspendedUser =
-    currentUser?.email?.toLowerCase() !== "sngxworld@gmail.com" &&
-    (currentUser?.status === "revoked" ||
-      currentUser?.status === "banned" ||
-      currentUser?.status === "rejected");
+  const cleanEmail = cleanEmailKey(currentUser?.email || "");
+  const isMasterOwner = cleanEmail === "sngxworld@gmail.com";
 
-  // Strict Approval check (Suspended users can NEVER be considered approved)
+  // Calculate trial remaining time in ms
+  const trialRemainingMs = currentUser ? getTrialRemainingMs(currentUser) : 0;
+
+  // Subscribed flag (explicit subscription or previously approved in history)
+  const isSubscribedUser = Boolean(
+    currentUser?.subscribed ||
+      currentUser?.isSubscribed ||
+      currentUser?.hasSubscribed ||
+      currentUser?.wasApproved ||
+      (typeof window !== "undefined" && localStorage.getItem(`sngx_was_approved_${cleanEmail}`) === "true")
+  );
+
+  // 1. Strict Ban Gate (IMG 3: Cannot be bypassed, persists permanently, unmounts entire app)
+  const isBannedUser =
+    !isMasterOwner &&
+    Boolean(
+      currentUser?.status === "banned" ||
+        (typeof window !== "undefined" && localStorage.getItem(`sngx_banned_${cleanEmail}`) === "true")
+    );
+
+  // 2. Strict Revoked Subscribed Gate (IMG 1: Revoked a person who already subscribed -> "UR ACCESS HAS BEEN REVOKED CONTACT THE OWNER OR AN MODERATOR")
+  const isRevokedSubscribedUser =
+    !isMasterOwner && !isBannedUser && currentUser?.status === "revoked" && isSubscribedUser;
+
+  // 3. Revoked Trial User (IMG 1: Revoked access of user who has time on trial -> THEY DON'T GET FULLY REVOKED UNTIL TIME GOES 0)
+  // If currentUser.status === "revoked" and !isSubscribedUser:
+  // - If trialRemainingMs > 0: user continues on trial! (isSuspendedUser is FALSE, isTrialExpired is FALSE)
+  // - If trialRemainingMs <= 0: user gets Trial Ended screen! (isTrialExpired is TRUE)
+
+  // 4. Rejected Gate
+  const isRejectedUser = !isMasterOwner && !isBannedUser && currentUser?.status === "rejected";
+
+  // 5. Approved User (IMG 2: Subscribed / granted access -> logs in normally)
   const isApprovedUser =
-    !isSuspendedUser &&
-    (currentUser?.email?.toLowerCase() === "sngxworld@gmail.com" ||
+    !isBannedUser &&
+    !isRevokedSubscribedUser &&
+    !isRejectedUser &&
+    (isMasterOwner ||
       currentUser?.status === "approved" ||
-      (currentUser?.role === "admin" &&
-        currentUser?.status !== "revoked" &&
-        currentUser?.status !== "banned" &&
-        currentUser?.status !== "rejected") ||
       currentUser?.platformRole === "owner");
 
-  // Calculate 5-Day Trial Status (strict device & user account check)
+  // 6. Trial Expired Check
+  // Expired if not approved, not banned, not revoked-subscribed, and trial remaining <= 0!
   const isTrialExpired =
-    !isApprovedUser && !isSuspendedUser && checkIsTrialExpired(currentUser);
+    !isApprovedUser &&
+    !isBannedUser &&
+    !isRevokedSubscribedUser &&
+    !isRejectedUser &&
+    trialRemainingMs <= 0;
+
+  // Is Suspended User (for rendering the suspension/revocation screen)
+  const isSuspendedUser = isBannedUser || isRevokedSubscribedUser || isRejectedUser;
 
   // Auto-poll approval status every 4 seconds if user is awaiting host admin approval, suspended, or trial expired
   useEffect(() => {
@@ -405,6 +492,7 @@ export default function App() {
             user={currentUser}
             onRefreshStatus={handleRefreshStatus}
             onLogout={handleLogout}
+            mode={isBannedUser ? "banned" : isRevokedSubscribedUser ? "revoked-subscribed" : "generic"}
           />
         ) : isTrialExpired && currentUser ? (
           /* If 5-Day trial is expired and user is not approved/suspended, show TrialExpiredModal */

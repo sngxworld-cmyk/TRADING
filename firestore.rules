@@ -15,6 +15,26 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Ban Appeals submitted by banned users
+    match /banAppeals/{emailKey} {
+      allow read, write: if true;
+    }
+
+    // Pre-approved whitelist emails
+    match /preApprovedEmails/{emailKey} {
+      allow read, write: if true;
+    }
+
+    // Registered hardware devices
+    match /devices/{deviceId} {
+      allow read, write: if true;
+    }
+
+    // System audit logs
+    match /system_audit_logs/{logId} {
+      allow read, write: if true;
+    }
+
     // Community Live Signals
     match /signals/{signalId} {
       allow read: if true;

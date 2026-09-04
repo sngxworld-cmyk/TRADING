@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { UserProfile } from "../types";
 import { AuthLottieAnimation } from "./AuthLottieAnimation";
 import {
@@ -31,6 +31,51 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [copiedBank, setCopiedBank] = useState<string | null>(null);
   const [refreshFeedback, setRefreshFeedback] = useState<string | null>(null);
+  const gateRef = useRef<HTMLDivElement>(null);
+
+  // Anti-tamper DOM Integrity Watchdog
+  useEffect(() => {
+    const target = gateRef.current;
+    if (!target) return;
+
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J" || e.key === "C")) ||
+        (e.metaKey && e.altKey && (e.key === "i" || e.key === "j" || e.key === "c"))
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    target.addEventListener("contextmenu", handleContextMenu);
+    window.addEventListener("keydown", handleKeyDown, true);
+
+    const observer = new MutationObserver(() => {
+      if (!document.body.contains(target)) {
+        window.location.reload();
+      } else {
+        if (target.style.display === "none" || target.style.visibility === "hidden" || target.style.opacity === "0") {
+          target.style.display = "flex";
+          target.style.visibility = "visible";
+          target.style.opacity = "1";
+        }
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+
+    return () => {
+      target.removeEventListener("contextmenu", handleContextMenu);
+      window.removeEventListener("keydown", handleKeyDown, true);
+      observer.disconnect();
+    };
+  }, []);
 
   const bankDetails = {
     bankName: "Commercial Bank of Ceylon",
@@ -71,8 +116,10 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
 
   return (
     <div
+      ref={gateRef}
       id="trial-expired-fullscreen-gate"
-      className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/95 backdrop-blur-2xl p-3 sm:p-5 overflow-y-auto"
+      className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/98 backdrop-blur-2xl p-3 sm:p-5 overflow-y-auto select-none"
+      style={{ userSelect: "none", WebkitUserSelect: "none" }}
     >
       <div className="w-full max-w-xl bg-slate-900 border border-amber-500/40 shadow-2xl rounded-3xl overflow-hidden p-6 sm:p-8 flex flex-col items-center text-center relative max-h-[94vh] overflow-y-auto overscroll-contain animate-in fade-in zoom-in-95 duration-300">
         {/* Top Decorative Ambient Glow Bar */}

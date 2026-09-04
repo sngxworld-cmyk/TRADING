@@ -41,6 +41,12 @@ interface UserRecord {
   tradingData?: any;
   yearRange?: string;
   startMonth?: number;
+  subscribed?: boolean;
+  wasApproved?: boolean;
+  bannedReason?: string;
+  banAppeal?: any;
+  trialStartDate?: string;
+  trialExpiresAt?: string;
 }
 
 interface DBStructure {
@@ -55,6 +61,7 @@ interface DBStructure {
   communitySignals?: any[];
   communityDirectMessages?: any[];
   communityGroupChatMessages?: Record<string, any[]>;
+  banAppeals?: any[];
 }
 
 const DB_FILE = process.env.VERCEL
@@ -221,6 +228,48 @@ function saveDB(db: DBStructure) {
 
 function getDB(): DBStructure {
   return loadDB();
+}
+
+/**
+ * Strict evaluation of user lockout status according to Host Admin policies:
+ * - Banned: immediate strict lockout, trial is voided
+ * - Rejected: access denied
+ * - Revoked: check if remaining 5-day trial exists. If trial active, allowed until 0; if expired, blocked.
+ * - Master Admin (sngxworld@gmail.com): always allowed
+ */
+function isUserAccessBlocked(user: any): { blocked: boolean; message?: string } {
+  if (!user || !user.email) return { blocked: false };
+  const email = (user.email || "").trim().toLowerCase();
+  if (email === "sngxworld@gmail.com") return { blocked: false };
+
+  // Banned: strict lockout, trial is completely voided
+  if (user.status === "banned") {
+    return { blocked: true, message: "Account is strictly banned by the host administrator." };
+  }
+
+  // Rejected: access denied
+  if (user.status === "rejected") {
+    return { blocked: true, message: "Access request has been rejected." };
+  }
+
+  // Revoked: Check remaining trial time!
+  if (user.status === "revoked") {
+    const trialDurationMs = 5 * 24 * 60 * 60 * 1000;
+    const regTime = user.trialStartDate
+      ? new Date(user.trialStartDate).getTime()
+      : user.createdAt
+      ? new Date(user.createdAt).getTime()
+      : 0;
+
+    const hasTrialRemaining = regTime > 0 && Date.now() - regTime < trialDurationMs;
+    if (hasTrialRemaining) {
+      // User still has active trial time! Allowed to use app until timer reaches 0
+      return { blocked: false };
+    }
+    return { blocked: true, message: "Account access revoked and trial period has ended." };
+  }
+
+  return { blocked: false };
 }
 
 function logActivity(message: string, type: "info" | "access" | "warn" = "info") {
@@ -1857,11 +1906,9 @@ app.use((req, res, next) => {
       return res.status(404).json({ error: "User not found." });
     }
 
-    if (
-      user.email.toLowerCase() !== "sngxworld@gmail.com" &&
-      (user.status === "banned" || user.status === "revoked" || user.status === "rejected")
-    ) {
-      return res.status(403).json({ error: "Access denied. Your account is revoked or banned by host administrator." });
+    const saveAccessCheck = isUserAccessBlocked(user);
+    if (saveAccessCheck.blocked) {
+      return res.status(403).json({ error: saveAccessCheck.message });
     }
 
     if (tradingData !== undefined && typeof tradingData === "object") {
@@ -1902,11 +1949,9 @@ app.use((req, res, next) => {
       return res.status(404).json({ error: "User not found." });
     }
 
-    if (
-      user.email.toLowerCase() !== "sngxworld@gmail.com" &&
-      (user.status === "banned" || user.status === "revoked" || user.status === "rejected")
-    ) {
-      return res.status(403).json({ error: "Access denied. Your account is revoked or banned by host administrator." });
+    const fetchAccessCheck = isUserAccessBlocked(user);
+    if (fetchAccessCheck.blocked) {
+      return res.status(403).json({ error: fetchAccessCheck.message });
     }
 
     return res.json({
@@ -1977,8 +2022,11 @@ app.use((req, res, next) => {
     if (senderEmail && senderEmail !== "sngxworld@gmail.com") {
       const currentDb = getDB();
       const senderUser = currentDb.users.find((u) => u.email.trim().toLowerCase() === senderEmail);
-      if (senderUser && (senderUser.status === "banned" || senderUser.status === "revoked" || senderUser.status === "rejected")) {
-        return res.status(403).json({ error: "Access denied. Your account is revoked or banned." });
+      if (senderUser) {
+        const groupMsgCheck = isUserAccessBlocked(senderUser);
+        if (groupMsgCheck.blocked) {
+          return res.status(403).json({ error: groupMsgCheck.message });
+        }
       }
     }
 
@@ -2077,8 +2125,11 @@ app.use((req, res, next) => {
     if (resolvedEmail && resolvedEmail.toLowerCase() !== "sngxworld@gmail.com") {
       const currentDb = getDB();
       const senderUser = currentDb.users.find((u) => u.email.trim().toLowerCase() === resolvedEmail.trim().toLowerCase());
-      if (senderUser && (senderUser.status === "banned" || senderUser.status === "revoked" || senderUser.status === "rejected")) {
-        return res.status(403).json({ error: "Access denied. Your account is revoked or banned." });
+      if (senderUser) {
+        const chatMsgCheck = isUserAccessBlocked(senderUser);
+        if (chatMsgCheck.blocked) {
+          return res.status(403).json({ error: chatMsgCheck.message });
+        }
       }
     }
 
@@ -2507,8 +2558,11 @@ app.use((req, res, next) => {
     if (!isHost && adminEmail) {
       const currentDb = getDB();
       const adminUser = currentDb.users.find((u) => u.email.trim().toLowerCase() === adminEmail);
-      if (adminUser && (adminUser.status === "banned" || adminUser.status === "revoked" || adminUser.status === "rejected")) {
-        return res.status(403).json({ error: "Access denied. Your account is revoked or banned." });
+      if (adminUser) {
+        const groupAdminCheck = isUserAccessBlocked(adminUser);
+        if (groupAdminCheck.blocked) {
+          return res.status(403).json({ error: groupAdminCheck.message });
+        }
       }
     }
 
@@ -2801,6 +2855,85 @@ Provide a concise, helpful, friendly, and expert response based on the above tra
       const fallbackReply = generateDynamicResponse(message);
       return res.json({ reply: fallbackReply });
     }
+  });
+
+  // --- BAN APPEAL API ENDPOINTS ---
+  app.post("/api/admin/ban-appeals/submit", (req, res) => {
+    const { email, username, reason } = req.body || {};
+    if (!email || !reason) {
+      return res.status(400).json({ error: "Email and appeal reason are required." });
+    }
+    const clean = String(email).trim().toLowerCase();
+    const currentDb = getDB();
+    if (!currentDb.banAppeals) {
+      currentDb.banAppeals = [];
+    }
+    const appealObj = {
+      id: "appeal_" + Date.now(),
+      email: clean,
+      username: username || clean.split("@")[0],
+      reason: String(reason).trim(),
+      submittedAt: new Date().toISOString(),
+      status: "pending",
+    };
+    currentDb.banAppeals = currentDb.banAppeals.filter((a: any) => a.email !== clean);
+    currentDb.banAppeals.unshift(appealObj);
+
+    const user = currentDb.users.find((u) => u.email.trim().toLowerCase() === clean);
+    if (user) {
+      user.banAppeal = appealObj;
+    }
+    logActivity(`Ban appeal submitted by: ${clean}`, "info");
+    saveDB(currentDb);
+    return res.json({ success: true, message: "Ban appeal registered.", appeal: appealObj });
+  });
+
+  app.get("/api/admin/ban-appeals", (_req, res) => {
+    const currentDb = getDB();
+    return res.json({ success: true, appeals: currentDb.banAppeals || [] });
+  });
+
+  app.post("/api/admin/user-status-sync", (req, res) => {
+    const { email, status, role, bannedReason, trialStartDate, trialExpiresAt } = req.body || {};
+    if (!email || !status) {
+      return res.status(400).json({ error: "Email and status are required." });
+    }
+    const clean = String(email).trim().toLowerCase();
+    const currentDb = getDB();
+    let user = currentDb.users.find((u) => u.email.trim().toLowerCase() === clean);
+    if (!user) {
+      user = {
+        id: "usr_" + Date.now(),
+        email: clean,
+        username: clean.split("@")[0],
+        password: "pre_synced_user",
+        role: role || "client",
+        status: status,
+        createdAt: new Date().toISOString(),
+      };
+      currentDb.users.push(user);
+    } else {
+      user.status = status;
+      if (role) user.role = role;
+    }
+    if (bannedReason !== undefined) user.bannedReason = bannedReason;
+    if (trialStartDate !== undefined) user.trialStartDate = trialStartDate;
+    if (trialExpiresAt !== undefined) user.trialExpiresAt = trialExpiresAt;
+
+    if (status === "banned" || status === "revoked" || status === "rejected") {
+      if (clean !== "sngxworld@gmail.com") {
+        currentDb.preApprovedEmails = currentDb.preApprovedEmails.filter(
+          (e) => e.trim().toLowerCase() !== clean
+        );
+      }
+    } else if (status === "approved") {
+      if (!currentDb.preApprovedEmails.includes(clean)) {
+        currentDb.preApprovedEmails.push(clean);
+      }
+    }
+    logActivity(`User status synced: ${clean} -> ${status}`, "access");
+    saveDB(currentDb);
+    return res.json({ success: true, user });
   });
 
 // --- VITE / STATIC SERVING & SERVER LISTEN ---

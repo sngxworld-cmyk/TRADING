@@ -242,25 +242,40 @@ export async function verifyDeviceRegistrationPermission(
 }
 
 /**
- * Check if the 5-day trial is expired for a given user or this device
+ * Calculate the exact remaining milliseconds in the 5-day trial period.
+ * Supports trialStartDate, trialExpiresAt, user createdAt, and local device binding.
  */
-export function checkIsTrialExpired(user?: Partial<UserProfile> | null): boolean {
-  if (!user) return false;
-  // Admin role, approved accounts, or Host Master Device never expire
+export function getTrialRemainingMs(user?: Partial<UserProfile> | null): number {
+  if (!user) return 0;
+  // Master Admin role, Approved status, or Host Master Device never expire
   if (
     user.role === "admin" ||
     user.status === "approved" ||
+    user.email?.toLowerCase() === "sngxworld@gmail.com" ||
     isHostMasterDevice()
   ) {
-    return false;
+    return Infinity;
+  }
+
+  // Explicit trial expiry timestamp set by host admin
+  if ((user as any).trialExpiresAt) {
+    const exp = new Date((user as any).trialExpiresAt).getTime();
+    if (!isNaN(exp)) {
+      return Math.max(0, exp - Date.now());
+    }
   }
 
   const trialDurationMs = 5 * 24 * 60 * 60 * 1000; // 5 days in ms
-  const localReg = getLocalDeviceRegistration();
 
-  // Pick the oldest known registration date between user object and device record
-  let regTime = user.createdAt ? new Date(user.createdAt).getTime() : 0;
-  if (localReg.registeredAt) {
+  // Prefer trialStartDate if set by host admin (+5d or force expire)
+  let regTime = (user as any).trialStartDate
+    ? new Date((user as any).trialStartDate).getTime()
+    : user.createdAt
+    ? new Date(user.createdAt).getTime()
+    : 0;
+
+  const localReg = getLocalDeviceRegistration();
+  if (localReg.registeredAt && !(user as any).trialStartDate) {
     const devTime = new Date(localReg.registeredAt).getTime();
     if (!isNaN(devTime) && (regTime === 0 || devTime < regTime)) {
       regTime = devTime;
@@ -271,5 +286,44 @@ export function checkIsTrialExpired(user?: Partial<UserProfile> | null): boolean
     regTime = Date.now();
   }
 
-  return Date.now() - regTime >= trialDurationMs;
+  return Math.max(0, trialDurationMs - (Date.now() - regTime));
+}
+
+/**
+ * Format remaining trial milliseconds into human readable format (e.g., '1d 22h', '3h 15m')
+ */
+export function formatTrialRemaining(ms: number): string {
+  if (ms === Infinity) return "Full Access";
+  if (ms <= 0) return "Trial Ended";
+
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  if (days > 0) {
+    return `${days}d ${hours}h left`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m left`;
+  }
+  return `${minutes}m left`;
+}
+
+/**
+ * Check if the 5-day trial is expired for a given user or this device
+ */
+export function checkIsTrialExpired(user?: Partial<UserProfile> | null): boolean {
+  if (!user) return false;
+  // Admin role, approved accounts, or Host Master Device never expire
+  if (
+    user.role === "admin" ||
+    user.status === "approved" ||
+    user.email?.toLowerCase() === "sngxworld@gmail.com" ||
+    isHostMasterDevice()
+  ) {
+    return false;
+  }
+
+  return getTrialRemainingMs(user) <= 0;
 }

@@ -32,6 +32,18 @@ export interface UserProfile {
   subOwnerNote?: string;
   createdAt?: string;
   lastLogin?: string;
+  trialStartDate?: string;
+  trialExpiresAt?: string;
+  subscribed?: boolean;
+  isSubscribed?: boolean;
+  hasSubscribed?: boolean;
+  wasApproved?: boolean;
+  bannedReason?: string;
+  banAppeal?: {
+    reason: string;
+    submittedAt: string;
+    status: "pending" | "approved" | "rejected";
+  };
   hasSeenTutorial?: boolean;
   hasConfiguredJournal?: boolean;
   yearRange?: string;

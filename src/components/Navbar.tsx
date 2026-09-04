@@ -21,8 +21,11 @@ import {
   TrendingUp,
   ShieldAlert,
   Check,
+  UserX,
 } from "lucide-react";
 import { getEffectiveRole } from "../utils/roleUtils";
+import { getTrialRemainingMs } from "../utils/deviceUtils";
+import { cleanEmailKey } from "../lib/userStore";
 
 interface NavbarProps {
   user: UserProfile | null;
@@ -81,15 +84,23 @@ export const Navbar: React.FC<NavbarProps> = ({
     effectiveRole === "owner" ||
     user?.email.toLowerCase() === "sngxworld@gmail.com" ||
     user?.username.toLowerCase() === "sngxadmin009";
-  const isSuspended =
-    !isOwner &&
-    (user?.status === "revoked" ||
-      user?.status === "banned" ||
-      user?.status === "rejected");
+
+  const cleanEmail = cleanEmailKey(user?.email || "");
+  const isSubscribedUser = Boolean(
+    user?.subscribed ||
+      user?.isSubscribed ||
+      user?.hasSubscribed ||
+      user?.wasApproved ||
+      (typeof window !== "undefined" && localStorage.getItem(`sngx_was_approved_${cleanEmail}`) === "true")
+  );
+
+  const remainingMs = user ? getTrialRemainingMs(user) : 0;
+  const isBanned = !isOwner && user?.status === "banned";
+  const isRevokedSubscribed = !isOwner && !isBanned && user?.status === "revoked" && isSubscribedUser;
+  const isRevokedTrialActive = !isOwner && !isBanned && user?.status === "revoked" && !isSubscribedUser && remainingMs > 0;
+  const isTrialActive = !isOwner && !isBanned && user?.status !== "approved" && remainingMs > 0;
+  const isSuspended = isBanned || isRevokedSubscribed || (!isOwner && user?.status === "rejected");
   const isApproved = (user?.status === "approved" || isOwner) && !isSuspended;
-  const createdTime = user?.createdAt ? new Date(user.createdAt).getTime() : Date.now();
-  const remainingMs = Math.max(0, 5 * 24 * 60 * 60 * 1000 - (now - createdTime));
-  const isTrialActive = !isApproved && !isSuspended && remainingMs > 0;
 
   const days = Math.floor(remainingMs / (1000 * 60 * 60 * 24));
   const hours = Math.floor((remainingMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -163,6 +174,23 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <ShieldCheck className="w-3 h-3 text-purple-400" /> <span className="hidden sm:inline">Host </span>Master Admin
                 </span>
               </>
+            ) : isBanned ? (
+              <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
+                <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                <span>Account Banned</span>
+              </div>
+            ) : isRevokedSubscribed ? (
+              <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[10px] font-semibold uppercase">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                <span>Access Revoked</span>
+              </div>
+            ) : isRevokedTrialActive ? (
+              <div className="flex items-center gap-1 sm:gap-1.5 text-amber-300 font-mono text-[10px] sm:text-[11px] font-semibold">
+                <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse shrink-0" />
+                <span>
+                  Revoked (Trial: <span className="text-white font-bold">{days}d {hours}h</span>)
+                </span>
+              </div>
             ) : user.status === "approved" ? (
               <>
                 <div className="w-2 h-2 rounded-full bg-blue-400" />
@@ -170,16 +198,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <UserCheck className="w-3 h-3" /> Full Access
                 </span>
               </>
-            ) : user.status === "banned" ? (
-              <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
-                <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                <span>Account Banned</span>
-              </div>
-            ) : user.status === "revoked" ? (
-              <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[10px] font-semibold uppercase">
-                <div className="w-2 h-2 rounded-full bg-amber-500" />
-                <span>Access Revoked</span>
-              </div>
             ) : user.status === "rejected" ? (
               <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
                 <div className="w-2 h-2 rounded-full bg-rose-500" />
