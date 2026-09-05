@@ -610,7 +610,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-lg font-bold text-white font-mono">{group.name}</h1>
-                <RoleBadge role={group.adminRole} size="xs" />
+                <RoleBadge email={group.adminEmail} role={group.adminRole} size="xs" hideOnCompact={true} />
                 {group.isVerified ? (
                   <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/40 text-[10px] font-mono font-bold flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3 text-purple-400" /> VERIFIED VIP (≥75% WIN)
@@ -626,8 +626,8 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5 font-mono">
-                Admin:{" "}
+              <p className="text-xs text-slate-400 flex flex-wrap items-center gap-2 mt-0.5 font-mono">
+                <span>Admin:</span>
                 <button
                   onClick={() =>
                     onOpenProfile({
@@ -641,6 +641,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 >
                   {group.adminDisplayName || group.adminUsername}
                 </button>
+                <RoleBadge email={group.adminEmail} role={group.adminRole} size="xs" hideOnCompact={true} />
                 <span>•</span>
                 <button
                   onClick={() => setActiveTab("members")}
@@ -1215,7 +1216,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                             >
                               {msg.senderDisplayName}
                             </button>
-                            <RoleBadge role={msg.senderRole} size="xs" />
+                            <RoleBadge email={msg.senderEmail} role={msg.senderRole} size="xs" hideOnCompact={true} />
                             {isMsgAdmin && (
                               <span className="px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[9px] font-mono font-bold">
                                 GROUP ADMIN
@@ -1663,6 +1664,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                             >
                               {memberEmail.split("@")[0]}
                             </button>
+                            <RoleBadge email={memberEmail} size="xs" hideOnCompact={true} />
                             {isMemberAdmin && (
                               <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 text-[9px] font-mono font-bold">
                                 ADMIN

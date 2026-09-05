@@ -103,130 +103,142 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isRevokedTrialActive = !isOwner && !isBanned && user?.status === "revoked" && !isSubscribedUser && remainingMs > 0;
   const isTrialActive = !isOwner && !isExempt && !isBanned && !isSuspended && !isApproved && remainingMs > 0;
 
-  const validMs = isFinite(remainingMs) && remainingMs > 0 ? remainingMs : 0;
-  const days = Math.floor(validMs / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((validMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((validMs % (1000 * 60)) / (1000 * 60));
-  const seconds = Math.floor((validMs % (1000 * 60)) / 1000);
+  const validMs = isFinite(remainingMs) && remainingMs > 0 && now ? remainingMs : 0;
+  const totalSeconds = Math.floor(validMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
 
   return (
     <nav
       id="main-navbar"
-      className="min-h-16 border-b border-slate-800/90 bg-slate-900/95 backdrop-blur-md flex flex-wrap items-center justify-between px-3 sm:px-6 lg:px-8 py-2.5 gap-2 shrink-0 z-50 sticky top-0 shadow-lg shadow-black/40"
+      className="border-b border-slate-800/90 bg-slate-900/95 backdrop-blur-md px-2.5 sm:px-6 lg:px-8 py-2 sm:py-2.5 shrink-0 z-50 sticky top-0 shadow-lg shadow-black/40"
     >
-      {/* Left: TrackerX Branding */}
-      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-        <div className="flex items-center gap-1.5 cursor-pointer select-none">
-          <span className="text-xl sm:text-2xl font-black tracking-tight text-white font-mono flex items-center">
-            Tracker<span className="text-blue-400">X</span>
-          </span>
-          <span className="text-[10px] bg-blue-950/60 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-md font-mono font-bold tracking-widest uppercase">
-            PRO
-          </span>
+      <div className="flex items-center justify-between gap-2 min-w-0">
+        {/* Left: TrackerX Branding & Desktop View Switcher */}
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <div className="flex items-center cursor-pointer select-none shrink-0">
+            <span className="text-lg sm:text-2xl font-black tracking-tight text-white font-mono inline-flex items-baseline">
+              <span>Tracker</span>
+              <span className="text-xl sm:text-3xl font-black text-blue-400 inline-block leading-none ml-[0.5px]">
+                X
+              </span>
+              <sub className="text-[11px] sm:text-[14px] font-bold text-slate-400 lowercase tracking-normal ml-0.5 relative -bottom-[2px]">
+                journal
+              </sub>
+            </span>
+          </div>
+
+          {/* View Switcher Tabs (Desktop only: hidden on mobile, shown on sm+) */}
+          {onToggleView && !isSuspended && (isApproved || isTrialActive) && (
+            <div className="hidden sm:flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 font-mono text-xs shrink-0">
+              <button
+                id="nav-tab-journal"
+                onClick={() => onToggleView("journal")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
+                  activeView === "journal"
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Trading Journal</span>
+              </button>
+              <button
+                id="nav-tab-community"
+                onClick={() => onToggleView("community")}
+                className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
+                  activeView === "community"
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Community</span>
+                {activeView === "community" ? (
+                  <span className="relative flex h-2 w-2 items-center justify-center shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
+                  </span>
+                ) : (
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80" />
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* View Switcher Tabs (Only available when account is active) */}
-        {onToggleView && !isSuspended && (isApproved || isTrialActive) && (
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 ml-1 sm:ml-2 font-mono text-[11px] sm:text-xs shrink-0">
-            <button
-              id="nav-tab-journal"
-              onClick={() => onToggleView("journal")}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
-                activeView === "journal"
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline">Trading </span>Journal
-            </button>
-            <button
-              id="nav-tab-community"
-              onClick={() => onToggleView("community")}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
-                activeView === "community"
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>Community</span>
-              {activeView === "community" ? (
-                <span className="relative flex h-2 w-2 items-center justify-center shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
-                </span>
+        {/* Right Controls - ALWAYS pinned to the right edge */}
+        <div className="ml-auto flex items-center justify-end gap-1.5 sm:gap-3 shrink-0">
+          {/* Status & Trial Countdown Indicator */}
+          {user && (
+            <div className="flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2.5 py-1 rounded-xl bg-slate-950/80 border border-slate-800 text-[10px] sm:text-xs shadow-inner shrink-0">
+              {isOwner ? (
+                <>
+                  <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                  <span className="text-purple-300 font-medium uppercase tracking-wider text-[10px] flex items-center gap-1 font-mono">
+                    <ShieldCheck className="w-3 h-3 text-purple-400" />
+                    <span className="hidden md:inline">Host </span>Admin
+                  </span>
+                </>
+              ) : user.role === "admin" || effectiveRole === "sub_owner" || effectiveRole === "moderator" ? (
+                <>
+                  <div className="w-2 h-2 rounded-full bg-blue-400" />
+                  <span className="text-blue-300 font-medium uppercase tracking-wider text-[10px] flex items-center gap-1 font-mono">
+                    <ShieldCheck className="w-3 h-3 text-blue-400" /> Admin
+                  </span>
+                </>
+              ) : isBanned ? (
+                <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
+                  <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                  <span>Banned</span>
+                </div>
+              ) : isRevokedSubscribed ? (
+                <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[10px] font-semibold uppercase">
+                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span>Revoked</span>
+                </div>
+              ) : isRevokedTrialActive ? (
+                <div className="flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 text-amber-300 font-mono">
+                  <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse shrink-0" />
+                  <div className="flex flex-col text-left leading-none justify-center">
+                    <span className="text-[8px] sm:text-[9px] text-amber-400 font-bold uppercase tracking-wider">Revoked (Trial)</span>
+                    <span className="text-white font-bold text-[10px] sm:text-[11px] whitespace-nowrap mt-0.5">
+                      {days}d {hours}h {minutes}m {seconds}s
+                    </span>
+                  </div>
+                </div>
+              ) : isApproved || user.status === "approved" || isSubscribedUser || isExempt ? (
+                <>
+                  <div className="w-2 h-2 rounded-full bg-blue-400" />
+                  <span className="text-blue-300 font-medium uppercase tracking-wider text-[10px] flex items-center gap-1 font-mono">
+                    <UserCheck className="w-3 h-3" /> <span className="hidden sm:inline">Full </span>Access
+                  </span>
+                </>
+              ) : user.status === "rejected" ? (
+                <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
+                  <div className="w-2 h-2 rounded-full bg-rose-500" />
+                  <span>Declined</span>
+                </div>
+              ) : isTrialActive ? (
+                <div className="flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 text-blue-300 font-mono">
+                  <Clock className="w-3.5 h-3.5 text-blue-400 animate-pulse shrink-0" />
+                  <div className="flex flex-col text-left leading-none justify-center">
+                    <span className="text-[8px] sm:text-[9px] text-blue-300 font-bold uppercase tracking-wider">Trial Countdown</span>
+                    <span className="text-white font-bold text-[10px] sm:text-[11px] whitespace-nowrap mt-0.5">
+                      {days}d {hours}h {minutes}m {seconds}s
+                    </span>
+                  </div>
+                </div>
               ) : (
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80" />
+                <div className="flex items-center gap-1.5 text-slate-400 font-mono text-[10px] font-semibold uppercase">
+                  <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>Expired</span>
+                </div>
               )}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Right Controls */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Status & Trial Countdown Indicator */}
-        {user && (
-          <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800 text-[10px] sm:text-xs shadow-inner shrink-0">
-            {isOwner ? (
-              <>
-                <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-                <span className="text-purple-300 font-medium uppercase tracking-wider text-[10px] flex items-center gap-1 font-mono">
-                  <ShieldCheck className="w-3 h-3 text-purple-400" /> <span className="hidden sm:inline">Host </span>Master Admin
-                </span>
-              </>
-            ) : user.role === "admin" || effectiveRole === "sub_owner" || effectiveRole === "moderator" ? (
-              <>
-                <div className="w-2 h-2 rounded-full bg-blue-400" />
-                <span className="text-blue-300 font-medium uppercase tracking-wider text-[10px] flex items-center gap-1 font-mono">
-                  <ShieldCheck className="w-3 h-3 text-blue-400" /> Admin
-                </span>
-              </>
-            ) : isBanned ? (
-              <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
-                <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                <span>Account Banned</span>
-              </div>
-            ) : isRevokedSubscribed ? (
-              <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[10px] font-semibold uppercase">
-                <div className="w-2 h-2 rounded-full bg-amber-500" />
-                <span>Access Revoked</span>
-              </div>
-            ) : isRevokedTrialActive ? (
-              <div className="flex items-center gap-1 sm:gap-1.5 text-amber-300 font-mono text-[10px] sm:text-[11px] font-semibold">
-                <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse shrink-0" />
-                <span>
-                  Revoked (Trial: <span className="text-white font-bold">{days}d {hours}h</span>)
-                </span>
-              </div>
-            ) : isApproved || user.status === "approved" || isSubscribedUser || isExempt ? (
-              <>
-                <div className="w-2 h-2 rounded-full bg-blue-400" />
-                <span className="text-blue-300 font-medium uppercase tracking-wider text-[10px] flex items-center gap-1 font-mono">
-                  <UserCheck className="w-3 h-3" /> Full Access
-                </span>
-              </>
-            ) : user.status === "rejected" ? (
-              <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
-                <div className="w-2 h-2 rounded-full bg-rose-500" />
-                <span>Access Declined</span>
-              </div>
-            ) : isTrialActive ? (
-              <div className="flex items-center gap-1 sm:gap-1.5 text-blue-300 font-mono text-[10px] sm:text-[11px] font-semibold">
-                <Clock className="w-3.5 h-3.5 text-blue-400 animate-pulse shrink-0" />
-                <span>
-                  Trial: <span className="text-white font-bold">{days}d {hours}h {minutes}m</span>
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 text-slate-400 font-mono text-[10px] font-semibold uppercase">
-                <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                <span>Trial Expired</span>
-              </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
 
         {/* Profile Button */}
         {user && (
@@ -274,7 +286,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {menuOpen && (
             <div
               id="nav-three-dots-dropdown"
-              className="absolute right-0 mt-2 w-72 sm:w-80 bg-slate-900/98 border border-slate-700 rounded-2xl shadow-2xl shadow-black/90 backdrop-blur-2xl p-2.5 z-[100] text-white animate-in fade-in zoom-in-95 duration-150 space-y-1.5 font-mono text-xs max-h-[calc(100vh-80px)] overflow-y-auto"
+              className="absolute right-0 mt-2 w-72 sm:w-80 max-w-[calc(100vw-1.25rem)] bg-slate-900/98 border border-slate-700 rounded-2xl shadow-2xl shadow-black/90 backdrop-blur-2xl p-2.5 z-[100] text-white animate-in fade-in zoom-in-95 duration-150 space-y-1.5 font-mono text-xs max-h-[calc(100vh-80px)] overflow-y-auto"
             >
               {/* Account Access / Trial Status */}
               <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
@@ -295,6 +307,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span className="text-[10px] font-bold text-rose-300 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-500/30">
                       Banned
                     </span>
+                  ) : isRevokedTrialActive ? (
+                    <span className="text-[10px] font-bold text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30">
+                      Revoked ({days}d {hours}h {minutes}m {seconds}s)
+                    </span>
                   ) : user?.status === "revoked" ? (
                     <span className="text-[10px] font-bold text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30">
                       Revoked
@@ -305,7 +321,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </span>
                   ) : isTrialActive ? (
                     <span className="text-[10px] font-bold text-blue-300 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-500/30">
-                      {days}d {hours}h {minutes}m
+                      {days}d {hours}h {minutes}m {seconds}s
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-700">
@@ -589,6 +605,47 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
       </div>
+    </div>
+
+      {/* Mobile Dedicated View Switcher Tab Bar (Shown ONLY on < sm screens) */}
+      {onToggleView && !isSuspended && (isApproved || isTrialActive) && (
+        <div className="flex sm:hidden items-center justify-center w-full pt-2">
+          <div className="grid grid-cols-2 w-full gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-mono shadow-inner">
+            <button
+              id="nav-tab-journal-mobile"
+              onClick={() => onToggleView("journal")}
+              className={`py-2 px-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
+                activeView === "journal"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Trading Journal</span>
+            </button>
+            <button
+              id="nav-tab-community-mobile"
+              onClick={() => onToggleView("community")}
+              className={`py-2 px-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
+                activeView === "community"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Community</span>
+              {activeView === "community" ? (
+                <span className="relative flex h-2 w-2 items-center justify-center shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
+                </span>
+              ) : (
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80" />
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

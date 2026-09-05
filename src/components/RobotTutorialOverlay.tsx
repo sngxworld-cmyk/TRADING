@@ -84,7 +84,7 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
       subtitle: "Interactive 3D Walkthrough Guidance",
       icon: Cpu,
       description:
-        "3D AI Robot උපදේශක එක මගින් TrackerX Trading Plan App එකෙහි සියලුම විශේෂාංග පිළිබඳ සවිස්තරාත්මක 3D නිබන්ධන මඟපෙන්වීමක් ලබාදේ.",
+        "3D AI Robot උපදේශක එක මගින් TrackerX journal App එකෙහි සියලුම විශේෂාංග පිළිබඳ සවිස්තරාත්මක 3D නිබන්ධන මඟපෙන්වීමක් ලබාදේ.",
       highlightHint: "3D Interactive AI Tutorial Overlay",
     },
   ];
@@ -159,7 +159,7 @@ export const RobotTutorialOverlay: React.FC<RobotTutorialOverlayProps> = ({
       subtitle: "Interactive 3D Walkthrough Guidance",
       icon: Cpu,
       description:
-        "The 3D AI Robot Assistant provides this comprehensive interactive walkthrough tutorial covering all features of your TrackerX Trading Plan.",
+        "The 3D AI Robot Assistant provides this comprehensive interactive walkthrough tutorial covering all features of your TrackerX journal.",
       highlightHint: "3D Interactive AI Tutorial Overlay",
     },
   ];

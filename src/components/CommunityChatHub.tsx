@@ -396,188 +396,207 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Top Header / Bar */}
-      <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-3 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 shadow-md shadow-black/30">
-        <div className="flex items-center gap-3">
-          {onBackToApp && (
-            <button
-              onClick={onBackToApp}
-              className="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 text-blue-400" /> Trading Journal
-            </button>
-          )}
+      <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-2.5 sm:px-6 py-2 sm:py-3 shadow-md shadow-black/30">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          {/* Row 1 on Mobile: Left Branding + Back Button, and Right User Profile */}
+          <div className="flex items-center justify-between gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              {onBackToApp && (
+                <button
+                  onClick={onBackToApp}
+                  className="px-2 sm:px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs font-mono flex items-center gap-1 transition-colors shrink-0"
+                  title="Back to Trading Journal"
+                >
+                  <ArrowLeft className="w-4 h-4 text-blue-400" />
+                  <span className="hidden md:inline">Journal</span>
+                </button>
+              )}
 
-          <div className="flex items-center gap-2.5">
-            <AuthLottieAnimation type="community-signal" className="w-8 h-8 sm:w-9 sm:h-9 shrink-0" />
-            <div>
-              <h1 className="text-sm sm:text-base font-bold text-white font-mono tracking-tight flex items-center gap-2">
-                TRACKERX COMMUNITY HUB
-              </h1>
-              <p className="text-[10px] text-blue-300 font-mono hidden xs:block">
-                Real-Time Trading Signals & Trader Network
-              </p>
+              <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                <AuthLottieAnimation type="community-signal" className="w-7 h-7 sm:w-8 sm:h-8 shrink-0" />
+                <div className="min-w-0">
+                  <h1 className="text-xs sm:text-base font-bold text-white font-mono tracking-tight whitespace-nowrap">
+                    <span className="hidden sm:inline">TRACKERX </span>COMMUNITY HUB
+                  </h1>
+                  <p className="text-[10px] text-blue-300 font-mono hidden md:block">
+                    Real-Time Trading Signals & Trader Network
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile-only User Profile (on sm+ it sits at the far right of the single line) */}
+            <div className="sm:hidden shrink-0">
+              <button
+                onClick={() => setSelectedProfileUser(currentUser)}
+                className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 transition-colors"
+                title="My Profile"
+              >
+                <span className="text-xs text-white font-mono font-bold max-w-[85px] truncate">
+                  {currentUser.displayName || currentUser.username}
+                </span>
+                <RoleBadge role={userRole} size="xs" />
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Right Controls: Main View Dropdown Switcher + Guidelines + User Profile */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Main View Dropdown Button */}
-          <div className="relative" ref={viewDropdownRef}>
-            <button
-              id="community-main-dropdown-btn"
-              onClick={() => setViewDropdownOpen((prev) => !prev)}
-              className={`flex items-center gap-2 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border font-mono text-xs font-bold transition-all shadow-md active:scale-95 ${
-                viewDropdownOpen
-                  ? "bg-slate-800 border-blue-400 text-white shadow-blue-500/20"
-                  : "bg-slate-950 hover:bg-slate-900 border-slate-800 hover:border-blue-500/50 text-slate-200 hover:text-white"
-              }`}
-            >
-              {activeTab === "chat" && (
-                <>
-                  <MessageSquare className="w-4 h-4 text-blue-400 shrink-0" />
-                  <span>Chat Room</span>
-                </>
-              )}
-              {activeTab === "groups" && (
-                <>
-                  <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Signal Groups</span>
-                </>
-              )}
-              {activeTab === "dms" && (
-                <>
-                  <User className="w-4 h-4 text-purple-400 shrink-0" />
-                  <span>Direct Messages</span>
-                </>
-              )}
-              <ChevronDown
-                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
-                  viewDropdownOpen ? "rotate-180 text-blue-400" : ""
+          {/* Row 2 on Mobile / Right side on Desktop: View Dropdown Switcher + Guidelines + Desktop User Profile */}
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pt-1 sm:pt-0 border-t border-slate-800/60 sm:border-t-0">
+            {/* Main View Dropdown Button */}
+            <div className="relative flex-1 sm:flex-initial" ref={viewDropdownRef}>
+              <button
+                id="community-main-dropdown-btn"
+                onClick={() => setViewDropdownOpen((prev) => !prev)}
+                className={`w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border font-mono text-xs font-bold transition-all shadow-md active:scale-95 ${
+                  viewDropdownOpen
+                    ? "bg-slate-800 border-blue-400 text-white shadow-blue-500/20"
+                    : "bg-slate-950 hover:bg-slate-900 border-slate-800 hover:border-blue-500/50 text-slate-200 hover:text-white"
                 }`}
-              />
+              >
+                <div className="flex items-center gap-2">
+                  {activeTab === "chat" && (
+                    <>
+                      <MessageSquare className="w-4 h-4 text-blue-400 shrink-0" />
+                      <span>Live Chat Room</span>
+                    </>
+                  )}
+                  {activeTab === "groups" && (
+                    <>
+                      <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Signal Groups</span>
+                    </>
+                  )}
+                  {activeTab === "dms" && (
+                    <>
+                      <User className="w-4 h-4 text-purple-400 shrink-0" />
+                      <span>Direct Messages</span>
+                    </>
+                  )}
+                </div>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                    viewDropdownOpen ? "rotate-180 text-blue-400" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown Menu - perfectly anchored on mobile and desktop without viewport clipping */}
+              {viewDropdownOpen && (
+                <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] bg-slate-900/98 border border-slate-700 rounded-2xl shadow-2xl shadow-black/90 backdrop-blur-2xl p-1.5 z-[100] text-white space-y-1 font-mono text-xs animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Select Community View
+                  </div>
+
+                  <button
+                    id="dropdown-tab-chat"
+                    onClick={() => {
+                      setActiveTab("chat");
+                      setSelectedGroup(null);
+                      setViewDropdownOpen(false);
+                    }}
+                    className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between transition-colors ${
+                      activeTab === "chat"
+                        ? "bg-blue-600/20 text-blue-300 border border-blue-500/40 font-bold"
+                        : "hover:bg-slate-800 text-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <MessageSquare className="w-4 h-4 text-blue-400 shrink-0" />
+                      <div>
+                        <div className="font-bold">Live Chat Room</div>
+                        <div className="text-[10px] text-slate-400 font-sans">Public trader discussion</div>
+                      </div>
+                    </div>
+                    {activeTab === "chat" && <Check className="w-4 h-4 text-blue-400" />}
+                  </button>
+
+                  <button
+                    id="dropdown-tab-groups"
+                    onClick={() => {
+                      setActiveTab("groups");
+                      setViewDropdownOpen(false);
+                    }}
+                    className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between transition-colors ${
+                      activeTab === "groups"
+                        ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-bold"
+                        : "hover:bg-slate-800 text-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <div>
+                        <div className="font-bold">Signal Groups</div>
+                        <div className="text-[10px] text-slate-400 font-sans">Free & Verified VIP Signals</div>
+                      </div>
+                    </div>
+                    {activeTab === "groups" && <Check className="w-4 h-4 text-emerald-400" />}
+                  </button>
+
+                  <button
+                    id="dropdown-tab-dms"
+                    onClick={() => {
+                      setActiveTab("dms");
+                      setSelectedGroup(null);
+                      setViewDropdownOpen(false);
+                    }}
+                    className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between transition-colors ${
+                      activeTab === "dms"
+                        ? "bg-purple-600/20 text-purple-300 border border-purple-500/40 font-bold"
+                        : "hover:bg-slate-800 text-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <User className="w-4 h-4 text-purple-400 shrink-0" />
+                      <div>
+                        <div className="font-bold">Direct Messages</div>
+                        <div className="text-[10px] text-slate-400 font-sans">1-on-1 Trader Inboxes</div>
+                      </div>
+                    </div>
+                    {activeTab === "dms" && <Check className="w-4 h-4 text-purple-400" />}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Guidelines Button */}
+            <button
+              id="community-guidelines-header-btn"
+              onClick={() => setIsGuidelinesOpen(true)}
+              className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-mono flex items-center gap-1.5 transition-colors shrink-0"
+              title="Community Guidelines"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              <span>Guidelines</span>
             </button>
 
-            {/* Dropdown Menu */}
-            {viewDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-slate-900/98 border border-slate-700 rounded-2xl shadow-2xl shadow-black/90 backdrop-blur-2xl p-1.5 z-[100] text-white space-y-1 font-mono text-xs animate-in fade-in zoom-in-95 duration-150">
-                <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Select Community View
-                </div>
-
-                <button
-                  id="dropdown-tab-chat"
-                  onClick={() => {
-                    setActiveTab("chat");
-                    setSelectedGroup(null);
-                    setViewDropdownOpen(false);
-                  }}
-                  className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between transition-colors ${
-                    activeTab === "chat"
-                      ? "bg-blue-600/20 text-blue-300 border border-blue-500/40 font-bold"
-                      : "hover:bg-slate-800 text-slate-200"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <MessageSquare className="w-4 h-4 text-blue-400 shrink-0" />
-                    <div>
-                      <div className="font-bold">Live Chat Room</div>
-                      <div className="text-[10px] text-slate-400 font-sans">Public trader discussion</div>
-                    </div>
-                  </div>
-                  {activeTab === "chat" && <Check className="w-4 h-4 text-blue-400" />}
-                </button>
-
-                <button
-                  id="dropdown-tab-groups"
-                  onClick={() => {
-                    setActiveTab("groups");
-                    setViewDropdownOpen(false);
-                  }}
-                  className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between transition-colors ${
-                    activeTab === "groups"
-                      ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 font-bold"
-                      : "hover:bg-slate-800 text-slate-200"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <TrendingUp className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <div>
-                      <div className="font-bold">Signal Groups</div>
-                      <div className="text-[10px] text-slate-400 font-sans">Free & Verified VIP Signals</div>
-                    </div>
-                  </div>
-                  {activeTab === "groups" && <Check className="w-4 h-4 text-emerald-400" />}
-                </button>
-
-                <button
-                  id="dropdown-tab-dms"
-                  onClick={() => {
-                    setActiveTab("dms");
-                    setSelectedGroup(null);
-                    setViewDropdownOpen(false);
-                  }}
-                  className={`w-full px-3 py-2.5 rounded-xl text-left flex items-center justify-between transition-colors ${
-                    activeTab === "dms"
-                      ? "bg-purple-600/20 text-purple-300 border border-purple-500/40 font-bold"
-                      : "hover:bg-slate-800 text-slate-200"
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <User className="w-4 h-4 text-purple-400 shrink-0" />
-                    <div>
-                      <div className="font-bold">Direct Messages</div>
-                      <div className="text-[10px] text-slate-400 font-sans">1-on-1 Trader Inboxes</div>
-                    </div>
-                  </div>
-                  {activeTab === "dms" && <Check className="w-4 h-4 text-purple-400" />}
-                </button>
-              </div>
-            )}
+            {/* Desktop User Profile (hidden on mobile) */}
+            <div className="hidden sm:block shrink-0">
+              <button
+                onClick={() => setSelectedProfileUser(currentUser)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 transition-colors"
+                title="My Profile"
+              >
+                <span className="text-xs text-white font-mono font-bold">
+                  {currentUser.displayName || currentUser.username}
+                </span>
+                <RoleBadge role={userRole} size="xs" />
+              </button>
+            </div>
           </div>
-
-          {/* Guidelines Button */}
-          <button
-            id="community-guidelines-header-btn"
-            onClick={() => setIsGuidelinesOpen(true)}
-            className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 text-xs font-mono flex items-center gap-1.5 transition-colors"
-          >
-            <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden sm:inline">Guidelines</span>
-          </button>
-
-          {/* Current User Info */}
-          <button
-            onClick={() => setSelectedProfileUser(currentUser)}
-            className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 transition-colors"
-          >
-            <span className="text-xs text-white font-mono font-bold">
-              {currentUser.displayName || currentUser.username}
-            </span>
-            <RoleBadge role={userRole} size="xs" />
-          </button>
         </div>
       </header>
 
       {/* Main Hub Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col relative z-0">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-6 flex flex-col relative z-0">
         {/* ============================================================ */}
         {/* 1. MAIN PUBLIC CHAT ROOM VIEW (Slide 1, 2, 10, 14)           */}
         {/* ============================================================ */}
         {activeTab === "chat" && (
-          <div className="flex-1 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl h-[calc(100vh-140px)]">
+          <div className="flex-1 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl h-[calc(100vh-190px)] sm:h-[calc(100vh-140px)]">
             {/* Frozen Chat Room Subheader */}
-            <div className="sticky top-0 z-10 shrink-0 px-4 py-3 sm:px-5 sm:py-3.5 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs font-mono select-none shadow-md shadow-black/50">
-              <div className="flex items-center gap-2 text-slate-300 flex-wrap">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
-                <span className="font-bold text-white tracking-wide">LIVE PUBLIC CHAT</span>
-                <span className="text-slate-500">•</span>
-                <span className="text-blue-200 text-[11px] sm:text-xs">All registered traders & verified providers</span>
-              </div>
-              <div className="text-[10px] text-blue-300 font-mono flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-full border border-blue-500/30 shrink-0 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping"></span>
-                <span className="font-bold text-blue-300">Community Chat</span>
-              </div>
+            <div className="sticky top-0 z-10 shrink-0 px-4 py-3 sm:px-5 sm:py-3.5 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 flex items-center gap-2 text-xs font-mono select-none shadow-md shadow-black/50">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
+              <span className="font-bold text-white tracking-wide">LIVE PUBLIC CHAT</span>
             </div>
 
             {/* Messages Feed */}
@@ -625,11 +644,9 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                           )}
                         </button>
 
-                        {/* Message Bubble & Role Badge In Front of Name */}
+                        {/* Message Bubble & Role Badge Next To Name */}
                         <div className={`max-w-xl space-y-1.5 ${isSelf ? "items-end text-right" : "items-start text-left"}`}>
                           <div className="flex flex-wrap items-center gap-1.5 text-xs font-mono">
-                            {/* ROLE BADGE IN FRONT OF NAME */}
-                            <RoleBadge role={msg.senderRole} size="xs" />
                             <button
                               onClick={() =>
                                 setSelectedProfileUser({
@@ -644,6 +661,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                             >
                               {msg.senderDisplayName || msg.senderUsername}
                             </button>
+                            <RoleBadge email={msg.senderEmail} role={msg.senderRole} size="xs" hideOnCompact={true} />
                             <span className="text-[10px] text-slate-400">
                               {formatMessageTime(msg.createdAt)}
                             </span>
@@ -936,13 +954,16 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                                   <h3 className="text-sm font-bold text-white font-mono group-hover:text-blue-400 transition-colors">
                                     {group.name}
                                   </h3>
-                                  <span className="text-[10px] text-slate-400 font-mono block">
-                                    Admin: {group.adminDisplayName || group.adminUsername}
-                                  </span>
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="text-[10px] text-slate-400 font-mono">
+                                      Admin: {group.adminDisplayName || group.adminUsername}
+                                    </span>
+                                    <RoleBadge email={group.adminEmail} role={group.adminRole} size="xs" hideOnCompact={true} />
+                                  </div>
                                 </div>
                               </div>
 
-                              <RoleBadge role={group.adminRole} size="xs" />
+                              <RoleBadge email={group.adminEmail} role={group.adminRole} size="xs" hideOnCompact={true} />
                             </div>
 
                             <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
@@ -1189,9 +1210,12 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                         {activeDmUser.username.substring(0, 2).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <h3 className="text-xs font-bold text-white font-mono truncate">
-                          {activeDmUser.displayName || activeDmUser.username}
-                        </h3>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h3 className="text-xs font-bold text-white font-mono truncate">
+                            {activeDmUser.displayName || activeDmUser.username}
+                          </h3>
+                          <RoleBadge email={activeDmUser.email} role={activeDmUser.platformRole} size="xs" hideOnCompact={true} />
+                        </div>
                         <p className="text-[10px] text-slate-400 font-mono">
                           1-on-1 Encrypted Channel
                         </p>
@@ -1236,8 +1260,9 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                               <div
                                 className={`flex flex-col ${isSelf ? "items-end" : "items-start"}`}
                               >
-                                <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 mb-1">
+                                <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 mb-1 flex-wrap">
                                   <span className="text-white font-semibold">{dm.senderDisplayName || dm.senderUsername}</span>
+                                  <RoleBadge email={dm.senderEmail} size="xs" hideOnCompact={true} />
                                   <span>•</span>
                                   <span>
                                     {formatMessageTime(dm.createdAt)}

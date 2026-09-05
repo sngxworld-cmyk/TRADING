@@ -34,7 +34,7 @@ export const UnderReviewModal: React.FC<UnderReviewModalProps> = ({
   };
 
   const whatsappLink = `https://wa.me/94752840841?text=${encodeURIComponent(
-    `Hello Host Admin, I am requesting full account activation for Trading Plan Pro.\n\nAccount Email: ${user.email}\nUsername: ${user.username}\nPayment verification requested.`
+    `Hello Host Admin, I am requesting full account activation for TrackerX journal.\n\nAccount Email: ${user.email}\nUsername: ${user.username}\nPayment verification requested.`
   )}`;
 
   return (
@@ -58,7 +58,7 @@ export const UnderReviewModal: React.FC<UnderReviewModalProps> = ({
 
         {/* Respectful Core Message */}
         <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-5 bg-slate-950/70 border border-slate-800 p-4 rounded-xl text-left">
-          Thank you for trying <span className="font-bold text-blue-400">Trading Plan Pro</span>! Your 5-day trial period has expired. To continue enjoying full access to your trading workspace for <span className="text-white font-mono font-semibold">{user.email}</span>, please complete your payment subscription and log into your account. We appreciate your partnership!
+          Thank you for trying <span className="font-bold text-white inline-flex items-baseline font-mono"><span>Tracker</span><span className="text-[1.25em] text-blue-400 font-black leading-none ml-[0.5px]">X</span><sub className="text-[11px] font-bold text-slate-400 lowercase tracking-normal ml-0.5 relative -bottom-[1px]">journal</sub></span>! Your 5-day trial period has expired. To continue enjoying full access to your trading workspace for <span className="text-white font-mono font-semibold">{user.email}</span>, please complete your payment subscription and log into your account. We appreciate your partnership!
         </p>
 
         {/* Strict 1-Registration Device Policy Banner */}

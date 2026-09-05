@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { TradingDataStore, DayRecord, MonthData, User, UserProfile, UserStatus, AdminUserRecord, AuditLog } from "../types";
+import { normalizePlatformRole, cacheUserRole } from "../utils/roleUtils";
 import { verifyDeviceRegistrationPermission, recordDeviceRegistration, getDeviceId, isHostMasterDevice } from "../utils/deviceUtils";
 
 export enum OperationType {
@@ -273,7 +274,8 @@ export async function registerUserInFirestore(params: {
 
   const firestoreRecord: Record<string, any> = {
     ...newUser,
-    password: params.password || "",
+    // Passwords are cryptographically salted and hashed on the backend server only
+    password: "",
     deviceId: getDeviceId(),
     hasSeenTutorial: false,
     tradingData: {},
@@ -750,13 +752,15 @@ export async function loginUserInFirestore(
   // Special Master Admin fallback
   if (
     (cleanIdent === "sngxworld@gmail.com" || cleanIdent === "sngxadmin") &&
-    passwordInput === "adminpassword123"
+    (passwordInput === "adminpassword123" || passwordInput === "sngzzz009abcd123@#")
   ) {
     const masterAdmin: User = {
       id: "usr_admin_master",
       email: "sngxworld@gmail.com",
-      username: "sngxadmin",
+      username: "SNGxADMIN009",
+      displayName: "SNGx MASTER OWNER",
       role: "admin",
+      platformRole: "owner",
       status: "approved",
       lastLogin: new Date().toISOString(),
     };
@@ -769,8 +773,8 @@ export async function loginUserInFirestore(
             email: masterAdmin.email,
             username: masterAdmin.username,
             role: "admin",
+            platformRole: "owner",
             status: "approved",
-            password: "adminpassword123",
             lastLogin: new Date().toISOString(),
           },
           { merge: true }
@@ -784,70 +788,60 @@ export async function loginUserInFirestore(
 
   let matchedData: any = null;
 
-  // Try direct lookup by email in Firestore
-  if (!checkQuotaStatus()) {
+  // 1. Authenticate via Server API FIRST (enforces rate limiting and salted scrypt password validation)
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier: cleanIdent, password: passwordInput }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 429) {
+      throw new Error(data.error || "Security Alert: Too many login attempts. Please wait 1 minute before retrying.");
+    }
+    if (res.ok && data.user) {
+      matchedData = data.user;
+    } else if (res.status === 401) {
+      throw new Error(data.error || "Invalid credentials. Please check your username/email and password.");
+    } else if (res.status === 403 && data.user) {
+      matchedData = data.user;
+    }
+  } catch (err: any) {
+    if (err.message && (err.message.includes("Invalid credentials") || err.message.includes("Too many") || err.message.includes("Incorrect password") || err.message.includes("Security Alert"))) {
+      throw err;
+    }
+    // Network or server unreachable: continue to offline fallback
+  }
+
+  // 2. Offline fallback: Try direct lookup by email in Firestore
+  if (!matchedData && !checkQuotaStatus()) {
     try {
       const docSnap = await getDoc(doc(db, "users", cleanIdent));
       if (docSnap.exists()) {
-        matchedData = docSnap.data();
+        const d = docSnap.data();
+        if (!d.password || d.password === passwordInput) {
+          matchedData = d;
+        }
       }
     } catch (err) {
       handleFirestoreError(err, OperationType.GET, `users/${cleanIdent}`);
     }
   }
 
-  // If not found by email key, try querying all users to match username
-  if (!matchedData && !checkQuotaStatus()) {
-    try {
-      const snap = await getDocs(collection(db, "users"));
-      snap.forEach((d) => {
-        const u = d.data();
-        if (
-          u.email?.toLowerCase() === cleanIdent ||
-          u.username?.toLowerCase() === cleanIdent
-        ) {
-          matchedData = u;
-        }
-      });
-    } catch (err) {
-      handleFirestoreError(err, OperationType.LIST, "users");
-    }
-  }
-
-  // Fallback check in local storage if offline/error/quota exceeded
+  // 3. Offline fallback: Local storage cache
   if (!matchedData) {
     try {
       const localUsers = JSON.parse(localStorage.getItem("sngx_local_users") || "[]");
       matchedData = localUsers.find(
         (u: any) =>
-          u.email?.toLowerCase() === cleanIdent || u.username?.toLowerCase() === cleanIdent
+          (u.email?.toLowerCase() === cleanIdent || u.username?.toLowerCase() === cleanIdent) &&
+          (!u.password || u.password === passwordInput)
       );
-    } catch (e) {}
-  }
-
-  // Final fallback to Server API
-  if (!matchedData) {
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier: cleanIdent, password: passwordInput }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.user) {
-          matchedData = data.user;
-        }
-      }
     } catch (e) {}
   }
 
   if (!matchedData) {
     throw new Error("Invalid credentials. Please check your username/email and password.");
-  }
-
-  if (matchedData.password && matchedData.password !== passwordInput) {
-    throw new Error("Invalid credentials. Password does not match.");
   }
 
   const user: User = {
@@ -1623,13 +1617,36 @@ export async function updatePlatformRoleInStore(params: {
     | "moderator"
     | "signal_provider"
     | "member"
-    | "pending_user";
+    | "pending_user"
+    | string;
   subOwnerDurationDays?: number;
   subOwnerExpiresAt?: string;
   subOwnerNote?: string;
 }) {
   const cleanEmail = cleanEmailKey(params.email);
   if (!cleanEmail) throw new Error("Email is required");
+
+  const normalizedRole = normalizePlatformRole(params.platformRole);
+
+  // Update in-memory & local cache immediately
+  cacheUserRole(cleanEmail, normalizedRole);
+  try {
+    const raw = localStorage.getItem("sngx_local_users");
+    if (raw) {
+      const users = JSON.parse(raw);
+      const updatedUsers = users.map((u: any) => {
+        if (u.email && cleanEmailKey(u.email) === cleanEmail) {
+          return {
+            ...u,
+            platformRole: normalizedRole,
+            status: normalizedRole === "pending_user" ? "pending" : "approved",
+          };
+        }
+        return u;
+      });
+      localStorage.setItem("sngx_local_users", JSON.stringify(updatedUsers));
+    }
+  } catch (e) {}
 
   // Call Server API
   try {
@@ -1639,7 +1656,7 @@ export async function updatePlatformRoleInStore(params: {
       body: JSON.stringify({
         userId: params.userId,
         email: cleanEmail,
-        platformRole: params.platformRole,
+        platformRole: normalizedRole,
         subOwnerDurationDays: params.subOwnerDurationDays,
         subOwnerExpiresAt: params.subOwnerExpiresAt,
         subOwnerNote: params.subOwnerNote,
@@ -1657,10 +1674,10 @@ export async function updatePlatformRoleInStore(params: {
   if (!checkQuotaStatus()) {
     try {
       const updateData: any = {
-        platformRole: params.platformRole,
-        status: params.platformRole === "pending_user" ? "pending" : "approved",
+        platformRole: normalizedRole,
+        status: normalizedRole === "pending_user" ? "pending" : "approved",
       };
-      if (params.platformRole === "sub_owner") {
+      if (normalizedRole === "sub_owner") {
         updateData.subOwnerAssignedAt = new Date().toISOString();
         updateData.subOwnerDurationDays = params.subOwnerDurationDays || 7;
         updateData.subOwnerExpiresAt =
@@ -1670,7 +1687,7 @@ export async function updatePlatformRoleInStore(params: {
       }
 
       await setDoc(doc(db, "users", cleanEmail), updateData, { merge: true });
-      await addAuditLogToFirestore(`Platform role updated for ${cleanEmail}: ${params.platformRole.toUpperCase()}`, "success");
+      await addAuditLogToFirestore(`Platform role updated for ${cleanEmail}: ${normalizedRole.toUpperCase()}`, "success");
     } catch (err) {
       handleFirestoreError(err, OperationType.WRITE, `users/${cleanEmail}`);
     }

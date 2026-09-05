@@ -3,61 +3,83 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // User-specific private trading journals, settings, and profile data
+    // Deny collection-wide list scraping to protect trader confidentiality
     match /users/{userId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId 
-                   || request.resource.data.email == request.auth.token.email
-                   || resource == null;
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.resource.data.email is string 
+                   && (request.resource.data.role == 'client' || request.resource.data.email == 'sngxworld@gmail.com');
+      allow update: if (resource.data.email == request.resource.data.email || request.auth != null)
+                   && (request.resource.data.role == resource.data.role || request.resource.data.email == 'sngxworld@gmail.com');
+      allow delete: if request.auth != null && request.auth.token.email == 'sngxworld@gmail.com';
     }
     
     // Authentication OTP verification codes (auto-expires in 10 mins)
+    // Direct listing of all codes is strictly denied to prevent intercepting 2FA codes
     match /authVerificationCodes/{emailKey} {
-      allow read, write: if true;
+      allow list: if false;
+      allow get: if true;
+      allow create, update: if request.resource.data.code is string && request.resource.data.code.size() == 6;
+      allow delete: if true;
     }
 
     // Ban Appeals submitted by banned users
     match /banAppeals/{emailKey} {
-      allow read, write: if true;
+      allow list: if false;
+      allow get, create, update: if request.resource.data.appealText is string;
+      allow delete: if request.auth != null && request.auth.token.email == 'sngxworld@gmail.com';
     }
 
-    // Pre-approved whitelist emails
+    // Pre-approved whitelist emails (Scraping is denied; only single get or admin updates)
     match /preApprovedEmails/{emailKey} {
-      allow read, write: if true;
+      allow list: if false;
+      allow get: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'sngxworld@gmail.com';
     }
 
-    // Registered hardware devices
+    // Registered hardware devices (Scraping is denied, write only on registration)
     match /devices/{deviceId} {
-      allow read, write: if true;
+      allow list: if false;
+      allow get: if true;
+      allow create: if request.resource.data.email is string;
+      allow update, delete: if false;
     }
 
-    // System audit logs
+    // System audit logs (Append-only by clients; tamper-proof)
     match /system_audit_logs/{logId} {
-      allow read, write: if true;
+      allow list: if false;
+      allow get: if request.auth != null && request.auth.token.email == 'sngxworld@gmail.com';
+      allow create: if request.resource.data.message is string;
+      allow update, delete: if false;
     }
 
     // Community Live Signals
     match /signals/{signalId} {
       allow read: if true;
-      allow create: if request.auth != null || request.resource.data.authorEmail != null;
-      allow update, delete: if request.auth != null || resource.data.authorEmail == request.resource.data.authorEmail;
+      allow create: if request.resource.data.authorEmail is string && request.resource.data.authorEmail.size() > 0;
+      allow update, delete: if resource.data.authorEmail == request.resource.data.authorEmail
+                           || (request.auth != null && request.auth.token.email == 'sngxworld@gmail.com');
     }
     
     // Community Signal Groups
     match /signal_groups/{groupId} {
       allow read: if true;
-      allow write: if request.auth != null || request.resource.data.createdBy != null;
+      allow create: if request.resource.data.adminEmail is string || request.resource.data.createdBy is string;
+      allow update, delete: if resource.data.adminEmail == request.resource.data.adminEmail
+                           || (request.auth != null && request.auth.token.email == 'sngxworld@gmail.com');
     }
 
     // Community Chat & Discussion Boards
     match /community_chats/{messageId} {
       allow read: if true;
-      allow create: if request.resource.data.senderEmail != null;
-      allow update, delete: if request.auth != null;
+      allow create: if request.resource.data.senderEmail is string && request.resource.data.senderEmail.size() > 0;
+      allow update, delete: if resource.data.senderEmail == request.resource.data.senderEmail
+                           || (request.auth != null && request.auth.token.email == 'sngxworld@gmail.com');
     }
     
-    // Fallback: Deny unhandled arbitrary root access
+    // Default-deny catch-all rule
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }

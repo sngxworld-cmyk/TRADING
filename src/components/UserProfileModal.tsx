@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UserProfile, SignalGroup } from "../types";
-import { RoleBadge, getEffectiveRole, isPendingUser } from "../utils/roleUtils";
-import { X, MessageSquare, UserPlus, EyeOff, Eye, Calendar, Shield, Sparkles, Check, Lock } from "lucide-react";
+import { RoleBadge, getEffectiveRole, isPendingUser, cacheUserRole, getUserLiveRole, normalizePlatformRole } from "../utils/roleUtils";
+import { X, MessageSquare, UserPlus, EyeOff, Eye, Calendar, Shield, Sparkles, Check, Lock, Crown } from "lucide-react";
 import { getSignalGroups } from "../lib/communityStore";
+import { updatePlatformRoleInStore } from "../lib/userStore";
 
 interface UserProfileModalProps {
   targetUser: {
@@ -39,6 +40,25 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   if (!isOpen) return null;
 
   const isSelf = targetUser.email.toLowerCase() === currentUser.email.toLowerCase();
+  const isHostAdmin =
+    currentUser.email.toLowerCase() === "sngxworld@gmail.com" ||
+    currentUser.role === "admin" ||
+    getEffectiveRole(currentUser) === "owner" ||
+    getEffectiveRole(currentUser) === "sub_owner";
+
+  const [currentRole, setCurrentRole] = useState<string>(() => {
+    const cached = getUserLiveRole(targetUser.email);
+    if (cached) return cached;
+    return targetUser.platformRole || getEffectiveRole(targetUser as any);
+  });
+  const [roleUpdating, setRoleUpdating] = useState(false);
+  const [roleUpdateMsg, setRoleUpdateMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const live = getUserLiveRole(targetUser.email);
+    if (live) setCurrentRole(live);
+  }, [targetUser.email]);
+
   const [hideIdentity, setHideIdentity] = useState(currentUser.hideIdentity || false);
   const [savedNotice, setSavedNotice] = useState(false);
 
@@ -52,6 +72,35 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const ownedGroup = allGroups.find(
     (g) => g.adminEmail.toLowerCase() === targetUser.email.toLowerCase()
   );
+
+  const handleRoleChange = async (newRoleStr: string) => {
+    setRoleUpdating(true);
+    setRoleUpdateMsg(null);
+    try {
+      const normalized = normalizePlatformRole(newRoleStr);
+      await updatePlatformRoleInStore({
+        email: targetUser.email,
+        platformRole: normalized,
+      });
+      setCurrentRole(normalized);
+      cacheUserRole(targetUser.email, normalized);
+
+      if (isSelf && onUpdateCurrentUser) {
+        onUpdateCurrentUser({
+          ...currentUser,
+          platformRole: normalized,
+        });
+      }
+
+      setRoleUpdateMsg(`Role updated to ${normalized.toUpperCase()}!`);
+      setTimeout(() => setRoleUpdateMsg(null), 3000);
+    } catch (err: any) {
+      setRoleUpdateMsg(err.message || "Failed to update role");
+      setTimeout(() => setRoleUpdateMsg(null), 4000);
+    } finally {
+      setRoleUpdating(false);
+    }
+  };
 
   const handleToggleHideIdentity = () => {
     const newVal = !hideIdentity;
@@ -102,15 +151,22 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
 
             <RoleBadge
-              role={targetUser.platformRole || getEffectiveRole(targetUser as any)}
+              email={targetUser.email}
+              role={currentRole}
               size="sm"
             />
           </div>
 
           {/* Name & Username */}
           <div className="space-y-1">
-            <h3 className="text-lg font-bold text-white font-mono flex items-center gap-2">
-              {targetUser.displayName || targetUser.username}
+            <h3 className="text-lg font-bold text-white font-mono flex flex-wrap items-center gap-2">
+              <span>{targetUser.displayName || targetUser.username}</span>
+              <RoleBadge
+                email={targetUser.email}
+                role={currentRole}
+                size="xs"
+                hideOnCompact={true}
+              />
               {targetUser.hideIdentity && !isSelf && (
                 <span className="text-[10px] text-blue-200/70 font-normal font-sans bg-slate-800 px-2 py-0.5 rounded">
                   (Anonymous)
@@ -171,6 +227,45 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <strong className="font-semibold text-white">Community Safety Rule:</strong> Harassment of any user leads to an <strong>immediate permanent ban</strong>.
             </span>
           </div>
+
+          {/* Host Admin Platform Role Dropdown */}
+          {isHostAdmin && (
+            <div className="mt-3 p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Crown className="w-3.5 h-3.5 text-amber-400" /> Platform Role (Host Admin)
+                </span>
+                {roleUpdating && (
+                  <span className="text-[10px] text-blue-400 animate-pulse font-sans">
+                    Updating...
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-slate-400 leading-tight">
+                Select a role to instantly propagate to chat, groups, and badges across the platform.
+              </p>
+              <select
+                value={currentRole}
+                onChange={(e) => handleRoleChange(e.target.value)}
+                disabled={roleUpdating}
+                className="w-full bg-slate-900 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 font-mono focus:outline-none focus:border-amber-500 transition-colors"
+              >
+                <option value="owner">1. Owner (Root)</option>
+                <option value="sub_owner">2. Sub-Owner (Co-Admin)</option>
+                <option value="verified_signal_provider">3. Verified Signal Provider (≥85% WR)</option>
+                <option value="moderator">4. Moderator (Bug / Chat)</option>
+                <option value="signal_provider">5. Signal Provider (Free)</option>
+                <option value="member">6. Member (Approved)</option>
+                <option value="pending_user">7. Pending User (Trial)</option>
+              </select>
+              {roleUpdateMsg && (
+                <div className="text-[10px] text-emerald-400 flex items-center gap-1 pt-1">
+                  <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                  <span>{roleUpdateMsg}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="mt-6 space-y-2">

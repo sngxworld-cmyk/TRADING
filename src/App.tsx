@@ -524,7 +524,7 @@ export default function App() {
                 onCloseGuidelines={() => setIsGuidelinesOpen(false)}
               />
             ) : (
-              <main className="container max-w-7xl mx-auto px-4 sm:px-6 py-6">
+              <main className="container max-w-7xl mx-auto px-2 sm:px-6 py-3 sm:py-6">
                 <TradingApp
                   user={currentUser}
                   onSaveDataToServer={(newData) => {

@@ -143,7 +143,7 @@ export const TrialExpiredModal: React.FC<TrialExpiredModalProps> = ({
 
         {/* Core Description */}
         <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-5 bg-slate-950/80 border border-slate-800/90 p-4 rounded-2xl text-left">
-          Thank you for trading with <span className="font-bold text-amber-400">TrackerX</span>! Your 5-day free access trial for <span className="text-white font-mono font-semibold">{user.email}</span> is now completed. Subscribe via bank payment and send your transfer receipt to the owner on WhatsApp to unlock your lifetime trading journal and signal channels instantly.
+          Thank you for trading with <span className="font-bold text-white inline-flex items-baseline font-mono"><span>Tracker</span><span className="text-[1.25em] text-amber-400 font-black leading-none ml-[0.5px]">X</span><sub className="text-[11px] font-bold text-slate-400 lowercase tracking-normal ml-0.5 relative -bottom-[1px]">journal</sub></span>! Your 5-day free access trial for <span className="text-white font-mono font-semibold">{user.email}</span> is now completed. Subscribe via bank payment and send your transfer receipt to the owner on WhatsApp to unlock your lifetime trading journal and signal channels instantly.
         </p>
 
         {/* Subscription Price Banner - 350 LKR (~$1.20 USD) Lifetime */}

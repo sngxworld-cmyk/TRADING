@@ -48,22 +48,158 @@ export function getSubOwnerTimeRemaining(user?: Partial<UserProfile> | null): {
   };
 }
 
-export function getEffectiveRole(user?: Partial<UserProfile> | null): PlatformRole {
-  if (!user) return "pending_user";
-  if (user.email?.toLowerCase() === "sngxworld@gmail.com" || user.username?.toLowerCase() === "sngxadmin009") {
+export function normalizePlatformRole(raw?: any): PlatformRole {
+  if (!raw) return "member";
+  if (typeof raw !== "string") return "member";
+  const lower = raw.trim().toLowerCase();
+
+  // 1. Owner (Root)
+  if (
+    lower.includes("owner (root)") ||
+    lower === "owner" ||
+    lower.startsWith("1.") ||
+    lower === "1" ||
+    lower.includes("master root") ||
+    lower.includes("master owner")
+  ) {
     return "owner";
   }
-  if (user.platformRole === "sub_owner") {
-    if (isSubOwnerExpired(user)) {
-      return "member"; // Downgrades gracefully if sub-owner time limit elapsed
-    }
+
+  // 2. Sub-Owner (Co-Admin)
+  if (
+    lower.includes("sub-owner") ||
+    lower.includes("sub_owner") ||
+    lower.includes("co-admin") ||
+    lower.startsWith("2.") ||
+    lower === "2"
+  ) {
     return "sub_owner";
   }
-  if (user.platformRole) return user.platformRole;
+
+  // 3. Verified Signal Provider (≥85% WR)
+  if (
+    lower.includes("verified signal provider") ||
+    lower.includes("verified_signal_provider") ||
+    lower.includes("≥85%") ||
+    lower.includes("85%") ||
+    lower.startsWith("3.") ||
+    lower === "3"
+  ) {
+    return "verified_signal_provider";
+  }
+
+  // 4. Moderator (Bug / Chat)
+  if (
+    lower.includes("moderator") ||
+    lower.includes("bug / chat") ||
+    lower.startsWith("4.") ||
+    lower === "4"
+  ) {
+    return "moderator";
+  }
+
+  // 5. Signal Provider (Free)
+  if (
+    lower.includes("signal provider") ||
+    lower.includes("signal_provider") ||
+    lower.startsWith("5.") ||
+    lower === "5"
+  ) {
+    return "signal_provider";
+  }
+
+  // 6. Member (Approved)
+  if (
+    lower.includes("member") ||
+    lower.startsWith("6.") ||
+    lower === "6"
+  ) {
+    return "member";
+  }
+
+  // 7. Pending User (Trial)
+  if (
+    lower.includes("pending") ||
+    lower.includes("trial") ||
+    lower.startsWith("7.") ||
+    lower === "7"
+  ) {
+    return "pending_user";
+  }
+
+  return "member";
+}
+
+// In-memory cache of live roles
+const userRoleCache = new Map<string, PlatformRole>();
+
+export function cacheUserRole(email?: string | null, role?: any): void {
+  if (!email || !role) return;
+  const clean = email.trim().toLowerCase();
+  const normalized = normalizePlatformRole(role);
+  userRoleCache.set(clean, normalized);
+
+  try {
+    localStorage.setItem(`sngx_role_${clean}`, normalized);
+    window.dispatchEvent(new CustomEvent("sngx_role_changed", { detail: { email: clean, role: normalized } }));
+  } catch (e) {}
+}
+
+export function getUserLiveRole(email?: string | null): PlatformRole | null {
+  if (!email) return null;
+  const clean = email.trim().toLowerCase();
+  if (clean === "sngxworld@gmail.com") return "owner";
+
+  if (userRoleCache.has(clean)) {
+    return userRoleCache.get(clean)!;
+  }
+
+  try {
+    const directStored = localStorage.getItem(`sngx_role_${clean}`);
+    if (directStored) {
+      const norm = normalizePlatformRole(directStored);
+      userRoleCache.set(clean, norm);
+      return norm;
+    }
+
+    const raw = localStorage.getItem("sngx_local_users");
+    if (raw) {
+      const users = JSON.parse(raw);
+      const found = users.find((u: any) => u.email && u.email.trim().toLowerCase() === clean);
+      if (found && (found.platformRole || found.role)) {
+        const norm = normalizePlatformRole(found.platformRole || (found.role === "admin" ? "owner" : "member"));
+        userRoleCache.set(clean, norm);
+        return norm;
+      }
+    }
+  } catch (e) {}
+
+  return null;
+}
+
+export function getEffectiveRole(user?: Partial<UserProfile> | null): PlatformRole {
+  if (!user) return "pending_user";
+  const emailLower = (user.email || "").toLowerCase().trim();
+  const usernameLower = (user.username || "").toLowerCase().trim();
+  if (emailLower === "sngxworld@gmail.com" || usernameLower === "sngxadmin009") {
+    return "owner";
+  }
+
+  if (user.platformRole) {
+    const norm = normalizePlatformRole(user.platformRole);
+    if (norm === "sub_owner") {
+      if (isSubOwnerExpired(user)) {
+        return "member"; // Downgrades gracefully if sub-owner time limit elapsed
+      }
+      return "sub_owner";
+    }
+    return norm;
+  }
+
   if (user.role === "admin") {
     return "owner";
   }
-  if (user.status === "approved") {
+  if (user.status === "approved" || (user as any).subscribed || (user as any).isSubscribed || (user as any).wasApproved) {
     return "member";
   }
   return "pending_user";
@@ -146,30 +282,64 @@ export function getRoleConfig(role: PlatformRole) {
 }
 
 export const RoleBadge: React.FC<{
-  role?: PlatformRole;
+  role?: PlatformRole | string;
   user?: Partial<UserProfile> | null;
+  email?: string;
   size?: "xs" | "sm" | "md";
   showIcon?: boolean;
-}> = ({ role, user, size = "xs", showIcon = true }) => {
-  const effectiveRole = role || getEffectiveRole(user);
+  className?: string;
+  hideOnCompact?: boolean;
+}> = ({ role, user, email, size = "xs", showIcon = true, className = "", hideOnCompact = false }) => {
+  const targetEmail = (email || user?.email)?.trim().toLowerCase();
+  
+  const [liveRole, setLiveRole] = React.useState<PlatformRole | null>(() => {
+    return targetEmail ? getUserLiveRole(targetEmail) : null;
+  });
+
+  React.useEffect(() => {
+    if (!targetEmail) return;
+
+    // Set initial
+    const initial = getUserLiveRole(targetEmail);
+    if (initial) setLiveRole(initial);
+
+    const handler = (e: any) => {
+      const changedEmail = e.detail?.email?.trim().toLowerCase();
+      if (!changedEmail || changedEmail === targetEmail) {
+        setLiveRole(getUserLiveRole(targetEmail));
+      }
+    };
+
+    window.addEventListener("sngx_role_changed", handler);
+    return () => window.removeEventListener("sngx_role_changed", handler);
+  }, [targetEmail]);
+
+  const effectiveRole = liveRole
+    ? liveRole
+    : role
+    ? normalizePlatformRole(role)
+    : getEffectiveRole(user);
+
   const cfg = getRoleConfig(effectiveRole);
   const Icon = cfg.icon;
 
   const sizeClasses = {
-    xs: "text-[10px] px-2 py-0.5 gap-1",
-    sm: "text-xs px-2.5 py-1 gap-1.5",
-    md: "text-sm px-3 py-1.5 gap-2",
+    xs: "text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 gap-1",
+    sm: "text-xs px-2 sm:px-2.5 py-0.5 sm:py-1 gap-1.5",
+    md: "text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 gap-2",
   }[size];
 
   const iconSizes = {
-    xs: "w-3 h-3",
-    sm: "w-3.5 h-3.5",
-    md: "w-4 h-4",
+    xs: "w-2.5 h-2.5 sm:w-3 sm:h-3",
+    sm: "w-3 h-3 sm:w-3.5 sm:h-3.5",
+    md: "w-3.5 h-3.5 sm:w-4 sm:h-4",
   }[size];
 
   return (
     <span
-      className={`inline-flex items-center font-mono font-bold uppercase rounded-md border tracking-wider shadow-sm whitespace-nowrap ${cfg.badgeClass} ${sizeClasses}`}
+      className={`inline-flex items-center font-mono font-bold uppercase rounded-md border tracking-wider shadow-sm whitespace-nowrap shrink-0 ${
+        hideOnCompact ? "hidden sm:inline-flex" : ""
+      } ${cfg.badgeClass} ${sizeClasses} ${className}`}
       title={cfg.description}
     >
       {showIcon && <Icon className={`${iconSizes} ${cfg.iconColor} shrink-0`} />}

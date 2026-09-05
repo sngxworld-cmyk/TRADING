@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { UserProfile } from "../types";
 import { updateUserProfileInFirestore } from "../lib/userStore";
+import { RoleBadge } from "../utils/roleUtils";
 import { User, Camera, Trash2, Check, X, LogOut, Phone, ShieldCheck, Sparkles, Tag, DollarSign, BookOpen, Calendar } from "lucide-react";
 import { CountryPhoneInput } from "./CountryPhoneInput";
 
@@ -133,7 +134,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+            <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
               <User className="w-5 h-5" />
             </div>
             <div>
@@ -169,7 +170,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
             </div>
           )}
 
-          {/* Profile Picture Upload Section (WhatsApp-style avatar) */}
+          {/* Profile Picture Upload Section (Concentric circular avatar) */}
           <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-950/70 p-4 rounded-xl border border-slate-800">
             <div className="relative group shrink-0">
               {photoURL ? (
@@ -179,10 +180,10 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                   className="w-20 h-20 rounded-full object-cover border-2 border-blue-500 shadow-xl"
                 />
               ) : (
-                /* WhatsApp-Style Default Profile Logo */
-                <div className="w-20 h-20 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-slate-400 shadow-inner relative overflow-hidden">
-                  <div className="w-10 h-10 rounded-full bg-blue-900/40 mb-[-12px] flex items-center justify-center">
-                    <User className="w-7 h-7 text-white" />
+                /* Perfectly Concentric Default Profile Logo */
+                <div className="w-20 h-20 rounded-full bg-slate-800/90 border-2 border-slate-700 flex items-center justify-center text-slate-400 shadow-inner relative overflow-hidden shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-blue-600/25 border border-blue-500/40 flex items-center justify-center shrink-0">
+                    <User className="w-6 h-6 text-white" />
                   </div>
                 </div>
               )}
@@ -191,7 +192,7 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-medium gap-1"
+                className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-medium gap-1 cursor-pointer"
                 title="Change Photo"
               >
                 <Camera className="w-5 h-5" />
@@ -199,8 +200,9 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
             </div>
 
             <div className="flex-1 text-center sm:text-left space-y-2">
-              <div className="flex items-center justify-center sm:justify-start gap-2">
-                <span className="text-sm font-bold text-white">Profile Photo</span>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <span className="text-sm font-bold text-white">{displayName || username}</span>
+                <RoleBadge email={user.email} role={user.platformRole} size="xs" hideOnCompact={true} />
                 {user.role === "admin" && (
                   <span className="text-[10px] bg-purple-950/50 text-purple-300 border border-purple-500/40 px-2 py-0.5 rounded font-mono flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3 text-purple-400" /> Host Admin

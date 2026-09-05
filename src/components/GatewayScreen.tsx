@@ -654,15 +654,15 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
         <div className="lg:col-span-7 flex flex-col gap-5">
           {/* Header Title */}
           <div className="text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-300 text-xs font-semibold uppercase tracking-widest mb-3">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" /> Core Gateway Infrastructure
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white mb-2">
-              Tracker<span className="text-blue-500">X</span> Pro Journal
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-white mb-2 inline-flex items-baseline font-mono select-none">
+              <span>Tracker</span>
+              <span className="text-5xl sm:text-7xl lg:text-8xl xl:text-9xl font-black text-blue-500 inline-block leading-none ml-1 sm:ml-1.5">
+                X
+              </span>
+              <sub className="text-sm sm:text-xl lg:text-2xl xl:text-3xl font-bold text-slate-400 lowercase tracking-normal ml-1 sm:ml-2 relative -bottom-[2px] sm:-bottom-[6px]">
+                journal
+              </sub>
             </h1>
-            <p className="text-sm text-blue-100/70 max-w-lg">
-              Enterprise Multi-Year Trade Journal Tracker Infrastructure.
-            </p>
           </div>
 
           {/* Chart Card */}
@@ -735,7 +735,10 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                     </div>
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-mono">
                       <CheckCircle className="w-4 h-4 text-blue-400" />
-                      <span>Welcome to TrackerX</span>
+                      <span className="inline-flex items-baseline">
+                        Welcome to Tracker<span className="text-[1.25em] font-black text-blue-400 leading-none ml-[0.5px]">X</span>
+                        <sub className="text-[11px] font-bold text-slate-300 lowercase ml-0.5 relative -bottom-[1px]">journal</sub>
+                      </span>
                     </div>
                   </div>
                 ) : (

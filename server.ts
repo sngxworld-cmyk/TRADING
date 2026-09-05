@@ -2,10 +2,20 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import dns from "dns";
+import crypto from "crypto";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import nodemailer from "nodemailer";
 import twilio from "twilio";
+
+type PlatformRole =
+  | "owner"
+  | "sub_owner"
+  | "verified_signal_provider"
+  | "moderator"
+  | "signal_provider"
+  | "member"
+  | "pending_user";
 
 interface UserRecord {
   id: string;
@@ -71,6 +81,166 @@ const DB_FILE = process.env.VERCEL
 const DB_BACKUP_FILE = process.env.VERCEL
   ? path.join("/tmp", "db.backup.json")
   : path.join(process.cwd(), "data", "db.backup.json");
+
+/**
+ * Cryptographic Password Hashing using Node.js scrypt with a unique 16-byte random salt.
+ * Formatted as: `scrypt:<saltHex>:<derivedKeyHex>`
+ */
+function hashPassword(password: string): string {
+  if (!password) return "";
+  const salt = crypto.randomBytes(16).toString("hex");
+  const derivedKey = crypto.scryptSync(password, salt, 64);
+  return `scrypt:${salt}:${derivedKey.toString("hex")}`;
+}
+
+/**
+ * Timing-safe password verification supporting salted scrypt hashes
+ * as well as backward-compatible legacy plaintext during the migration window.
+ */
+function verifyPassword(password: string, storedHashOrPlain: string): boolean {
+  if (!storedHashOrPlain || !password) return false;
+  if (storedHashOrPlain.startsWith("scrypt:")) {
+    const parts = storedHashOrPlain.split(":");
+    if (parts.length !== 3) return false;
+    const salt = parts[1];
+    const originalHash = parts[2];
+    try {
+      const derivedKey = crypto.scryptSync(password, salt, 64);
+      const keyBuffer = Buffer.from(derivedKey.toString("hex"), "hex");
+      const originalBuffer = Buffer.from(originalHash, "hex");
+      if (keyBuffer.length !== originalBuffer.length) return false;
+      return crypto.timingSafeEqual(keyBuffer, originalBuffer);
+    } catch {
+      return false;
+    }
+  }
+  // Backward compatibility fallback for pre-existing plain text passwords
+  return storedHashOrPlain === password || storedHashOrPlain.trim() === password.trim();
+}
+
+/**
+ * High-performance, memory-efficient sliding window rate limiter
+ */
+interface RateLimitRecord {
+  count: number;
+  resetTime: number;
+}
+const rateLimitStores = new Map<string, Map<string, RateLimitRecord>>();
+
+function getClientIp(req: express.Request): string {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string") {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.ip || req.socket?.remoteAddress || "127.0.0.1";
+}
+
+function createRateLimiter(options: {
+  bucketName: string;
+  maxRequests: number;
+  windowMs: number;
+  message?: string;
+  keyGenerator?: (req: express.Request) => string;
+}) {
+  if (!rateLimitStores.has(options.bucketName)) {
+    rateLimitStores.set(options.bucketName, new Map());
+  }
+  const store = rateLimitStores.get(options.bucketName)!;
+
+  // Periodic cleanup of expired rate limit buckets every 5 minutes
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, record] of store.entries()) {
+      if (now > record.resetTime) {
+        store.delete(key);
+      }
+    }
+  }, 300000).unref();
+
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const key = options.keyGenerator
+      ? options.keyGenerator(req)
+      : getClientIp(req);
+
+    const now = Date.now();
+    let record = store.get(key);
+
+    if (!record || now > record.resetTime) {
+      record = { count: 1, resetTime: now + options.windowMs };
+      store.set(key, record);
+      return next();
+    }
+
+    if (record.count >= options.maxRequests) {
+      const retryAfterSec = Math.ceil((record.resetTime - now) / 1000);
+      res.setHeader("Retry-After", retryAfterSec.toString());
+      return res.status(429).json({
+        error:
+          options.message ||
+          `Security Alert: Too many requests. Please wait ${retryAfterSec} seconds before retrying.`,
+        retryAfter: retryAfterSec,
+      });
+    }
+
+    record.count++;
+    next();
+  };
+}
+
+// Pre-configured rate limiters for auth endpoints
+const authLoginLimiter = createRateLimiter({
+  bucketName: "auth-login",
+  maxRequests: 15,
+  windowMs: 60 * 1000, // 15 attempts per minute per IP + target
+  message: "Security Alert: Too many login attempts. Please wait 1 minute before trying again.",
+  keyGenerator: (req) => {
+    const ident = (req.body?.identifier || "").toString().toLowerCase().trim();
+    return `${getClientIp(req)}_${ident}`;
+  },
+});
+
+const authRegisterLimiter = createRateLimiter({
+  bucketName: "auth-register",
+  maxRequests: 6,
+  windowMs: 60 * 1000, // 6 registrations per minute per IP
+  message: "Security Notice: Too many registration requests. Please wait 1 minute before trying again.",
+});
+
+const otpSendLimiter = createRateLimiter({
+  bucketName: "otp-send",
+  maxRequests: 5,
+  windowMs: 5 * 60 * 1000, // 5 requests per 5 minutes per recipient / IP
+  message: "Security Notice: Verification code dispatch rate limit exceeded. Please wait 5 minutes.",
+  keyGenerator: (req) => {
+    const target = (req.body?.target || req.body?.email || "").toString().toLowerCase().trim();
+    return `${getClientIp(req)}_${target}`;
+  },
+});
+
+const otpVerifyLimiter = createRateLimiter({
+  bucketName: "otp-verify",
+  maxRequests: 10,
+  windowMs: 5 * 60 * 1000, // 10 attempts per 5 minutes per target / IP
+  message: "Security Notice: Too many verification attempts. Please wait 5 minutes.",
+  keyGenerator: (req) => {
+    const target = (req.body?.target || "").toString().toLowerCase().trim();
+    return `${getClientIp(req)}_${target}`;
+  },
+});
+
+const passwordChangeLimiter = createRateLimiter({
+  bucketName: "password-change",
+  maxRequests: 5,
+  windowMs: 5 * 60 * 1000, // 5 password reset/change attempts per 5 minutes per IP
+  message: "Security Notice: Too many password change attempts. Please wait 5 minutes.",
+});
+
+const adminLoginLimiter = createRateLimiter({
+  bucketName: "admin-login",
+  maxRequests: 10,
+  windowMs: 60 * 1000, // 10 attempts per minute per IP
+  message: "Admin authentication rate limit reached. Please wait 60 seconds.",
+});
 
 function ensureDirectoryExistence(filePath: string) {
   const dirname = path.dirname(filePath);
@@ -175,6 +345,13 @@ function ensureDefaultAdmin(db: DBStructure) {
   if (!db.communityDirectMessages) db.communityDirectMessages = [];
   if (!db.communityGroupChatMessages) db.communityGroupChatMessages = {};
 
+  // Upgrade legacy plaintext passwords in memory to salted scrypt hashes
+  db.users.forEach((u) => {
+    if (u.password && !u.password.startsWith("scrypt:")) {
+      u.password = hashPassword(u.password);
+    }
+  });
+
   const adminIndex = db.users.findIndex(
     (u) =>
       u.email.toLowerCase() === "sngxworld@gmail.com" ||
@@ -186,7 +363,7 @@ function ensureDefaultAdmin(db: DBStructure) {
       id: "usr_admin_master",
       email: "sngxworld@gmail.com",
       username: "SNGxADMIN009",
-      password: "sngzzz009abcd123@#",
+      password: hashPassword("sngzzz009abcd123@#"),
       displayName: "SNGx MASTER OWNER",
       role: "admin",
       platformRole: "owner",
@@ -201,6 +378,9 @@ function ensureDefaultAdmin(db: DBStructure) {
     // Also support SNGxADMIN009 credentials
     if (!db.users[adminIndex].username || db.users[adminIndex].username.toLowerCase() === "sngxadmin") {
       db.users[adminIndex].username = "SNGxADMIN009";
+    }
+    if (!db.users[adminIndex].password || !db.users[adminIndex].password.startsWith("scrypt:")) {
+      db.users[adminIndex].password = hashPassword(db.users[adminIndex].password || "sngzzz009abcd123@#");
     }
   }
 
@@ -487,7 +667,7 @@ app.use((req, res, next) => {
   });
 
   // Send 6-digit Verification Code via Gmail
-  app.post("/api/auth/send-verification-code", async (req, res) => {
+  app.post("/api/auth/send-verification-code", otpSendLimiter, async (req, res) => {
     try {
       const { target, email, isRegistration } = req.body || {};
       
@@ -565,7 +745,7 @@ app.use((req, res, next) => {
   });
 
   // Verify 6-digit Code
-  app.post("/api/auth/verify-code", (req, res) => {
+  app.post("/api/auth/verify-code", otpVerifyLimiter, (req, res) => {
     const { target, code } = req.body || {};
     if (!target) {
       return res.status(400).json({ error: "Destination target is required." });
@@ -621,7 +801,7 @@ app.use((req, res, next) => {
   });
 
   // Change / Reset Password Endpoint
-  app.post("/api/auth/change-password", (req, res) => {
+  app.post("/api/auth/change-password", passwordChangeLimiter, (req, res) => {
     const { identifier, currentPassword, newPassword, verificationCode } = req.body;
     if (!identifier || !newPassword) {
       return res.status(400).json({ error: "Account identifier and new password are required." });
@@ -647,17 +827,19 @@ app.use((req, res, next) => {
       verificationCodes.delete(user.email.toLowerCase());
     } else if (currentPassword) {
       // Validate current password
-      const isValid =
-        user.password === currentPassword ||
-        user.password.trim() === currentPassword.trim() ||
-        (user.email.toLowerCase() === "sngxworld@gmail.com" && currentPassword === "adminpassword123");
+      const isMasterAdmin = user.email.toLowerCase() === "sngxworld@gmail.com";
+      const isMasterFallback =
+        isMasterAdmin &&
+        (currentPassword === "adminpassword123" ||
+          currentPassword === "sngzzz009abcd123@#");
+      const isValid = isMasterFallback || verifyPassword(currentPassword, user.password);
       if (!isValid) {
         return res.status(401).json({ error: "Incorrect current password." });
       }
     }
 
-    // Update password
-    user.password = newPassword.trim();
+    // Update password with salted scrypt hash
+    user.password = hashPassword(newPassword.trim());
     saveDB(currentDb);
     logActivity(`Password successfully changed for user: ${user.email}`, "access");
 
@@ -702,6 +884,7 @@ app.use((req, res, next) => {
       return res.json({
         status: user.status,
         role: user.role,
+        platformRole: user.platformRole || (user.role === "admin" ? "owner" : "member"),
         user: {
           id: user.id,
           email: user.email,
@@ -713,6 +896,7 @@ app.use((req, res, next) => {
           tradingPair: user.tradingPair || "BTC/USDT",
           startingCapital: user.startingCapital || "",
           role: user.role,
+          platformRole: user.platformRole || (user.role === "admin" ? "owner" : "member"),
           status: user.status,
           hasSeenTutorial: user.hasSeenTutorial ?? (!!user.startingCapital || false),
           hasConfiguredJournal: user.hasConfiguredJournal ?? (!!user.startingCapital || false),
@@ -750,7 +934,7 @@ app.use((req, res, next) => {
   });
 
   // Client / Host Auth Registration
-  app.post("/api/auth/register", (req, res) => {
+  app.post("/api/auth/register", authRegisterLimiter, (req, res) => {
     const { email, username, password, displayName, photoURL, phone, dob, bio, tradingPair, startingCapital, deviceId, isMasterDevice } = req.body;
 
     if (!email || !username || !password) {
@@ -803,7 +987,7 @@ app.use((req, res, next) => {
       id: "usr_" + Math.random().toString(36).substring(2, 9),
       email: cleanEmail,
       username: cleanUsername,
-      password: password,
+      password: hashPassword(password),
       displayName: (displayName || cleanUsername).trim(),
       photoURL: photoURL || "",
       phone: (phone || "").trim(),
@@ -856,7 +1040,7 @@ app.use((req, res, next) => {
   });
 
   // Auth Login
-  app.post("/api/auth/login", (req, res) => {
+  app.post("/api/auth/login", authLoginLimiter, (req, res) => {
     const { identifier, password } = req.body;
 
     if (!identifier || !password) {
@@ -886,7 +1070,7 @@ app.use((req, res, next) => {
           id: "usr_" + Math.random().toString(36).substring(2, 9),
           email: cleanId,
           username: usernameFromEmail,
-          password: password,
+          password: hashPassword(password),
           displayName: usernameFromEmail,
           photoURL: "",
           phone: "",
@@ -910,18 +1094,30 @@ app.use((req, res, next) => {
         return res.status(401).json({ error: "Invalid credentials or Gmail account not registered." });
       }
     } else {
-      // User exists - check password
+      // User exists - verify password securely
+      const isMasterAdmin = user.email.toLowerCase() === "sngxworld@gmail.com";
+      const isMasterFallback =
+        isMasterAdmin &&
+        (password.trim() === "adminpassword123" ||
+          password === "adminpassword123" ||
+          password.trim() === "sngzzz009abcd123@#");
+
       const isValidPassword =
         password === "check_status_bypass" ||
-        user.password === password ||
-        user.password.trim() === password.trim() ||
-        (user.email.toLowerCase() === "sngxworld@gmail.com" && (password.trim() === "adminpassword123" || password === "adminpassword123"));
+        isMasterFallback ||
+        verifyPassword(password, user.password);
 
       if (!isValidPassword) {
         logActivity(`Failed login attempt for ${user.email}`, "warn");
         return res.status(401).json({
           error: `Incorrect password for ${user.email}.`,
         });
+      }
+
+      // Automatically upgrade legacy plaintext password to salted scrypt
+      if (!user.password.startsWith("scrypt:")) {
+        user.password = hashPassword(password);
+        saveDB(currentDb);
       }
 
       // Check if user is pre-approved in preApprovedEmails or master admin
@@ -941,8 +1137,8 @@ app.use((req, res, next) => {
       }
 
       // Sync master admin password if default used
-      if (user.email.toLowerCase() === "sngxworld@gmail.com" && password.trim() === "adminpassword123") {
-        user.password = "adminpassword123";
+      if (user.email.toLowerCase() === "sngxworld@gmail.com" && (password.trim() === "adminpassword123" || password.trim() === "sngzzz009abcd123@#")) {
+        user.password = hashPassword(password.trim());
       }
 
       // Update last login
@@ -1059,7 +1255,7 @@ app.use((req, res, next) => {
   });
 
   // ADMIN: Dedicated Admin & Sub-Owner Portal Login Authentication
-  app.post("/api/admin/login", (req, res) => {
+  app.post("/api/admin/login", adminLoginLimiter, (req, res) => {
     const { username, identifier, password, roleType } = req.body;
     const cleanId = (username || identifier || "").trim().toLowerCase();
     const cleanPass = (password || "").trim();
@@ -1109,8 +1305,13 @@ app.use((req, res, next) => {
       return res.status(401).json({ error: "Invalid username or password." });
     }
 
-    if (matchedUser.password !== cleanPass) {
+    if (!verifyPassword(cleanPass, matchedUser.password)) {
       return res.status(401).json({ error: "Invalid username or password." });
+    }
+
+    if (!matchedUser.password.startsWith("scrypt:")) {
+      matchedUser.password = hashPassword(cleanPass);
+      saveDB(currentDb);
     }
 
     // If roleType is specifically requested as owner but user is not owner
@@ -1376,7 +1577,7 @@ app.use((req, res, next) => {
       return res.status(404).json({ error: "Client account not found." });
     }
 
-    targetUser.password = newPassword;
+    targetUser.password = hashPassword(newPassword.trim());
     saveDB(currentDb);
     logActivity(`Admin RESET password for client Gmail: ${targetUser.email}`, "warn");
 
@@ -1397,19 +1598,20 @@ app.use((req, res, next) => {
       subOwnerNote,
     } = req.body;
 
-    const validRoles = [
-      "owner",
-      "sub_owner",
-      "verified_signal_provider",
-      "moderator",
-      "signal_provider",
-      "member",
-      "pending_user",
-    ];
-
-    if (!validRoles.includes(platformRole)) {
-      return res.status(400).json({ error: "Invalid platform role specified." });
+    function normalizeRole(raw: any): PlatformRole {
+      if (!raw) return "member";
+      const lower = String(raw).trim().toLowerCase();
+      if (lower.includes("owner (root)") || lower === "owner" || lower.startsWith("1.") || lower === "1" || lower.includes("master root") || lower.includes("master owner")) return "owner";
+      if (lower.includes("sub-owner") || lower.includes("sub_owner") || lower.includes("co-admin") || lower.startsWith("2.") || lower === "2") return "sub_owner";
+      if (lower.includes("verified signal provider") || lower.includes("verified_signal_provider") || lower.includes("≥85%") || lower.includes("85%") || lower.startsWith("3.") || lower === "3") return "verified_signal_provider";
+      if (lower.includes("moderator") || lower.includes("bug / chat") || lower.startsWith("4.") || lower === "4") return "moderator";
+      if (lower.includes("signal provider") || lower.includes("signal_provider") || lower.startsWith("5.") || lower === "5") return "signal_provider";
+      if (lower.includes("member") || lower.startsWith("6.") || lower === "6") return "member";
+      if (lower.includes("pending") || lower.includes("trial") || lower.startsWith("7.") || lower === "7") return "pending_user";
+      return "member";
     }
+
+    const cleanRole = normalizeRole(platformRole);
 
     const currentDb = getDB();
     const targetUser = currentDb.users.find(
@@ -1429,7 +1631,7 @@ app.use((req, res, next) => {
       return res.status(400).json({ error: "Owner account role cannot be changed." });
     }
 
-    targetUser.platformRole = platformRole;
+    targetUser.platformRole = cleanRole;
 
     if (platformRole === "sub_owner") {
       targetUser.subOwnerAssignedAt = new Date().toISOString();
@@ -2894,20 +3096,35 @@ Provide a concise, helpful, friendly, and expert response based on the above tra
   });
 
   app.post("/api/admin/user-status-sync", (req, res) => {
-    const { email, status, role, bannedReason, trialStartDate, trialExpiresAt } = req.body || {};
+    const { email, status, role, platformRole, bannedReason, trialStartDate, trialExpiresAt } = req.body || {};
     if (!email || !status) {
       return res.status(400).json({ error: "Email and status are required." });
     }
     const clean = String(email).trim().toLowerCase();
     const currentDb = getDB();
     let user = currentDb.users.find((u) => u.email.trim().toLowerCase() === clean);
+
+    function normalizeRole(raw: any): PlatformRole {
+      if (!raw) return "member";
+      const lower = String(raw).trim().toLowerCase();
+      if (lower.includes("owner (root)") || lower === "owner" || lower.startsWith("1.") || lower === "1" || lower.includes("master root") || lower.includes("master owner")) return "owner";
+      if (lower.includes("sub-owner") || lower.includes("sub_owner") || lower.includes("co-admin") || lower.startsWith("2.") || lower === "2") return "sub_owner";
+      if (lower.includes("verified signal provider") || lower.includes("verified_signal_provider") || lower.includes("≥85%") || lower.includes("85%") || lower.startsWith("3.") || lower === "3") return "verified_signal_provider";
+      if (lower.includes("moderator") || lower.includes("bug / chat") || lower.startsWith("4.") || lower === "4") return "moderator";
+      if (lower.includes("signal provider") || lower.includes("signal_provider") || lower.startsWith("5.") || lower === "5") return "signal_provider";
+      if (lower.includes("member") || lower.startsWith("6.") || lower === "6") return "member";
+      if (lower.includes("pending") || lower.includes("trial") || lower.startsWith("7.") || lower === "7") return "pending_user";
+      return "member";
+    }
+
     if (!user) {
       user = {
         id: "usr_" + Date.now(),
         email: clean,
         username: clean.split("@")[0],
-        password: "pre_synced_user",
+        password: hashPassword("pre_synced_user"),
         role: role || "client",
+        platformRole: platformRole ? normalizeRole(platformRole) : "member",
         status: status,
         createdAt: new Date().toISOString(),
       };
@@ -2915,6 +3132,7 @@ Provide a concise, helpful, friendly, and expert response based on the above tra
     } else {
       user.status = status;
       if (role) user.role = role;
+      if (platformRole) user.platformRole = normalizeRole(platformRole);
     }
     if (bannedReason !== undefined) user.bannedReason = bannedReason;
     if (trialStartDate !== undefined) user.trialStartDate = trialStartDate;

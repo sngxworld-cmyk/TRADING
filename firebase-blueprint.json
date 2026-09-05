@@ -38,12 +38,61 @@
         "type": { "type": "string" }
       },
       "required": ["timestamp", "message"]
+    },
+    "authVerificationCodes": {
+      "title": "authVerificationCodes",
+      "description": "Authentication OTP verification codes",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "maxLength": 6 },
+        "email": { "type": "string" },
+        "expiresAt": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["code", "email", "expiresAt"]
+    },
+    "devices": {
+      "title": "devices",
+      "description": "Hardware device registrations for 1-device policy",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "registeredAt": { "type": "string" }
+      },
+      "required": ["email"]
+    },
+    "signals": {
+      "title": "signals",
+      "description": "Trading signals published in community groups",
+      "type": "object",
+      "properties": {
+        "authorEmail": { "type": "string" },
+        "market": { "type": "string" },
+        "type": { "type": "string" },
+        "entry": { "type": "string" },
+        "stopLoss": { "type": "string" },
+        "takeProfit": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["authorEmail", "market"]
+    },
+    "community_chats": {
+      "title": "community_chats",
+      "description": "Public chat messages and media",
+      "type": "object",
+      "properties": {
+        "senderEmail": { "type": "string" },
+        "senderName": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["senderEmail", "text"]
     }
   },
   "firestore": {
     "/users/{userEmail}": {
       "schema": "users",
-      "description": "User profile, credentials, access status, and trading plan records"
+      "description": "User profile, access status, and trading plan records"
     },
     "/preApprovedEmails/{userEmail}": {
       "schema": "preApprovedEmails",
@@ -52,6 +101,22 @@
     "/logs/{logId}": {
       "schema": "logs",
       "description": "Admin and security audit logs"
+    },
+    "/authVerificationCodes/{emailKey}": {
+      "schema": "authVerificationCodes",
+      "description": "Time-sensitive OTP verification codes"
+    },
+    "/devices/{deviceId}": {
+      "schema": "devices",
+      "description": "Registered user hardware device bindings"
+    },
+    "/signals/{signalId}": {
+      "schema": "signals",
+      "description": "Published community trading signals"
+    },
+    "/community_chats/{messageId}": {
+      "schema": "community_chats",
+      "description": "Community hub live chat messages"
     }
   }
 }
