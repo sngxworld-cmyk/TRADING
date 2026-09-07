@@ -7,6 +7,8 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import nodemailer from "nodemailer";
 import twilio from "twilio";
+import { initializeApp, getApps } from "firebase/app";
+import { initializeFirestore, getDocs, setDoc, doc, collection, deleteDoc } from "firebase/firestore";
 
 type PlatformRole =
   | "owner"
@@ -408,6 +410,132 @@ function saveDB(db: DBStructure) {
 
 function getDB(): DBStructure {
   return loadDB();
+}
+
+// --- CLOUD FIRESTORE SYNCHRONIZATION FOR HOST ADMIN & CLIENTS ---
+let firestoreDb: any = null;
+try {
+  const cfgPath = path.join(process.cwd(), "firebase-applet-config.json");
+  if (fs.existsSync(cfgPath)) {
+    const config = JSON.parse(fs.readFileSync(cfgPath, "utf-8"));
+    const fbApp = !getApps().length
+      ? initializeApp({
+          apiKey: config.apiKey,
+          projectId: config.projectId,
+          appId: config.appId,
+        })
+      : getApps()[0];
+    firestoreDb = initializeFirestore(
+      fbApp,
+      { experimentalForceLongPolling: true },
+      config.firestoreDatabaseId
+    );
+  }
+} catch (e: any) {
+  console.warn("Could not initialize server Firestore:", e?.message);
+}
+
+async function syncUsersFromFirestore() {
+  if (!firestoreDb) return;
+  try {
+    const snap = await getDocs(collection(firestoreDb, "users"));
+    if (snap.empty) return;
+    const currentDb = getDB();
+    let changed = false;
+
+    for (const docSnap of snap.docs) {
+      const u = docSnap.data();
+      const email = (u.email || docSnap.id).trim().toLowerCase();
+      if (!email) continue;
+
+      const existingIdx = currentDb.users.findIndex(
+        (x) => x.email.trim().toLowerCase() === email
+      );
+
+      const userRecord: UserRecord = {
+        id: u.id || `usr_${docSnap.id.replace(/[^a-zA-Z0-9_]/g, "_")}`,
+        email: email,
+        username: u.username || email.split("@")[0] || "Trader",
+        password: u.password || "managed_in_cloud",
+        displayName: u.displayName || u.username,
+        photoURL: u.photoURL || "",
+        phone: u.phone || "",
+        dob: u.dob || "",
+        bio: u.bio || "",
+        tradingPair: u.tradingPair || "BTC/USDT",
+        tradingMarket: u.tradingMarket || "Crypto Market",
+        startingCapital: u.startingCapital || "100",
+        role: u.role || (email === "sngxworld@gmail.com" ? "admin" : "client"),
+        platformRole: u.platformRole || (email === "sngxworld@gmail.com" ? "owner" : "member"),
+        status: u.status || "pending",
+        subOwnerExpiresAt: u.subOwnerExpiresAt,
+        subOwnerAssignedAt: u.subOwnerAssignedAt,
+        subOwnerDurationDays: u.subOwnerDurationDays,
+        subOwnerNote: u.subOwnerNote,
+        createdAt: u.createdAt || new Date().toISOString(),
+        lastLogin: u.lastLogin || new Date().toISOString(),
+        hasConfiguredJournal: !!u.hasConfiguredJournal,
+        hasSeenTutorial: !!u.hasSeenTutorial,
+        tradingData: u.tradingData || {},
+        trialStartDate: u.trialStartDate,
+        trialExpiresAt: u.trialExpiresAt,
+        subscribed: !!u.subscribed,
+        wasApproved: !!u.wasApproved,
+        bannedReason: u.bannedReason || "",
+      };
+
+      if (existingIdx >= 0) {
+        const cur = currentDb.users[existingIdx];
+        currentDb.users[existingIdx] = {
+          ...userRecord,
+          password: cur.password || userRecord.password,
+          tradingData: cur.tradingData && Object.keys(cur.tradingData).length > 0 ? cur.tradingData : userRecord.tradingData,
+        };
+      } else {
+        currentDb.users.push(userRecord);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      saveDB(currentDb);
+    }
+  } catch (err: any) {
+    console.warn("syncUsersFromFirestore error:", err?.message);
+  }
+}
+
+async function syncUserToFirestore(cleanEmail: string, updateFields: Record<string, any>) {
+  if (!firestoreDb || !cleanEmail) return;
+  try {
+    const cleanKey = cleanEmail.trim().toLowerCase();
+    const ref = doc(firestoreDb, "users", cleanKey);
+    await setDoc(ref, updateFields, { merge: true });
+  } catch (err: any) {
+    console.warn("syncUserToFirestore error:", err?.message);
+  }
+}
+
+async function syncPreApprovedEmailToFirestore(cleanEmail: string) {
+  if (!firestoreDb || !cleanEmail) return;
+  try {
+    const cleanKey = cleanEmail.trim().toLowerCase();
+    const ref = doc(firestoreDb, "preApprovedEmails", cleanKey);
+    await setDoc(ref, { email: cleanKey, approvedAt: new Date().toISOString() }, { merge: true });
+  } catch (err: any) {
+    console.warn("syncPreApprovedEmailToFirestore error:", err?.message);
+  }
+}
+
+async function removePreApprovedEmailFromFirestore(cleanEmail: string) {
+  if (!firestoreDb || !cleanEmail) return;
+  try {
+    const cleanKey = cleanEmail.trim().toLowerCase();
+    const ref = doc(firestoreDb, "preApprovedEmails", cleanKey);
+    await deleteDoc(ref);
+  } catch (err: any) {
+    console.warn("removePreApprovedEmailFromFirestore error:", err?.message);
+  }
 }
 
 /**
@@ -1364,7 +1492,8 @@ app.use((req, res, next) => {
   });
 
   // ADMIN: Get all users, subowner requests, mod reports & stats
-  app.get("/api/admin/users", (_req, res) => {
+  app.get("/api/admin/users", async (_req, res) => {
+    await syncUsersFromFirestore();
     const currentDb = getDB();
 
     res.json({
@@ -1422,6 +1551,7 @@ app.use((req, res, next) => {
       }
       logActivity(`Pre-approved Gmail access for ${clean}`, "access");
       saveDB(currentDb);
+      syncPreApprovedEmailToFirestore(clean);
       return res.json({ success: true, message: `Pre-approved access for ${clean}. Client can now sign up and enter immediately.` });
     }
 
@@ -1437,6 +1567,8 @@ app.use((req, res, next) => {
 
     saveDB(currentDb);
     logActivity(`Admin APPROVED access for Gmail: ${targetUser.email} (${targetUser.username})`, "access");
+    syncUserToFirestore(cleanTargetEmail, { status: "approved" });
+    syncPreApprovedEmailToFirestore(cleanTargetEmail);
 
     return res.json({
       success: true,
@@ -1467,6 +1599,8 @@ app.use((req, res, next) => {
     const cleanReqEmail = (email || targetUser?.email || "").trim().toLowerCase();
     if (cleanReqEmail) {
       currentDb.preApprovedEmails = currentDb.preApprovedEmails.filter((e) => e.trim().toLowerCase() !== cleanReqEmail);
+      syncUserToFirestore(cleanReqEmail, { status: "revoked" });
+      removePreApprovedEmailFromFirestore(cleanReqEmail);
     }
 
     saveDB(currentDb);
@@ -1495,6 +1629,8 @@ app.use((req, res, next) => {
     const cleanReqEmail = (email || targetUser?.email || "").trim().toLowerCase();
     if (cleanReqEmail) {
       currentDb.preApprovedEmails = currentDb.preApprovedEmails.filter((e) => e.trim().toLowerCase() !== cleanReqEmail);
+      syncUserToFirestore(cleanReqEmail, { status: "banned", platformRole: "pending_user", bannedReason: "Banned by administrator" });
+      removePreApprovedEmailFromFirestore(cleanReqEmail);
     }
 
     saveDB(currentDb);
@@ -1544,9 +1680,12 @@ app.use((req, res, next) => {
     currentDb.users.forEach((u) => {
       if (u.status === "pending" && u.role !== "admin") {
         u.status = "approved";
-        if (!currentDb.preApprovedEmails.some((e) => e.trim().toLowerCase() === u.email.trim().toLowerCase())) {
-          currentDb.preApprovedEmails.push(u.email.trim().toLowerCase());
+        const clean = u.email.trim().toLowerCase();
+        if (!currentDb.preApprovedEmails.some((e) => e.trim().toLowerCase() === clean)) {
+          currentDb.preApprovedEmails.push(clean);
         }
+        syncUserToFirestore(clean, { status: "approved" });
+        syncPreApprovedEmailToFirestore(clean);
         approvedCount++;
       }
     });
@@ -1666,6 +1805,17 @@ app.use((req, res, next) => {
       `Role for ${targetUser.email} (${targetUser.username}) updated to: ${platformRole.toUpperCase()}`,
       "access"
     );
+
+    syncUserToFirestore(targetUser.email.trim().toLowerCase(), {
+      platformRole: cleanRole,
+      status: targetUser.status,
+      ...(cleanRole === "sub_owner" ? {
+        subOwnerAssignedAt: targetUser.subOwnerAssignedAt,
+        subOwnerDurationDays: targetUser.subOwnerDurationDays,
+        subOwnerExpiresAt: targetUser.subOwnerExpiresAt,
+        subOwnerNote: targetUser.subOwnerNote,
+      } : {})
+    });
 
     return res.json({
       success: true,
@@ -3177,6 +3327,12 @@ if (!process.env.VERCEL) {
   const PORT = 3000;
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
+    // Initial sync from Firestore on startup
+    syncUsersFromFirestore().catch(() => {});
+    // Periodic sync every 15 seconds so Host Admin and Backend are always in lockstep
+    setInterval(() => {
+      syncUsersFromFirestore().catch(() => {});
+    }, 15000);
   });
 }
 
