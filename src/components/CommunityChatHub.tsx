@@ -457,7 +457,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                   {activeTab === "chat" && (
                     <>
                       <MessageSquare className="w-4 h-4 text-blue-400 shrink-0" />
-                      <span>Live Chat Room</span>
+                      <span>Live Public Chat</span>
                     </>
                   )}
                   {activeTab === "groups" && (
@@ -503,7 +503,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                     <div className="flex items-center gap-2.5">
                       <MessageSquare className="w-4 h-4 text-blue-400 shrink-0" />
                       <div>
-                        <div className="font-bold">Live Chat Room</div>
+                        <div className="font-bold">Live Public Chat</div>
                         <div className="text-[10px] text-slate-400 font-sans">Public trader discussion</div>
                       </div>
                     </div>

@@ -8,7 +8,7 @@ import { AuthLottieAnimation } from "./AuthLottieAnimation";
 import { CountryPhoneInput } from "./CountryPhoneInput";
 
 interface GatewayScreenProps {
-  onLoginSuccess: (user: UserProfile) => void;
+  onLoginSuccess: (user: UserProfile, isNewRegistration?: boolean) => void;
   onRegisteredPending: (user: UserProfile) => void;
 }
 
@@ -925,11 +925,13 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
                             <img
                               src={photoURL}
                               alt="Profile preview"
-                              className="w-12 h-12 rounded-full object-cover border-2 border-blue-500 shadow-md"
+                              className="w-12 h-12 aspect-square rounded-full object-cover border-2 border-blue-500 shadow-md"
                             />
                           ) : (
-                            <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400">
-                              <User className="w-6 h-6" />
+                            <div className="w-12 h-12 aspect-square rounded-full bg-slate-800/90 border border-slate-700/80 flex items-center justify-center text-slate-400 shrink-0">
+                              <div className="w-7 h-7 aspect-square rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
+                                <User className="w-4 h-4 text-blue-300 shrink-0 -translate-y-[0.5px]" />
+                              </div>
                             </div>
                           )}
                         </div>

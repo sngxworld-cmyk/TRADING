@@ -252,12 +252,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               <img
                 src={user.photoURL}
                 alt={user.username}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-blue-500/80 shadow-md group-hover:scale-105 transition-transform"
+                className="w-7 h-7 sm:w-8 sm:h-8 aspect-square rounded-full object-cover border border-blue-500/80 shadow-md group-hover:scale-105 transition-transform"
               />
             ) : (
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-slate-900 border border-slate-700/80 flex items-center justify-center text-slate-300 shadow-inner overflow-hidden shrink-0">
-                <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-900/60 mb-[-6px] flex items-center justify-center">
-                  <User className="w-3.5 h-3.5 text-white" />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 aspect-square rounded-full bg-slate-900 border border-slate-700/80 flex items-center justify-center text-slate-300 shadow-inner shrink-0">
+                <div className="w-4 h-4 sm:w-5 sm:h-5 aspect-square rounded-full bg-blue-900/60 border border-blue-500/30 flex items-center justify-center shrink-0">
+                  <User className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white shrink-0 -translate-y-[0.5px]" />
                 </div>
               </div>
             )}
@@ -359,7 +359,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div className="flex items-center gap-2.5">
                       <MessageSquare className="w-4 h-4 text-blue-400 shrink-0" />
                       <div>
-                        <div className="font-bold text-xs">Live Chat Room</div>
+                        <div className="font-bold text-xs">Live Public Chat</div>
                         <div className="text-[10px] text-slate-400 font-sans">
                           Public trader discussions & news
                         </div>

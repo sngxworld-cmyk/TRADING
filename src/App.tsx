@@ -49,58 +49,6 @@ export default function App() {
     } catch {}
   }, []);
 
-  // Check tutorial status and mandatory journal configuration status whenever an approved user logs in
-  useEffect(() => {
-    if (currentUser && isApprovedUser) {
-      const cleanEmail = currentUser.email.toLowerCase();
-      const tutorialKey = "sngx_tutorial_seen_" + cleanEmail;
-      const localSeen = localStorage.getItem(tutorialKey) === "true";
-      const cloudSeen = !!currentUser.hasSeenTutorial;
-
-      const configuredKey = "sngx_journal_configured_" + cleanEmail;
-      const localConfigured = localStorage.getItem(configuredKey) === "true";
-      const cloudConfigured =
-        currentUser.hasConfiguredJournal === true ||
-        (!!currentUser.startingCapital && currentUser.startingCapital.trim() !== "") ||
-        (currentUser.tradingData && Object.keys(currentUser.tradingData).length > 0);
-
-      if (cloudSeen) {
-        try {
-          localStorage.setItem(tutorialKey, "true");
-        } catch {}
-      }
-
-      if (cloudConfigured) {
-        try {
-          localStorage.setItem(configuredKey, "true");
-        } catch {}
-      }
-
-      // If user has never seen tutorial (neither on this device nor in cloud user account)
-      if (!localSeen && !cloudSeen) {
-        setShowTutorial(true);
-      } else {
-        setShowTutorial(false);
-
-        // If tutorial is already completed, check if mandatory configuration is needed.
-        // ONLY show on first login if NEVER configured on this device or in cloud.
-        if (!localConfigured && !cloudConfigured) {
-          setIsSetupMandatory(true);
-          setIsSetupModalOpen(true);
-        } else {
-          setIsSetupMandatory(false);
-          setIsSetupModalOpen(false);
-        }
-      }
-    }
-  }, [
-    currentUser?.email,
-    currentUser?.status,
-    currentUser?.hasSeenTutorial,
-    currentUser?.hasConfiguredJournal,
-    currentUser?.startingCapital,
-  ]);
-
   // Complete / Skip Tutorial -> If journal is not configured yet, immediately trigger mandatory setup
   const handleFinishTutorial = async () => {
     if (currentUser) {
@@ -124,7 +72,6 @@ export default function App() {
       const localConfigured = localStorage.getItem(configuredKey) === "true";
       const cloudConfigured =
         currentUser.hasConfiguredJournal === true ||
-        (!!currentUser.startingCapital && currentUser.startingCapital.trim() !== "") ||
         (currentUser.tradingData && Object.keys(currentUser.tradingData).length > 0);
 
       if (!localConfigured && !cloudConfigured) {
@@ -409,6 +356,74 @@ export default function App() {
 
   // Is Suspended User (for rendering the suspension/revocation screen)
   const isSuspendedUser = isBannedUser || isRevokedSubscribedUser || isRejectedUser;
+
+  // Check tutorial status and mandatory journal configuration status whenever an active user logs in
+  useEffect(() => {
+    if (currentUser && !isSuspendedUser && !isTrialExpired) {
+      const cleanEmail = currentUser.email.toLowerCase();
+      const tutorialKey = "sngx_tutorial_seen_" + cleanEmail;
+      let localSeen = localStorage.getItem(tutorialKey) === "true";
+      const cloudSeen = currentUser.hasSeenTutorial === true;
+
+      const configuredKey = "sngx_journal_configured_" + cleanEmail;
+      let localConfigured = localStorage.getItem(configuredKey) === "true";
+      const cloudConfigured =
+        currentUser.hasConfiguredJournal === true ||
+        (currentUser.tradingData && Object.keys(currentUser.tradingData).length > 0);
+
+      // If cloud explicitly says user hasn't seen tutorial, cloud is ground truth
+      if (currentUser.hasSeenTutorial === false) {
+        localSeen = false;
+        try {
+          localStorage.removeItem(tutorialKey);
+        } catch {}
+      } else if (cloudSeen) {
+        try {
+          localStorage.setItem(tutorialKey, "true");
+        } catch {}
+      }
+
+      // If cloud explicitly says user hasn't configured journal, cloud is ground truth
+      if (
+        currentUser.hasConfiguredJournal === false &&
+        (!currentUser.tradingData || Object.keys(currentUser.tradingData).length === 0)
+      ) {
+        localConfigured = false;
+        try {
+          localStorage.removeItem(configuredKey);
+        } catch {}
+      } else if (cloudConfigured) {
+        try {
+          localStorage.setItem(configuredKey, "true");
+        } catch {}
+      }
+
+      // If user has never seen tutorial (neither on this device nor in cloud user account)
+      if (!localSeen && !cloudSeen) {
+        setShowTutorial(true);
+        setIsSetupModalOpen(false);
+      } else {
+        setShowTutorial(false);
+
+        // If tutorial is already completed, check if mandatory configuration is needed.
+        // ONLY show on first login if NEVER configured on this device or in cloud.
+        if (!localConfigured && !cloudConfigured) {
+          setIsSetupMandatory(true);
+          setIsSetupModalOpen(true);
+        } else {
+          setIsSetupMandatory(false);
+          setIsSetupModalOpen(false);
+        }
+      }
+    }
+  }, [
+    currentUser?.email,
+    currentUser?.status,
+    currentUser?.hasSeenTutorial,
+    currentUser?.hasConfiguredJournal,
+    isSuspendedUser,
+    isTrialExpired,
+  ]);
 
   // Auto-poll approval status every 4 seconds if user is awaiting host admin approval, suspended, or trial expired
   useEffect(() => {

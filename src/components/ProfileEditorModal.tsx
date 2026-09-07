@@ -177,13 +177,13 @@ export const ProfileEditorModal: React.FC<ProfileEditorModalProps> = ({
                 <img
                   src={photoURL}
                   alt={username}
-                  className="w-20 h-20 rounded-full object-cover border-2 border-blue-500 shadow-xl"
+                  className="w-20 h-20 aspect-square rounded-full object-cover border-2 border-blue-500 shadow-xl"
                 />
               ) : (
                 /* Perfectly Concentric Default Profile Logo */
-                <div className="w-20 h-20 rounded-full bg-slate-800/90 border-2 border-slate-700 flex items-center justify-center text-slate-400 shadow-inner relative overflow-hidden shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-blue-600/25 border border-blue-500/40 flex items-center justify-center shrink-0">
-                    <User className="w-6 h-6 text-white" />
+                <div className="w-20 h-20 aspect-square rounded-full bg-slate-800/90 border border-slate-700/80 flex items-center justify-center text-slate-400 shadow-inner shrink-0">
+                  <div className="w-12 h-12 aspect-square rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center shrink-0">
+                    <User className="w-6 h-6 text-blue-300 shrink-0 -translate-y-[0.5px]" />
                   </div>
                 </div>
               )}
