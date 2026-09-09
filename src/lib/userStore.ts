@@ -267,6 +267,7 @@ export async function registerUserInFirestore(params: {
     tradingMarket: params.tradingMarket || params.tradingPair?.trim() || "Crypto Market",
     startingCapital: params.startingCapital?.trim() || "",
     role,
+    platformRole: isMasterAdmin ? "owner" : (status === "approved" ? "member" : "pending_user"),
     status,
     createdAt: new Date().toISOString(),
     lastLogin: new Date().toISOString(),
@@ -914,6 +915,18 @@ export async function loginUserInFirestore(
     tradingPair: matchedData.tradingPair || "BTC/USDT",
     startingCapital: matchedData.startingCapital || "",
     role: matchedData.role || "client",
+    platformRole: normalizePlatformRole(
+      matchedData.platformRole ||
+      matchedData.platform_role ||
+      matchedData.userRole ||
+      matchedData.assignedRole ||
+      matchedData.role ||
+      (cleanIdent === "sngxworld@gmail.com" ? "owner" : matchedData.status === "approved" ? "member" : "pending_user")
+    ),
+    subOwnerExpiresAt: matchedData.subOwnerExpiresAt,
+    subOwnerAssignedAt: matchedData.subOwnerAssignedAt,
+    subOwnerDurationDays: matchedData.subOwnerDurationDays,
+    subOwnerNote: matchedData.subOwnerNote,
     status: matchedData.status || "pending",
     createdAt: matchedData.createdAt,
     lastLogin: new Date().toISOString(),
@@ -939,6 +952,9 @@ export async function loginUserInFirestore(
 
   // Sync configured & tutorial flags to local device cache immediately
   const cleanEmail = cleanEmailKey(user.email);
+  if (user.platformRole) {
+    cacheUserRole(cleanEmail, user.platformRole);
+  }
   if (user.hasConfiguredJournal === true) {
     try {
       localStorage.setItem(`sngx_journal_configured_${cleanEmail}`, "true");
@@ -1513,10 +1529,20 @@ export async function fetchUserStatusFromFirestore(email: string): Promise<Parti
           }
         } catch {}
 
+        const effectivePlatformRole = normalizePlatformRole(
+          d.platformRole ||
+          d.platform_role ||
+          d.userRole ||
+          d.assignedRole ||
+          d.role ||
+          (cleanEmail === "sngxworld@gmail.com" ? "owner" : status === "approved" ? "member" : "pending_user")
+        );
+        cacheUserRole(cleanEmail, effectivePlatformRole);
+
         return {
           status,
           role: d.role,
-          platformRole: d.platformRole,
+          platformRole: effectivePlatformRole,
           trialStartDate: d.trialStartDate,
           trialExpiresAt: d.trialExpiresAt,
           subscribed: !!(d.subscribed || d.isSubscribed || d.hasSubscribed),

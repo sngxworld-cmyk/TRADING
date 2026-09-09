@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "client";
+export type UserRole = "admin" | "client" | string;
 export type UserStatus = "pending" | "approved" | "rejected" | "revoked" | "banned";
 
 export type PlatformRole =

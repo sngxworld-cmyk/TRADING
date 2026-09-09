@@ -10,6 +10,7 @@ import { ProfileEditorModal } from "./components/ProfileEditorModal";
 import { MandatorySetupModal } from "./components/MandatorySetupModal";
 import { CommunityChatHub } from "./components/CommunityChatHub";
 import { checkIsTrialExpired, getTrialRemainingMs, isUserExemptFromTrial } from "./utils/deviceUtils";
+import { normalizePlatformRole, cacheUserRole } from "./utils/roleUtils";
 import {
   markTutorialCompletedInFirestore,
   saveJournalConfigInFirestore,
@@ -41,6 +42,9 @@ export default function App() {
   // Tutorial overlay state
   const [showTutorial, setShowTutorial] = useState(false);
 
+  // Track if current session originated from a newly registered account
+  const [isNewRegistration, setIsNewRegistration] = useState(false);
+
   // Ensure active session is never persisted across browser refresh/reopen
   useEffect(() => {
     try {
@@ -49,7 +53,7 @@ export default function App() {
     } catch {}
   }, []);
 
-  // Complete / Skip Tutorial -> If journal is not configured yet, immediately trigger mandatory setup
+  // Complete / Skip Tutorial -> In a newly registered account, immediately trigger mandatory setup
   const handleFinishTutorial = async () => {
     if (currentUser) {
       const cleanEmail = currentUser.email.toLowerCase();
@@ -67,19 +71,10 @@ export default function App() {
 
       setCurrentUser((prev) => (prev ? { ...prev, hasSeenTutorial: true } : null));
 
-      // After tutorial, if journal is not configured anywhere, show mandatory setup
-      const configuredKey = "sngx_journal_configured_" + cleanEmail;
-      const localConfigured = localStorage.getItem(configuredKey) === "true";
-      const cloudConfigured =
-        currentUser.hasConfiguredJournal === true ||
-        (currentUser.tradingData && Object.keys(currentUser.tradingData).length > 0);
-
-      if (!localConfigured && !cloudConfigured) {
+      // After tutorial in a newly registered account, immediately show mandatory setup modal
+      if (isNewRegistration) {
         setIsSetupMandatory(true);
         setIsSetupModalOpen(true);
-      } else {
-        setIsSetupMandatory(false);
-        setIsSetupModalOpen(false);
       }
     }
     setShowTutorial(false);
@@ -135,6 +130,7 @@ export default function App() {
 
     setIsSetupModalOpen(false);
     setIsSetupMandatory(false);
+    setIsNewRegistration(false);
   };
 
   // Replay Tutorial
@@ -184,7 +180,11 @@ export default function App() {
           }
         }
         if (liveFsUser.role) newRole = liveFsUser.role;
-        if (liveFsUser.platformRole) newPlatformRole = liveFsUser.platformRole;
+        if (liveFsUser.platformRole) newPlatformRole = normalizePlatformRole(liveFsUser.platformRole);
+        if (liveFsUser.role && (!newPlatformRole || newPlatformRole === "member")) {
+          const normR = normalizePlatformRole(liveFsUser.role);
+          if (normR !== "member" && normR !== "pending_user") newPlatformRole = normR;
+        }
         if (liveFsUser.hasSeenTutorial !== undefined) newHasSeenTutorial = liveFsUser.hasSeenTutorial;
         if (liveFsUser.hasConfiguredJournal !== undefined) newHasConfiguredJournal = liveFsUser.hasConfiguredJournal;
         if (liveFsUser.yearRange) newYearRange = liveFsUser.yearRange;
@@ -215,7 +215,11 @@ export default function App() {
             newStatus = data.status;
           }
           if (data.role) newRole = data.role;
-          if (data.platformRole) newPlatformRole = data.platformRole;
+          if (data.platformRole) newPlatformRole = normalizePlatformRole(data.platformRole);
+          if (data.role && (!newPlatformRole || newPlatformRole === "member")) {
+            const normR = normalizePlatformRole(data.role);
+            if (normR !== "member" && normR !== "pending_user") newPlatformRole = normR;
+          }
           if (data.user?.hasSeenTutorial !== undefined) {
             newHasSeenTutorial = data.user.hasSeenTutorial;
           }
@@ -259,6 +263,10 @@ export default function App() {
         localStorage.setItem("sngx_local_users", JSON.stringify(localUsers));
       }
     } catch (e) {}
+
+    if (newPlatformRole) {
+      cacheUserRole(cleanEmail, newPlatformRole);
+    }
 
     if (
       newStatus &&
@@ -357,86 +365,35 @@ export default function App() {
   // Is Suspended User (for rendering the suspension/revocation screen)
   const isSuspendedUser = isBannedUser || isRevokedSubscribedUser || isRejectedUser;
 
-  // Check tutorial status and mandatory journal configuration status whenever an active user logs in
+  // Check tutorial status and mandatory journal configuration status ONLY for newly registered accounts
   useEffect(() => {
-    if (currentUser && !isSuspendedUser && !isTrialExpired) {
-      const cleanEmail = currentUser.email.toLowerCase();
-      const tutorialKey = "sngx_tutorial_seen_" + cleanEmail;
-      let localSeen = localStorage.getItem(tutorialKey) === "true";
-      const cloudSeen = currentUser.hasSeenTutorial === true;
-
-      const configuredKey = "sngx_journal_configured_" + cleanEmail;
-      let localConfigured = localStorage.getItem(configuredKey) === "true";
-      const cloudConfigured =
-        currentUser.hasConfiguredJournal === true ||
-        (currentUser.tradingData && Object.keys(currentUser.tradingData).length > 0);
-
-      // If cloud explicitly says user hasn't seen tutorial, cloud is ground truth
-      if (currentUser.hasSeenTutorial === false) {
-        localSeen = false;
-        try {
-          localStorage.removeItem(tutorialKey);
-        } catch {}
-      } else if (cloudSeen) {
-        try {
-          localStorage.setItem(tutorialKey, "true");
-        } catch {}
-      }
-
-      // If cloud explicitly says user hasn't configured journal, cloud is ground truth
-      if (
-        currentUser.hasConfiguredJournal === false &&
-        (!currentUser.tradingData || Object.keys(currentUser.tradingData).length === 0)
-      ) {
-        localConfigured = false;
-        try {
-          localStorage.removeItem(configuredKey);
-        } catch {}
-      } else if (cloudConfigured) {
-        try {
-          localStorage.setItem(configuredKey, "true");
-        } catch {}
-      }
-
-      // If user has never seen tutorial (neither on this device nor in cloud user account)
-      if (!localSeen && !cloudSeen) {
-        setShowTutorial(true);
-        setIsSetupModalOpen(false);
-      } else {
-        setShowTutorial(false);
-
-        // If tutorial is already completed, check if mandatory configuration is needed.
-        // ONLY show on first login if NEVER configured on this device or in cloud.
-        if (!localConfigured && !cloudConfigured) {
-          setIsSetupMandatory(true);
-          setIsSetupModalOpen(true);
-        } else {
-          setIsSetupMandatory(false);
-          setIsSetupModalOpen(false);
-        }
-      }
+    if (currentUser && isNewRegistration && !isSuspendedUser && !isTrialExpired) {
+      setShowTutorial(true);
+      setIsSetupModalOpen(false);
     }
   }, [
     currentUser?.email,
-    currentUser?.status,
-    currentUser?.hasSeenTutorial,
-    currentUser?.hasConfiguredJournal,
+    isNewRegistration,
     isSuspendedUser,
     isTrialExpired,
   ]);
 
-  // Auto-poll approval status every 4 seconds if user is awaiting host admin approval, suspended, or trial expired
+  // Auto-poll approval status and platform role every 4-5 seconds so role updates (e.g. Moderator) apply live
   useEffect(() => {
-    if (!currentUser || isApprovedUser) return;
-    const interval = setInterval(handleRefreshStatus, 4000);
+    if (!currentUser) return;
+    const pollIntervalMs = isApprovedUser ? 5000 : 4000;
+    const interval = setInterval(handleRefreshStatus, pollIntervalMs);
     return () => clearInterval(interval);
-  }, [currentUser?.email, currentUser?.status, isApprovedUser]);
+  }, [currentUser?.email, currentUser?.status, currentUser?.platformRole, isApprovedUser]);
 
   const handleLogout = () => {
     try {
       localStorage.removeItem("tradeplan_active_user");
       sessionStorage.removeItem("tradeplan_active_user");
     } catch (e) {}
+    setIsNewRegistration(false);
+    setShowTutorial(false);
+    setIsSetupModalOpen(false);
     setCurrentUser(null);
   };
 
@@ -444,10 +401,18 @@ export default function App() {
   if (!currentUser) {
     return (
       <GatewayScreen
-        onLoginSuccess={(user) => {
+        onLoginSuccess={(user, isNewReg) => {
           setCurrentUser(user);
+          if (isNewReg) {
+            setIsNewRegistration(true);
+          } else {
+            setIsNewRegistration(false);
+          }
         }}
-        onRegisteredPending={(user) => setCurrentUser(user)}
+        onRegisteredPending={(user) => {
+          setCurrentUser(user);
+          setIsNewRegistration(true);
+        }}
       />
     );
   }

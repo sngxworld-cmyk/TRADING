@@ -501,7 +501,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
       setTimeout(() => {
         setIsVerifying(false);
         setIsVerifiedSuccess(false);
-        onLoginSuccess(newUser);
+        onLoginSuccess(newUser, true);
       }, 1600);
     } catch (err: any) {
       setErrorMessage(err.message || "Invalid 6-digit verification code. Please check your Gmail or click Resend Code.");
@@ -575,7 +575,7 @@ export const GatewayScreen: React.FC<GatewayScreenProps> = ({
       } else {
         setSuccessMessage("Login successful! Entering TrackerX...");
       }
-      setTimeout(() => onLoginSuccess(loggedInUser), 600);
+      setTimeout(() => onLoginSuccess(loggedInUser, false), 600);
     } catch (err: any) {
       setErrorMessage(err.message || "An error occurred during login.");
     } finally {

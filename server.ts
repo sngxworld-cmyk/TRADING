@@ -32,7 +32,7 @@ interface UserRecord {
   tradingPair?: string;
   tradingMarket?: string;
   startingCapital?: string;
-  role: "admin" | "client";
+  role: "admin" | "client" | string;
   platformRole?:
     | "owner"
     | "sub_owner"
@@ -119,6 +119,55 @@ function verifyPassword(password: string, storedHashOrPlain: string): boolean {
   }
   // Backward compatibility fallback for pre-existing plain text passwords
   return storedHashOrPlain === password || storedHashOrPlain.trim() === password.trim();
+}
+
+function normalizeServerRole(raw: any): PlatformRole {
+  if (!raw) return "member";
+  const lower = String(raw).trim().toLowerCase();
+  if (lower.includes("owner (root)") || lower === "owner" || lower.startsWith("1.") || lower === "1" || lower.includes("master root") || lower.includes("master owner")) return "owner";
+  if (lower.includes("sub-owner") || lower.includes("sub_owner") || lower.includes("co-admin") || lower.startsWith("2.") || lower === "2") return "sub_owner";
+  if (lower.includes("verified signal provider") || lower.includes("verified_signal_provider") || lower.includes("≥85%") || lower.includes("85%") || lower.startsWith("3.") || lower === "3") return "verified_signal_provider";
+  if (lower.includes("moderator") || lower.includes("bug / chat") || lower.startsWith("4.") || lower === "4") return "moderator";
+  if (lower.includes("signal provider") || lower.includes("signal_provider") || lower.startsWith("5.") || lower === "5") return "signal_provider";
+  if (lower.includes("member") || lower.startsWith("6.") || lower === "6") return "member";
+  if (lower.includes("pending") || lower.includes("trial") || lower.startsWith("7.") || lower === "7") return "pending_user";
+  return "member";
+}
+
+function resolveUserPlatformRole(user: { email?: string; platformRole?: any; role?: any; status?: any }): PlatformRole {
+  if (!user) return "member";
+  const cleanEmail = (user.email || "").trim().toLowerCase();
+  if (cleanEmail === "sngxworld@gmail.com") return "owner";
+
+  const pNorm = normalizeServerRole(user.platformRole);
+  const rNorm = normalizeServerRole(user.role);
+
+  const roleRank: Record<PlatformRole, number> = {
+    owner: 100,
+    sub_owner: 80,
+    verified_signal_provider: 60,
+    moderator: 50,
+    signal_provider: 40,
+    member: 20,
+    pending_user: 10,
+  };
+
+  const pRank = roleRank[pNorm] || 0;
+  const rRank = roleRank[rNorm] || 0;
+
+  if (pRank >= rRank && pNorm !== "member") {
+    return pNorm;
+  }
+  if (rRank > pRank && rNorm !== "member" && rNorm !== "pending_user") {
+    return rNorm;
+  }
+  if (pNorm && pNorm !== "member") {
+    return pNorm;
+  }
+  if (rNorm && rNorm !== "member" && rNorm !== "pending_user") {
+    return rNorm;
+  }
+  return pNorm || "member";
 }
 
 /**
@@ -470,7 +519,7 @@ async function syncUsersFromFirestore() {
           tradingMarket: u.tradingMarket || "Crypto Market",
           startingCapital: u.startingCapital !== undefined ? u.startingCapital : "",
           role: u.role || (email === "sngxworld@gmail.com" ? "admin" : "client"),
-          platformRole: u.platformRole || (email === "sngxworld@gmail.com" ? "owner" : "member"),
+          platformRole: resolveUserPlatformRole({ email, platformRole: u.platformRole, role: u.role, status: u.status }),
           status: u.status || "pending",
           subOwnerExpiresAt: u.subOwnerExpiresAt,
           subOwnerAssignedAt: u.subOwnerAssignedAt,
@@ -488,13 +537,23 @@ async function syncUsersFromFirestore() {
           bannedReason: u.bannedReason || "",
         };
 
+        // If role field had elevated role (e.g. moderator), keep role and platformRole aligned
+        if (userRecord.platformRole !== "member" && userRecord.platformRole !== "pending_user") {
+          userRecord.role = userRecord.platformRole === "owner" ? "admin" : userRecord.platformRole;
+        }
+
         if (existingIdx >= 0) {
           const cur = currentDb.users[existingIdx];
+          const roleChanged = cur.platformRole !== userRecord.platformRole || cur.role !== userRecord.role;
+          const statusChanged = cur.status !== userRecord.status;
           currentDb.users[existingIdx] = {
             ...userRecord,
             password: cur.password || userRecord.password,
             tradingData: cur.tradingData && Object.keys(cur.tradingData).length > 0 ? cur.tradingData : userRecord.tradingData,
           };
+          if (roleChanged || statusChanged) {
+            changed = true;
+          }
         } else {
           currentDb.users.push(userRecord);
           changed = true;
@@ -1206,10 +1265,18 @@ app.use((req, res, next) => {
         user.status = "approved";
         saveDB(currentDb);
       }
+      const effectivePlatformRole = resolveUserPlatformRole({
+        email: clean,
+        platformRole: user.platformRole,
+        role: user.role,
+        status: user.status,
+      });
+      const effectiveRole = effectivePlatformRole === "owner" ? "admin" : (user.role && (user.role as string) !== "client" && (user.role as string) !== "member" ? user.role : effectivePlatformRole);
+
       return res.json({
         status: user.status,
-        role: user.role,
-        platformRole: user.platformRole || (user.role === "admin" ? "owner" : "member"),
+        role: effectiveRole,
+        platformRole: effectivePlatformRole,
         user: {
           id: user.id,
           email: user.email,
@@ -1220,8 +1287,8 @@ app.use((req, res, next) => {
           bio: user.bio || "",
           tradingPair: user.tradingPair || "BTC/USDT",
           startingCapital: user.startingCapital || "",
-          role: user.role,
-          platformRole: user.platformRole || (user.role === "admin" ? "owner" : "member"),
+          role: effectiveRole,
+          platformRole: effectivePlatformRole,
           status: user.status,
           hasSeenTutorial: user.hasSeenTutorial !== undefined ? !!user.hasSeenTutorial : false,
           hasConfiguredJournal: user.hasConfiguredJournal !== undefined ? !!user.hasConfiguredJournal : (user.tradingData && Object.keys(user.tradingData).length > 0 ? true : false),
@@ -1496,6 +1563,15 @@ app.use((req, res, next) => {
 
     logActivity(`Login event: ${user.email} (${user.role.toUpperCase()}) - Status: ${user.status.toUpperCase()}`, "access");
 
+    const cleanLoginEmail = (user.email || "").trim().toLowerCase();
+    const effectivePlatformRole = resolveUserPlatformRole({
+      email: cleanLoginEmail,
+      platformRole: user.platformRole,
+      role: user.role,
+      status: user.status,
+    });
+    const effectiveRole = effectivePlatformRole === "owner" ? "admin" : (user.role && (user.role as string) !== "client" && (user.role as string) !== "member" ? user.role : effectivePlatformRole);
+
     const fullUserObj = {
       id: user.id,
       email: user.email,
@@ -1507,8 +1583,11 @@ app.use((req, res, next) => {
       bio: user.bio || "",
       tradingPair: user.tradingPair || "BTC/USDT",
       startingCapital: user.startingCapital || "",
-      role: user.role,
+      role: effectiveRole,
+      platformRole: effectivePlatformRole,
       status: user.status,
+      subOwnerExpiresAt: user.subOwnerExpiresAt || null,
+      subOwnerDurationDays: user.subOwnerDurationDays || null,
       hasSeenTutorial: user.hasSeenTutorial !== undefined ? !!user.hasSeenTutorial : false,
       hasConfiguredJournal: user.hasConfiguredJournal !== undefined ? !!user.hasConfiguredJournal : (user.tradingData && Object.keys(user.tradingData).length > 0 ? true : false),
       yearRange: user.yearRange || "2026",
@@ -1965,20 +2044,7 @@ app.use((req, res, next) => {
       subOwnerNote,
     } = req.body;
 
-    function normalizeRole(raw: any): PlatformRole {
-      if (!raw) return "member";
-      const lower = String(raw).trim().toLowerCase();
-      if (lower.includes("owner (root)") || lower === "owner" || lower.startsWith("1.") || lower === "1" || lower.includes("master root") || lower.includes("master owner")) return "owner";
-      if (lower.includes("sub-owner") || lower.includes("sub_owner") || lower.includes("co-admin") || lower.startsWith("2.") || lower === "2") return "sub_owner";
-      if (lower.includes("verified signal provider") || lower.includes("verified_signal_provider") || lower.includes("≥85%") || lower.includes("85%") || lower.startsWith("3.") || lower === "3") return "verified_signal_provider";
-      if (lower.includes("moderator") || lower.includes("bug / chat") || lower.startsWith("4.") || lower === "4") return "moderator";
-      if (lower.includes("signal provider") || lower.includes("signal_provider") || lower.startsWith("5.") || lower === "5") return "signal_provider";
-      if (lower.includes("member") || lower.startsWith("6.") || lower === "6") return "member";
-      if (lower.includes("pending") || lower.includes("trial") || lower.startsWith("7.") || lower === "7") return "pending_user";
-      return "member";
-    }
-
-    const cleanRole = normalizeRole(platformRole);
+    const cleanRole = normalizeServerRole(platformRole);
 
     const currentDb = getDB();
     const targetUser = currentDb.users.find(
@@ -1999,6 +2065,7 @@ app.use((req, res, next) => {
     }
 
     targetUser.platformRole = cleanRole;
+    targetUser.role = cleanRole === "owner" ? "admin" : cleanRole;
 
     if (platformRole === "sub_owner") {
       targetUser.subOwnerAssignedAt = new Date().toISOString();
@@ -2035,6 +2102,7 @@ app.use((req, res, next) => {
     );
 
     syncUserToFirestore(targetUser.email.trim().toLowerCase(), {
+      role: targetUser.role,
       platformRole: cleanRole,
       status: targetUser.status,
       ...(cleanRole === "sub_owner" ? {
@@ -3482,18 +3550,13 @@ Provide a concise, helpful, friendly, and expert response based on the above tra
     const currentDb = getDB();
     let user = currentDb.users.find((u) => u.email.trim().toLowerCase() === clean);
 
-    function normalizeRole(raw: any): PlatformRole {
-      if (!raw) return "member";
-      const lower = String(raw).trim().toLowerCase();
-      if (lower.includes("owner (root)") || lower === "owner" || lower.startsWith("1.") || lower === "1" || lower.includes("master root") || lower.includes("master owner")) return "owner";
-      if (lower.includes("sub-owner") || lower.includes("sub_owner") || lower.includes("co-admin") || lower.startsWith("2.") || lower === "2") return "sub_owner";
-      if (lower.includes("verified signal provider") || lower.includes("verified_signal_provider") || lower.includes("≥85%") || lower.includes("85%") || lower.startsWith("3.") || lower === "3") return "verified_signal_provider";
-      if (lower.includes("moderator") || lower.includes("bug / chat") || lower.startsWith("4.") || lower === "4") return "moderator";
-      if (lower.includes("signal provider") || lower.includes("signal_provider") || lower.startsWith("5.") || lower === "5") return "signal_provider";
-      if (lower.includes("member") || lower.startsWith("6.") || lower === "6") return "member";
-      if (lower.includes("pending") || lower.includes("trial") || lower.startsWith("7.") || lower === "7") return "pending_user";
-      return "member";
-    }
+    const effectivePlatformRole = resolveUserPlatformRole({
+      email: clean,
+      platformRole: platformRole || user?.platformRole,
+      role: role || user?.role,
+      status: status,
+    });
+    const effectiveRole = effectivePlatformRole === "owner" ? "admin" : (role && (role as string) !== "client" && (role as string) !== "member" ? role : effectivePlatformRole);
 
     if (!user) {
       user = {
@@ -3501,16 +3564,16 @@ Provide a concise, helpful, friendly, and expert response based on the above tra
         email: clean,
         username: clean.split("@")[0],
         password: hashPassword("pre_synced_user"),
-        role: role || "client",
-        platformRole: platformRole ? normalizeRole(platformRole) : "member",
+        role: effectiveRole,
+        platformRole: effectivePlatformRole,
         status: status,
         createdAt: new Date().toISOString(),
       };
       currentDb.users.push(user);
     } else {
       user.status = status;
-      if (role) user.role = role;
-      if (platformRole) user.platformRole = normalizeRole(platformRole);
+      user.role = effectiveRole;
+      user.platformRole = effectivePlatformRole;
     }
     if (bannedReason !== undefined) user.bannedReason = bannedReason;
     if (trialStartDate !== undefined) user.trialStartDate = trialStartDate;

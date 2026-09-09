@@ -435,7 +435,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                 <span className="text-xs text-white font-mono font-bold max-w-[85px] truncate">
                   {currentUser.displayName || currentUser.username}
                 </span>
-                <RoleBadge role={userRole} size="xs" />
+                <RoleBadge email={currentUser.email} role={userRole} size="xs" />
               </button>
             </div>
           </div>
@@ -579,7 +579,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                 <span className="text-xs text-white font-mono font-bold">
                   {currentUser.displayName || currentUser.username}
                 </span>
-                <RoleBadge role={userRole} size="xs" />
+                <RoleBadge email={currentUser.email} role={userRole} size="xs" />
               </button>
             </div>
           </div>
@@ -661,7 +661,7 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                             >
                               {msg.senderDisplayName || msg.senderUsername}
                             </button>
-                            <RoleBadge email={msg.senderEmail} role={msg.senderRole} size="xs" hideOnCompact={true} />
+                            <RoleBadge email={msg.senderEmail} role={msg.senderRole} size="xs" hideOnCompact={false} />
                             <span className="text-[10px] text-slate-400">
                               {formatMessageTime(msg.createdAt)}
                             </span>

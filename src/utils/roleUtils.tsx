@@ -151,7 +151,10 @@ export function getUserLiveRole(email?: string | null): PlatformRole | null {
   if (clean === "sngxworld@gmail.com") return "owner";
 
   if (userRoleCache.has(clean)) {
-    return userRoleCache.get(clean)!;
+    const cached = userRoleCache.get(clean)!;
+    if (cached !== "member" && cached !== "pending_user") {
+      return cached;
+    }
   }
 
   try {
@@ -166,13 +169,19 @@ export function getUserLiveRole(email?: string | null): PlatformRole | null {
     if (raw) {
       const users = JSON.parse(raw);
       const found = users.find((u: any) => u.email && u.email.trim().toLowerCase() === clean);
-      if (found && (found.platformRole || found.role)) {
-        const norm = normalizePlatformRole(found.platformRole || (found.role === "admin" ? "owner" : "member"));
-        userRoleCache.set(clean, norm);
-        return norm;
+      if (found) {
+        const norm = getEffectiveRole(found);
+        if (norm !== "member" && norm !== "pending_user") {
+          userRoleCache.set(clean, norm);
+          return norm;
+        }
       }
     }
   } catch (e) {}
+
+  if (userRoleCache.has(clean)) {
+    return userRoleCache.get(clean)!;
+  }
 
   return null;
 }
@@ -185,16 +194,33 @@ export function getEffectiveRole(user?: Partial<UserProfile> | null): PlatformRo
     return "owner";
   }
 
-  if (user.platformRole) {
-    const norm = normalizePlatformRole(user.platformRole);
-    if (norm === "sub_owner") {
-      if (isSubOwnerExpired(user)) {
-        return "member"; // Downgrades gracefully if sub-owner time limit elapsed
-      }
-      return "sub_owner";
-    }
-    return norm;
+  // Check direct live cached role if available
+  const cachedRole = getUserLiveRole(user.email);
+  if (cachedRole && cachedRole !== "member" && cachedRole !== "pending_user") {
+    return cachedRole;
   }
+
+  const normPlatform = user.platformRole ? normalizePlatformRole(user.platformRole) : null;
+  const normRole = user.role ? normalizePlatformRole(user.role) : null;
+
+  // If sub_owner, check expiration
+  if (normPlatform === "sub_owner" || normRole === "sub_owner") {
+    if (isSubOwnerExpired(user)) {
+      return "member"; // Downgrades gracefully if sub-owner time limit elapsed
+    }
+    return "sub_owner";
+  }
+
+  // Prioritize specific elevated roles over generic defaults
+  if (normPlatform && normPlatform !== "member" && normPlatform !== "pending_user") {
+    return normPlatform;
+  }
+  if (normRole && normRole !== "member" && normRole !== "pending_user") {
+    return normRole;
+  }
+
+  if (normPlatform) return normPlatform;
+  if (normRole) return normRole;
 
   if (user.role === "admin") {
     return "owner";
@@ -314,11 +340,23 @@ export const RoleBadge: React.FC<{
     return () => window.removeEventListener("sngx_role_changed", handler);
   }, [targetEmail]);
 
-  const effectiveRole = liveRole
-    ? liveRole
-    : role
-    ? normalizePlatformRole(role)
-    : getEffectiveRole(user);
+  const normalizedPropRole = role ? normalizePlatformRole(role) : null;
+  const normalizedUserRole = user ? getEffectiveRole(user) : null;
+
+  let effectiveRole: PlatformRole = "member";
+  if (liveRole && liveRole !== "member" && liveRole !== "pending_user") {
+    effectiveRole = liveRole;
+  } else if (normalizedPropRole && normalizedPropRole !== "member" && normalizedPropRole !== "pending_user") {
+    effectiveRole = normalizedPropRole;
+  } else if (normalizedUserRole && normalizedUserRole !== "member" && normalizedUserRole !== "pending_user") {
+    effectiveRole = normalizedUserRole;
+  } else if (liveRole) {
+    effectiveRole = liveRole;
+  } else if (normalizedPropRole) {
+    effectiveRole = normalizedPropRole;
+  } else if (normalizedUserRole) {
+    effectiveRole = normalizedUserRole;
+  }
 
   const cfg = getRoleConfig(effectiveRole);
   const Icon = cfg.icon;

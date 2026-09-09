@@ -22,8 +22,9 @@ import {
   ShieldAlert,
   Check,
   UserX,
+  Shield,
 } from "lucide-react";
-import { getEffectiveRole } from "../utils/roleUtils";
+import { getEffectiveRole, RoleBadge } from "../utils/roleUtils";
 import { getTrialRemainingMs, isUserExemptFromTrial } from "../utils/deviceUtils";
 import { cleanEmailKey } from "../lib/userStore";
 
@@ -182,13 +183,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span className="hidden md:inline">Host </span>Admin
                   </span>
                 </>
-              ) : user.role === "admin" || effectiveRole === "sub_owner" || effectiveRole === "moderator" ? (
-                <>
-                  <div className="w-2 h-2 rounded-full bg-blue-400" />
-                  <span className="text-blue-300 font-medium uppercase tracking-wider text-[10px] flex items-center gap-1 font-mono">
-                    <ShieldCheck className="w-3 h-3 text-blue-400" /> Admin
-                  </span>
-                </>
               ) : isBanned ? (
                 <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
                   <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
@@ -209,18 +203,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </span>
                   </div>
                 </div>
-              ) : isApproved || user.status === "approved" || isSubscribedUser || isExempt ? (
-                <>
-                  <div className="w-2 h-2 rounded-full bg-blue-400" />
-                  <span className="text-blue-300 font-medium uppercase tracking-wider text-[10px] flex items-center gap-1 font-mono">
-                    <UserCheck className="w-3 h-3" /> <span className="hidden sm:inline">Full </span>Access
-                  </span>
-                </>
               ) : user.status === "rejected" ? (
                 <div className="flex items-center gap-1.5 text-rose-400 font-mono text-[10px] font-semibold uppercase">
                   <div className="w-2 h-2 rounded-full bg-rose-500" />
                   <span>Declined</span>
                 </div>
+              ) : effectiveRole !== "member" && effectiveRole !== "pending_user" ? (
+                <RoleBadge email={user.email} role={effectiveRole} size="xs" />
+              ) : isApproved || user.status === "approved" || isSubscribedUser || isExempt ? (
+                <RoleBadge email={user.email} role="member" size="xs" />
               ) : isTrialActive ? (
                 <div className="flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 text-blue-300 font-mono">
                   <Clock className="w-3.5 h-3.5 text-blue-400 animate-pulse shrink-0" />
@@ -264,6 +255,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-xs font-semibold text-white hidden md:inline-block">
               {user.displayName || user.username}
             </span>
+            <RoleBadge email={user.email} role={effectiveRole} size="xs" />
           </button>
         )}
 
@@ -328,6 +320,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                       Trial Ended
                     </span>
                   )}
+                </div>
+              </div>
+
+              {/* Platform Role Row */}
+              <div className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-sky-400" />
+                  <span className="text-slate-300 font-bold text-[11px]">Platform Role</span>
+                </div>
+                <div>
+                  <RoleBadge email={user?.email} role={effectiveRole} size="xs" />
                 </div>
               </div>
 
