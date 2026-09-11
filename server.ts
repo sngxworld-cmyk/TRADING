@@ -297,6 +297,18 @@ const adminLoginLimiter = createRateLimiter({
   message: "Admin authentication rate limit reached. Please wait 60 seconds.",
 });
 
+// Global API rate limiter protecting all backend endpoints against high-speed automated scanners & fuzzers (Gobuster, ffuf, wfuzz)
+const globalApiLimiter = createRateLimiter({
+  bucketName: "global-api",
+  maxRequests: 180,
+  windowMs: 60 * 1000, // 180 requests per minute per IP
+  message: "Security Notice: Rate limit exceeded. High-frequency automated scanning detected. Please throttle your requests.",
+  keyGenerator: (req) => {
+    const ip = getClientIp(req);
+    return ip;
+  },
+});
+
 function ensureDirectoryExistence(filePath: string) {
   const dirname = path.dirname(filePath);
   if (fs.existsSync(dirname)) {
@@ -722,6 +734,10 @@ function logActivity(message: string, type: "info" | "access" | "warn" = "info")
 
 export const app = express();
 
+// Conceal server identity - Remove fingerprint headers used by automated scanners like Nikto
+app.disable("x-powered-by");
+app.disable("etag");
+
 // Enable CORS for external Host Admin Dashboards and client apps
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -734,32 +750,169 @@ app.use((req, res, next) => {
   next();
 });
 
+// Helmet-grade Security Response Headers on every single incoming connection
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  next();
+});
+
 app.use(express.json({ limit: "10mb" }));
 
-// --- SECURITY FIREWALL MIDDLEWARE ---
-// Blocks malicious automated scanners & exploit tools: Commix, SQLMap, OWASP ZAP, WAFW00F (wa00f)
+// --- ADVANCED INTRUSION DETECTION & PREVENTION SYSTEM (IPS / WAF) ---
+// Actively neutralizes penetration tools (Kali Linux, Nikto, SQLMap, Commix, Gobuster, Metasploit, Hydra)
+interface QuarantineRecord {
+  strikes: number;
+  bannedUntil?: number;
+  lastOffense: number;
+  reasons: string[];
+}
+
+const quarantinedIps = new Map<string, QuarantineRecord>();
+
+// Periodic cleanup of expired IP quarantine records every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of quarantinedIps.entries()) {
+    if (record.bannedUntil && now > record.bannedUntil + 1800000) {
+      quarantinedIps.delete(ip);
+    }
+  }
+}, 600000).unref();
+
+function recordSecurityViolation(ip: string, reason: string, isSevere: boolean = false) {
+  // Never quarantine local dev loopback or host admin
+  if (ip === "127.0.0.1" || ip === "::1" || ip === "localhost") return;
+  const now = Date.now();
+  let record = quarantinedIps.get(ip);
+  if (!record) {
+    record = { strikes: 0, lastOffense: now, reasons: [] };
+    quarantinedIps.set(ip, record);
+  }
+  record.reasons.push(`${new Date().toISOString()}: ${reason}`);
+  record.lastOffense = now;
+  record.strikes += isSevere ? 3 : 1;
+
+  if (record.strikes >= 3) {
+    record.bannedUntil = now + 15 * 60 * 1000; // 15-minute security quarantine jail
+    logActivity(`🚨 [SECURITY LOCKDOWN] IP ${ip} quarantined for 15 minutes. Reason: ${reason}`, "warn");
+  } else {
+    logActivity(`⚠️ [SECURITY ALERT] IP ${ip} strike ${record.strikes}/3. Reason: ${reason}`, "warn");
+  }
+}
+
+function detectPrototypePollution(obj: any): boolean {
+  if (!obj || typeof obj !== "object") return false;
+  if (Array.isArray(obj)) {
+    return obj.some(detectPrototypePollution);
+  }
+  for (const key of Object.keys(obj)) {
+    if (key === "__proto__" || key === "constructor" || key === "prototype") {
+      return true;
+    }
+    if (typeof obj[key] === "object" && detectPrototypePollution(obj[key])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Kali Linux automated penetration & reconnaissance tool signatures
+const KALI_SCANNER_REGEX = /(nikto|sqlmap|commix|zaproxy|owasp-zap|\bzap\b|burp|burpcollaborator|wafw00f|wa00f|acunetix|nessus|openvas|qualys|arachni|w3af|skipfish|paros|gobuster|dirbuster|ffuf|wfuzz|feroxbuster|dirsearch|dirb|hydra|medusa|ncrack|patator|crowbar|thc-hydra|metasploit|meterpreter|havij|jsql|wpscan|droopescan|joomscan|sublist3r|masscan|zmap|nmap)/i;
+
+// Path Traversal & LFI / RFI exploit signatures
+const PATH_TRAVERSAL_REGEX = /(\.\.[\/\\]|%2e%2e|\/etc\/(passwd|shadow|hosts|group)|\/proc\/self|win\.ini|boot\.ini)/i;
+
+// Remote Code Execution (RCE) / Command Injection exploit signatures
+const COMMAND_INJECTION_REGEX = /(\$\(|\`|\bcat\s+\/etc|\bls\s+-[a-zA-Z]*l|\bwhoami\b|\buname\s+-a|\bwget\s+http|\bcurl\s+http|\bnc\s+-[a-zA-Z]*e|\bbash\s+-i|\/bin\/sh|\/bin\/bash)/i;
+
+// Honeypot trap paths commonly scanned by automated Kali scanners (Nikto, Gobuster, etc.)
+const HONEYPOT_PROBE_REGEX = /\/(\.env|\.git|\.svn|\.aws|\.ssh|wp-login\.php|wp-admin|phpmyadmin|pma\/|admin\.php|cgi-bin\/|eval-stdin\.php|shell\.php|c99\.php|r57\.php|b374k|actuator|console|server-status|backup\.sql|db\.backup\.json|dump\.sql|id_rsa|config\.json|\.bash_history)/i;
+
 app.use((req, res, next) => {
+  const clientIp = getClientIp(req);
+
+  // 1. IP Quarantine Enforcement
+  const quarantineRecord = quarantinedIps.get(clientIp);
+  if (quarantineRecord && quarantineRecord.bannedUntil && Date.now() < quarantineRecord.bannedUntil) {
+    const remainingSec = Math.ceil((quarantineRecord.bannedUntil - Date.now()) / 1000);
+    res.setHeader("Retry-After", remainingSec.toString());
+    return res.status(403).json({
+      error: "Security Quarantine Active",
+      message: `Access Denied: Your IP address (${clientIp}) has been quarantined for 15 minutes due to multiple malicious security probe violations. Security audit logs dispatched to Host Admin.`,
+      remainingSeconds: remainingSec,
+    });
+  }
+
   const userAgent = (req.headers["user-agent"] || "").toLowerCase();
   const urlPath = (req.originalUrl || req.url || "").toLowerCase();
   const queryStr = JSON.stringify(req.query || {}).toLowerCase();
   const headersStr = JSON.stringify(req.headers || {}).toLowerCase();
 
-  const isCommix = /commix/i.test(userAgent) || /commix/i.test(urlPath) || /commix/i.test(queryStr);
-  const isSqlMap = /sqlmap/i.test(userAgent) || /sqlmap/i.test(urlPath) || /sqlmap/i.test(queryStr) || /sql\s*map/i.test(userAgent);
-  const isZap = /zaproxy|owasp-zap|owasp\s*zap|\bzap\b/i.test(userAgent) || /zaproxy|owasp-zap|\bzap\b/i.test(urlPath) || /zaproxy|owasp-zap|\bzap\b/i.test(headersStr);
-  const isWafw00f = /wafw00f|wa00f/i.test(userAgent) || /wafw00f|wa00f/i.test(urlPath) || /wafw00f|wa00f/i.test(queryStr) || /wafw00f|wa00f/i.test(headersStr);
-
-  if (isCommix || isSqlMap || isZap || isWafw00f) {
-    const toolName = isCommix ? "Commix" : isSqlMap ? "SQLMap" : isZap ? "OWASP ZAP" : "WAFW00F (wa00f)";
-    logActivity(`[FIREWALL] Blocked malicious security scanner request (${toolName}) from ${req.ip || "unknown IP"}`, "warn");
+  // 2. Honeypot Trap Path Probes (Instant Quarantine)
+  if (HONEYPOT_PROBE_REGEX.test(urlPath)) {
+    recordSecurityViolation(clientIp, `Honeypot trap probe detected: ${urlPath}`, true);
     return res.status(403).json({
       error: "Access Denied",
-      message: `Firewall active: Malicious security scanning software (${toolName}) detected and blocked.`,
+      message: "Firewall Active: Unauthorized access probe to restricted system file detected. Origin IP placed in security quarantine.",
+    });
+  }
+
+  // 3. Kali Linux / Security Scanner Tool Detection
+  const isKaliTool =
+    KALI_SCANNER_REGEX.test(userAgent) ||
+    KALI_SCANNER_REGEX.test(urlPath) ||
+    KALI_SCANNER_REGEX.test(queryStr) ||
+    KALI_SCANNER_REGEX.test(headersStr);
+
+  if (isKaliTool) {
+    const match =
+      userAgent.match(KALI_SCANNER_REGEX)?.[0] ||
+      urlPath.match(KALI_SCANNER_REGEX)?.[0] ||
+      "Automated Penetration Suite";
+    recordSecurityViolation(clientIp, `Penetration tool detected: ${match}`, false);
+    return res.status(403).json({
+      error: "Access Denied",
+      message: `Firewall Active: Malicious security scanning software (${match}) detected and blocked. Incident logged with origin IP.`,
+    });
+  }
+
+  // 4. Path Traversal & LFI Exploit Signature Detection
+  if (PATH_TRAVERSAL_REGEX.test(urlPath) || PATH_TRAVERSAL_REGEX.test(queryStr)) {
+    recordSecurityViolation(clientIp, `Path traversal / LFI exploit attempt in URL: ${urlPath}`, false);
+    return res.status(403).json({
+      error: "Access Denied",
+      message: "Firewall Active: Path traversal attempt detected and blocked.",
+    });
+  }
+
+  // 5. Command Injection / RCE Exploit Signature Detection
+  if (COMMAND_INJECTION_REGEX.test(urlPath) || COMMAND_INJECTION_REGEX.test(queryStr)) {
+    recordSecurityViolation(clientIp, `Command injection attempt detected: ${urlPath}`, true);
+    return res.status(403).json({
+      error: "Access Denied",
+      message: "Firewall Active: Command execution payload detected and blocked.",
+    });
+  }
+
+  // 6. Prototype Pollution Inspection in Request Body
+  if (req.body && detectPrototypePollution(req.body)) {
+    recordSecurityViolation(clientIp, "Prototype pollution payload in request body", false);
+    return res.status(400).json({
+      error: "Bad Request",
+      message: "Malicious payload detected: Object prototype manipulation is strictly prohibited.",
     });
   }
 
   next();
 });
+
+// Protect all API routes with high-frequency flood rate limiter
+app.use("/api", globalApiLimiter);
 
   // --- API ROUTES ---
 
@@ -1677,6 +1830,69 @@ app.use((req, res, next) => {
         hasConfiguredJournal: user.hasConfiguredJournal ?? false,
         yearRange: user.yearRange || "2026",
         startMonth: user.startMonth ?? 0,
+      },
+    });
+  });
+
+  // ADMIN: Security Firewall Diagnostic Status
+  app.get("/api/admin/security-status", (req, res) => {
+    const quarantinedList: any[] = [];
+    const now = Date.now();
+    for (const [ip, record] of quarantinedIps.entries()) {
+      quarantinedList.push({
+        ip,
+        strikes: record.strikes,
+        isBanned: record.bannedUntil ? now < record.bannedUntil : false,
+        remainingBannedSeconds: record.bannedUntil && now < record.bannedUntil ? Math.ceil((record.bannedUntil - now) / 1000) : 0,
+        lastOffense: new Date(record.lastOffense).toISOString(),
+        reasons: record.reasons.slice(-5),
+      });
+    }
+
+    const currentDb = getDB();
+    const securityLogs = (currentDb.logs || []).filter((l: any) => l.message && (l.message.includes("[FIREWALL]") || l.message.includes("[SECURITY")));
+
+    return res.json({
+      success: true,
+      firewall: {
+        active: true,
+        mode: "MILITARY_GRADE_WAF_IPS",
+        status: "ONLINE",
+        antiFingerprint: "ENABLED (Server & ETag masked)",
+        headersEnforced: [
+          "X-Content-Type-Options: nosniff",
+          "X-Frame-Options: SAMEORIGIN",
+          "X-XSS-Protection: 1; mode=block",
+          "Strict-Transport-Security",
+          "Referrer-Policy: strict-origin-when-cross-origin",
+          "Permissions-Policy",
+        ],
+        blockedTools: [
+          "Kali Linux Suite",
+          "Nikto",
+          "SQLMap",
+          "Commix",
+          "OWASP ZAP",
+          "Burp Suite",
+          "WAFW00F",
+          "Gobuster / Dirbuster",
+          "ffuf / wfuzz",
+          "Hydra / Medusa",
+          "Metasploit Framework",
+          "Nmap / Masscan",
+          "Acunetix / Nessus",
+        ],
+        blockedVectors: [
+          "Path Traversal (LFI / RFI)",
+          "Remote Code Execution (RCE)",
+          "NoSQL / Query Operator Injection",
+          "Object Prototype Pollution",
+          "Honeypot Sensitive Traps (/.env, /.git, /wp-admin, /phpmyadmin, /backup.sql)",
+          "High-Frequency Flood Attacks (Global API Rate Limiter)",
+        ],
+        quarantinedIpsCount: quarantinedList.filter((q) => q.isBanned).length,
+        quarantinedIps: quarantinedList,
+        recentSecurityAlerts: securityLogs.slice(0, 30),
       },
     });
   });
@@ -3088,6 +3304,18 @@ app.use((req, res, next) => {
     const target = signals.find((s: any) => s.id === signalId);
     if (!target) return res.status(404).json({ error: "Signal not found." });
 
+    // Enforce rule: Trader must be a member of the group (or group admin / host) to vote
+    const cleanEmail = (userEmail || "").trim().toLowerCase();
+    const isHost = cleanEmail === "sngxworld@gmail.com";
+    const groups = currentDb.communitySignalGroups || communitySignalGroups || [];
+    const group = groups.find((g: any) => g.id === target.groupId);
+    const isGroupAdmin = group && (group.adminEmail || "").toLowerCase() === cleanEmail;
+    const isMember = group && Array.isArray(group.members) && group.members.map((m: string) => m.toLowerCase()).includes(cleanEmail);
+
+    if (!isHost && !isGroupAdmin && !isMember) {
+      return res.status(403).json({ error: "You must join this signal group to vote for signals loss or profit." });
+    }
+
     if (!target.votes) target.votes = {};
     target.votes[userEmail.toLowerCase()] = vote;
 
@@ -3421,6 +3649,16 @@ app.use((req, res, next) => {
   app.delete("/api/community/chat/messages/:messageId", (req, res) => {
     const { messageId } = req.params;
     const { deleterEmail } = req.body || {};
+
+    const targetMsg = communityChatMessages.find((m) => m.id === messageId);
+    if (targetMsg && deleterEmail) {
+      const cleanDeleter = (deleterEmail || "").trim().toLowerCase();
+      const authorEmail = (targetMsg.senderEmail || "").trim().toLowerCase();
+      if (authorEmail && cleanDeleter && authorEmail !== cleanDeleter) {
+        return res.status(403).json({ error: "You can only delete your own messages." });
+      }
+    }
+
     communityChatMessages = communityChatMessages.filter((m) => m.id !== messageId);
     const currentDb = getDB();
     if (currentDb.communityChatMessages) {
@@ -3433,6 +3671,17 @@ app.use((req, res, next) => {
   // DELETE Direct Message by ID
   app.delete("/api/community/direct-messages/:messageId", (req, res) => {
     const { messageId } = req.params;
+    const { deleterEmail } = req.body || {};
+
+    const targetMsg = communityDirectMessages.find((m) => m.id === messageId);
+    if (targetMsg && deleterEmail) {
+      const cleanDeleter = (deleterEmail || "").trim().toLowerCase();
+      const authorEmail = (targetMsg.senderEmail || "").trim().toLowerCase();
+      if (authorEmail && cleanDeleter && authorEmail !== cleanDeleter) {
+        return res.status(403).json({ error: "You can only delete your own direct messages." });
+      }
+    }
+
     communityDirectMessages = communityDirectMessages.filter((m) => m.id !== messageId);
     const currentDb = getDB();
     if (currentDb.communityDirectMessages) {
@@ -3445,6 +3694,17 @@ app.use((req, res, next) => {
   // DELETE Group Chat Message by ID
   app.delete("/api/community/signal-groups/:groupId/chat/:messageId", (req, res) => {
     const { groupId, messageId } = req.params;
+    const { deleterEmail } = req.body || {};
+
+    const targetMsg = (communityGroupChatMessages[groupId] || []).find((m) => m.id === messageId);
+    if (targetMsg && deleterEmail) {
+      const cleanDeleter = (deleterEmail || "").trim().toLowerCase();
+      const authorEmail = (targetMsg.senderEmail || "").trim().toLowerCase();
+      if (authorEmail && cleanDeleter && authorEmail !== cleanDeleter) {
+        return res.status(403).json({ error: "You can only delete your own group chat messages." });
+      }
+    }
+
     if (communityGroupChatMessages[groupId]) {
       communityGroupChatMessages[groupId] = communityGroupChatMessages[groupId].filter((m) => m.id !== messageId);
     }

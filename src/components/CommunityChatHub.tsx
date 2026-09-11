@@ -666,12 +666,12 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                               {formatMessageTime(msg.createdAt)}
                             </span>
 
-                            {(isSelf || isHostAdmin || userRole === "owner" || userRole === "sub_owner" || userRole === "moderator") && (
+                            {isSelf && (
                               <button
                                 type="button"
                                 onClick={() => handleDeletePublicMessage(msg.id)}
                                 className="text-slate-500 hover:text-rose-400 p-0.5 rounded transition-colors"
-                                title="Delete Message"
+                                title="Delete My Message"
                               >
                                 <Trash2 className="w-3 h-3" />
                               </button>
@@ -1267,14 +1267,16 @@ export const CommunityChatHub: React.FC<CommunityChatHubProps> = ({
                                   <span>
                                     {formatMessageTime(dm.createdAt)}
                                   </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteDmMessage(dm.id)}
-                                    className="text-slate-400 hover:text-rose-400 p-0.5 rounded transition-colors ml-1"
-                                    title="Delete Message"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </button>
+                                  {isSelf && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteDmMessage(dm.id)}
+                                      className="text-slate-400 hover:text-rose-400 p-0.5 rounded transition-colors ml-1"
+                                      title="Delete My Message"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  )}
                                 </div>
 
                                 <div

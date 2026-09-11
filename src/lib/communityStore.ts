@@ -124,17 +124,11 @@ export function deleteChatMessage(
   if (!target) return { success: false, error: "Message not found." };
 
   const deleterEmail = (deleter.email || "").toLowerCase();
-  const isHost =
-    deleterEmail === "sngxworld@gmail.com" ||
-    deleter.role === "admin" ||
-    deleter.platformRole === "owner" ||
-    deleter.platformRole === "sub_owner" ||
-    deleter.platformRole === "moderator";
   const isAuthor =
     (target.senderEmail || "").toLowerCase() === deleterEmail ||
     (target.senderUsername || "").toLowerCase() === (deleter.username || "").toLowerCase();
 
-  if (!isHost && !isAuthor) {
+  if (!isAuthor) {
     return { success: false, error: "You can only delete your own messages." };
   }
 
@@ -1079,6 +1073,20 @@ export function castSignalVote(
     return { success: false, error: "Voting is not open for this trade." };
   }
 
+  // Enforce rule: Trader must be a member of the group (or group admin / host) to vote
+  const groups = getSignalGroups();
+  const group = groups.find((g) => g.id === sig.groupId);
+  if (!group) return { success: false, error: "Associated signal group not found." };
+
+  const userEmail = (user.email || "").trim().toLowerCase();
+  const isHost = userEmail === "sngxworld@gmail.com" || user.role === "admin";
+  const isGroupAdmin = (group.adminEmail || "").toLowerCase() === userEmail;
+  const isMember = (group.members || []).map((m) => m.toLowerCase()).includes(userEmail);
+
+  if (!isHost && !isGroupAdmin && !isMember) {
+    return { success: false, error: "You must join this signal group to vote for signals loss or profit." };
+  }
+
   if (sig.votingEndsAt && new Date().getTime() > new Date(sig.votingEndsAt).getTime()) {
     // Process results if time has elapsed
     evaluateSignalResults(sig);
@@ -1278,21 +1286,21 @@ export function deleteDirectMessage(
   if (!target) return { success: false, error: "Direct message not found." };
 
   const deleterEmail = (deleter.email || "").toLowerCase();
-  const isHost =
-    deleterEmail === "sngxworld@gmail.com" ||
-    deleter.role === "admin" ||
-    deleter.platformRole === "owner" ||
-    deleter.platformRole === "sub_owner";
-  const isParticipant =
-    target.senderEmail.toLowerCase() === deleterEmail ||
-    target.receiverEmail.toLowerCase() === deleterEmail;
+  const isAuthor = (target.senderEmail || "").toLowerCase() === deleterEmail;
 
-  if (!isHost && !isParticipant) {
-    return { success: false, error: "You can only delete messages in your own direct conversations." };
+  if (!isAuthor) {
+    return { success: false, error: "You can only delete your own direct messages." };
   }
 
   const filtered = dms.filter((m) => m.id !== messageId);
   localStorage.setItem(DMS_STORAGE_KEY, JSON.stringify(filtered));
+
+  // Sync delete with server backend
+  fetch(`/api/community/direct-messages/${messageId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ deleterEmail }),
+  }).catch(() => {});
 
   return { success: true };
 }
@@ -1571,12 +1579,10 @@ export function deleteGroupChatMessage(
   if (!targetMsg) return { success: false, error: "Message not found." };
 
   const deleterEmail = deleter.email.toLowerCase();
-  const isHost = deleterEmail === "sngxworld@gmail.com" || deleter.role === "admin";
-  const isGroupAdmin = group.adminEmail.toLowerCase() === deleterEmail;
   const isAuthor = targetMsg.senderEmail.toLowerCase() === deleterEmail;
 
-  if (!isHost && !isGroupAdmin && !isAuthor) {
-    return { success: false, error: "You do not have permission to delete this message." };
+  if (!isAuthor) {
+    return { success: false, error: "You can only delete your own messages." };
   }
 
   const filtered = msgs.filter((m) => m.id !== messageId);

@@ -12,8 +12,10 @@ service cloud.firestore {
     }
     
     // Authentication OTP verification codes (auto-expires in 10 mins)
+    // NEVER allow list queries to prevent hackers dumping all active OTPs with automated tools
     match /authVerificationCodes/{emailKey} {
-      allow read: if true;
+      allow get: if true;
+      allow list: if false; // STRICT BLOCK: Automated scanners cannot enumerate or dump all active OTPs
       allow create, update: if request.resource.data.code is string && request.resource.data.code.size() == 6;
       allow delete: if true;
     }
@@ -21,7 +23,8 @@ service cloud.firestore {
     // Ban Appeals submitted by banned users - Host Admin reviews and approves/rejects
     match /banAppeals/{emailKey} {
       allow read: if true;
-      allow create, update, delete: if true;
+      allow create, update: if true;
+      allow delete: if true;
     }
 
     // Pre-approved whitelist emails - Host Admin manages whitelist
@@ -34,13 +37,17 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // System audit logs
+    // System audit logs - Tamper-proof append-only ledger
     match /system_audit_logs/{logId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false; // Attackers cannot tamper with or delete audit logs
     }
 
     match /logs/{logId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false; // Attackers cannot tamper with or delete audit logs
     }
 
     // Community Live Signals
@@ -58,9 +65,14 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
-    // Direct Messages & General App Sub-collections
-    match /{document=**} {
+    // Direct Messages
+    match /direct_messages/{messageId} {
       allow read, write: if true;
+    }
+
+    // Default Deny: Block any unauthorized or unmapped paths to prevent arbitrary collection creation or enumeration
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -331,6 +331,10 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
   };
 
   const handleVote = (sigId: string, vote: "tp" | "sl") => {
+    if (!isMember) {
+      alert("You must join this signal group to vote for signals loss or profit.");
+      return;
+    }
     const res = castSignalVote(currentUser, sigId, vote);
     if (res.success) {
       setVoteMessage(`Vote recorded: ${vote.toUpperCase()}! Live results remain hidden until voting ends.`);
@@ -1262,27 +1266,46 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                           </div>
 
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-mono text-slate-500 mr-1">Your Vote:</span>
-                            <button
-                              onClick={() => handleVote(sig.id, "tp")}
-                              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all ${
-                                hasVoted === "tp"
-                                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30"
-                                  : "bg-slate-800 hover:bg-emerald-950/60 text-emerald-400 border border-emerald-500/30"
-                              }`}
-                            >
-                              <ThumbsUp className="w-3.5 h-3.5" /> [ TP ] {hasVoted === "tp" ? "✓" : ""}
-                            </button>
-                            <button
-                              onClick={() => handleVote(sig.id, "sl")}
-                              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all ${
-                                hasVoted === "sl"
-                                  ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
-                                  : "bg-slate-800 hover:bg-rose-950/60 text-rose-400 border border-rose-500/30"
-                              }`}
-                            >
-                              <ThumbsDown className="w-3.5 h-3.5" /> [ SL ] {hasVoted === "sl" ? "✓" : ""}
-                            </button>
+                            {!isMember ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-mono text-amber-400 bg-amber-950/40 border border-amber-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                                  <Lock className="w-3.5 h-3.5 text-amber-400" /> Join group to vote for signals loss or profit
+                                </span>
+                                {!isPendingApproval && (
+                                  <button
+                                    onClick={handleJoinGroup}
+                                    disabled={joinLoading}
+                                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1 shadow-md shadow-emerald-600/30 transition-all"
+                                  >
+                                    <UserPlus className="w-3.5 h-3.5" /> Join Group
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <>
+                                <span className="text-xs font-mono text-slate-500 mr-1">Your Vote:</span>
+                                <button
+                                  onClick={() => handleVote(sig.id, "tp")}
+                                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all ${
+                                    hasVoted === "tp"
+                                      ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30"
+                                      : "bg-slate-800 hover:bg-emerald-950/60 text-emerald-400 border border-emerald-500/30"
+                                  }`}
+                                >
+                                  <ThumbsUp className="w-3.5 h-3.5" /> [ TP ] {hasVoted === "tp" ? "✓" : ""}
+                                </button>
+                                <button
+                                  onClick={() => handleVote(sig.id, "sl")}
+                                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all ${
+                                    hasVoted === "sl"
+                                      ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
+                                      : "bg-slate-800 hover:bg-rose-950/60 text-rose-400 border border-rose-500/30"
+                                  }`}
+                                >
+                                  <ThumbsDown className="w-3.5 h-3.5" /> [ SL ] {hasVoted === "sl" ? "✓" : ""}
+                                </button>
+                              </>
+                            )}
 
                             {isAdmin && (
                               <button
@@ -1475,12 +1498,12 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                               {formatMessageTime(msg.createdAt)}
                             </span>
 
-                            {/* Delete message button (Admin or author) */}
-                            {(isAdmin || isMe) && (
+                            {/* Delete message button (author only) */}
+                            {isMe && (
                               <button
                                 onClick={() => handleDeleteMessage(msg.id)}
                                 className="opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-rose-400 transition-opacity"
-                                title="Delete message"
+                                title="Delete my message"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
