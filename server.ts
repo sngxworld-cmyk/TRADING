@@ -2893,6 +2893,7 @@ app.use((req, res, next) => {
       communitySignals = merged;
       currentDb.communitySignals = merged;
       saveDB(currentDb);
+      recalculateServerGroupStats();
     }
     return res.json({ success: true, count: communitySignals.length });
   });
@@ -2937,6 +2938,92 @@ app.use((req, res, next) => {
     return res.json({ success: true, signal: target });
   });
 
+  // Helper to recalculate and audit group statistics and VIP qualification on server
+  function recalculateServerGroupStats(groupId?: string) {
+    const currentDb = getDB();
+    const groups = currentDb.communitySignalGroups || communitySignalGroups || [];
+    const signals = currentDb.communitySignals || communitySignals || [];
+
+    const targetGroups = groupId ? groups.filter((g: any) => g.id === groupId) : groups;
+    let changed = false;
+
+    targetGroups.forEach((g: any) => {
+      const closed = signals.filter((s: any) => s.groupId === g.id && s.status === "closed");
+      const totalClosed = closed.length;
+      const won = closed.filter((s: any) => s.result === "tp").length;
+      const lost = closed.filter((s: any) => s.result === "sl").length;
+      const decisive = won + lost;
+      const winRate = decisive > 0 ? parseFloat(((won / decisive) * 100).toFixed(2)) : 0;
+      const qualifiesVip = totalClosed >= 30 && winRate >= 75.0;
+
+      if (
+        g.totalSignals !== totalClosed ||
+        g.wonSignals !== won ||
+        g.lostSignals !== lost ||
+        g.winRate !== winRate ||
+        (qualifiesVip && !g.isVerified)
+      ) {
+        g.totalSignals = totalClosed;
+        g.wonSignals = won;
+        g.lostSignals = lost;
+        g.winRate = winRate;
+        if (qualifiesVip) {
+          g.isVerified = true;
+          g.adminRole = "verified_signal_provider";
+        }
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      communitySignalGroups = groups;
+      currentDb.communitySignalGroups = groups;
+      saveDB(currentDb);
+    }
+  }
+
+  // SIGNALS: Conclude Feedback & Certify Outcome (TP / SL / Inconclusive)
+  app.post("/api/community/signals/:signalId/conclude", (req, res) => {
+    const { signalId } = req.params;
+    const { result, status } = req.body;
+    const currentDb = getDB();
+    const signals = currentDb.communitySignals || [];
+    const target = signals.find((s: any) => s.id === signalId);
+    if (!target) return res.status(404).json({ error: "Signal not found." });
+
+    target.status = status || "closed";
+    target.closedAt = new Date().toISOString();
+
+    if (result) {
+      target.result = result;
+    } else {
+      const votes = target.votes || {};
+      const totalVotes = Object.keys(votes).length;
+      if (totalVotes === 0) {
+        target.result = "inconclusive";
+      } else {
+        const tpCount = Object.values(votes).filter((v) => v === "tp").length;
+        const slCount = Object.values(votes).filter((v) => v === "sl").length;
+        const tpPct = (tpCount / totalVotes) * 100;
+        const slPct = (slCount / totalVotes) * 100;
+        if (tpPct >= 75 || tpCount > slCount) {
+          target.result = "tp";
+        } else if (slPct >= 75 || slCount > tpCount) {
+          target.result = "sl";
+        } else {
+          target.result = "inconclusive";
+        }
+      }
+    }
+
+    communitySignals = signals;
+    saveDB(currentDb);
+
+    recalculateServerGroupStats(target.groupId);
+
+    return res.json({ success: true, signal: target });
+  });
+
   // SIGNALS: Delete Signal
   app.delete("/api/community/signals/:signalId", (req, res) => {
     const { signalId } = req.params;
@@ -2951,6 +3038,7 @@ app.use((req, res, next) => {
 
   // FULL COMMUNITY UNIFIED SYNC (One-shot safe sync on app load or post-update)
   app.get("/api/community/sync/all", (_req, res) => {
+    recalculateServerGroupStats();
     const currentDb = getDB();
     return res.json({
       success: true,
@@ -3021,6 +3109,7 @@ app.use((req, res, next) => {
     }
 
     saveDB(currentDb);
+    recalculateServerGroupStats();
 
     return res.json({
       success: true,

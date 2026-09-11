@@ -151,17 +151,67 @@ export function deleteChatMessage(
   return { success: true };
 }
 
-export function getSignalGroups(): SignalGroup[] {
+export function getSignalGroups(skipSync = false): SignalGroup[] {
+  let groups: SignalGroup[] = [];
   try {
     const raw = localStorage.getItem(GROUPS_STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(GROUPS_STORAGE_KEY, JSON.stringify(DEFAULT_SIGNAL_GROUPS));
-      return DEFAULT_SIGNAL_GROUPS;
-    }
-    return JSON.parse(raw);
+    groups = raw ? JSON.parse(raw) : DEFAULT_SIGNAL_GROUPS;
   } catch {
-    return DEFAULT_SIGNAL_GROUPS;
+    groups = DEFAULT_SIGNAL_GROUPS;
   }
+
+  // Cross-audit group statistics against actual recorded trade signals
+  if (!skipSync && Array.isArray(groups)) {
+    let hasChanges = false;
+    let allSignals: SignalItem[] = [];
+    try {
+      const rawSig = localStorage.getItem(SIGNALS_STORAGE_KEY);
+      allSignals = rawSig ? JSON.parse(rawSig) : [];
+    } catch {
+      allSignals = [];
+    }
+
+    groups.forEach((g) => {
+      const closed = allSignals.filter((s) => s.groupId === g.id && s.status === "closed");
+      const totalClosed = closed.length;
+      const won = closed.filter((s) => s.result === "tp").length;
+      const lost = closed.filter((s) => s.result === "sl").length;
+      const decisive = won + lost;
+      const winRate = decisive > 0 ? parseFloat(((won / decisive) * 100).toFixed(2)) : 0;
+      const qualifiesVip = totalClosed >= 30 && winRate >= 75.0;
+
+      if (
+        g.totalSignals !== totalClosed ||
+        g.wonSignals !== won ||
+        g.lostSignals !== lost ||
+        g.winRate !== winRate ||
+        (qualifiesVip && !g.isVerified)
+      ) {
+        g.totalSignals = totalClosed;
+        g.wonSignals = won;
+        g.lostSignals = lost;
+        g.winRate = winRate;
+        if (qualifiesVip) {
+          g.isVerified = true;
+          g.adminRole = "verified_signal_provider";
+        }
+        hasChanges = true;
+      }
+    });
+
+    if (hasChanges) {
+      try {
+        localStorage.setItem(GROUPS_STORAGE_KEY, JSON.stringify(groups));
+        fetch("/api/community/signal-groups/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ groups }),
+        }).catch(() => {});
+      } catch {}
+    }
+  }
+
+  return groups;
 }
 
 export function saveSignalGroups(groups: SignalGroup[]) {
@@ -589,16 +639,49 @@ export function adminToggleGroupVerification(
 }
 
 export function getSignals(): SignalItem[] {
+  let signals: SignalItem[] = [];
   try {
     const raw = localStorage.getItem(SIGNALS_STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(SIGNALS_STORAGE_KEY, JSON.stringify(DEFAULT_SIGNALS));
-      return DEFAULT_SIGNALS;
-    }
-    return JSON.parse(raw);
+    signals = raw ? JSON.parse(raw) : DEFAULT_SIGNALS;
   } catch {
-    return DEFAULT_SIGNALS;
+    signals = DEFAULT_SIGNALS;
   }
+
+  // Automatic evaluation of signals whose voting window has concluded
+  let autoEvaluated = false;
+  const now = Date.now();
+  signals.forEach((sig) => {
+    if (sig.status === "voting" && sig.votingEndsAt && now > new Date(sig.votingEndsAt).getTime()) {
+      const votes = sig.votes || {};
+      const totalVotes = Object.keys(votes).length;
+      sig.status = "closed";
+      sig.closedAt = new Date().toISOString();
+      if (totalVotes === 0) {
+        sig.result = "inconclusive";
+      } else {
+        const tpVotes = Object.values(votes).filter((v) => v === "tp").length;
+        const slVotes = Object.values(votes).filter((v) => v === "sl").length;
+        const tpPercent = (tpVotes / totalVotes) * 100;
+        const slPercent = (slVotes / totalVotes) * 100;
+        if (tpPercent >= 75 || tpVotes > slVotes) {
+          sig.result = "tp";
+        } else if (slPercent >= 75 || slVotes > tpVotes) {
+          sig.result = "sl";
+        } else {
+          sig.result = "inconclusive";
+        }
+      }
+      autoEvaluated = true;
+    }
+  });
+
+  if (autoEvaluated) {
+    try {
+      localStorage.setItem(SIGNALS_STORAGE_KEY, JSON.stringify(signals));
+    } catch {}
+  }
+
+  return signals;
 }
 
 export function saveSignals(signals: SignalItem[]) {
@@ -774,36 +857,105 @@ export function evaluateSignalResults(sig: SignalItem): "tp" | "sl" | "inconclus
   const votes = sig.votes || {};
   const totalVotes = Object.keys(votes).length;
 
+  sig.status = "closed";
+  sig.closedAt = new Date().toISOString();
+
   if (totalVotes === 0) {
-    sig.status = "closed";
     sig.result = "inconclusive";
-    return "inconclusive";
+  } else {
+    const tpVotes = Object.values(votes).filter((v) => v === "tp").length;
+    const slVotes = Object.values(votes).filter((v) => v === "sl").length;
+    const tpPercent = (tpVotes / totalVotes) * 100;
+    const slPercent = (slVotes / totalVotes) * 100;
+
+    // Slide 10: If >=75% or majority voted TP -> TP Win. If >=75% or majority voted SL -> SL Loss. Under 75% without clear majority -> inconclusive.
+    if (tpPercent >= 75 || tpVotes > slVotes) {
+      sig.result = "tp";
+    } else if (slPercent >= 75 || slVotes > tpVotes) {
+      sig.result = "sl";
+    } else {
+      sig.result = "inconclusive";
+    }
   }
 
-  const tpVotes = Object.values(votes).filter((v) => v === "tp").length;
-  const slVotes = Object.values(votes).filter((v) => v === "sl").length;
-  const tpPercent = (tpVotes / totalVotes) * 100;
-  const slPercent = (slVotes / totalVotes) * 100;
+  // Update in all signals and save to localStorage FIRST
+  const allSignals = getSignals();
+  const idx = allSignals.findIndex((s) => s.id === sig.id);
+  if (idx >= 0) {
+    allSignals[idx] = { ...allSignals[idx], ...sig };
+  } else {
+    allSignals.unshift(sig);
+  }
+  saveSignals(allSignals);
+
+  // Recalculate parent group win rate immediately with the updated signals
+  recalculateGroupStats(sig.groupId, allSignals);
+  return sig.result;
+}
+
+// Conclude feedback and certify outcome immediately (e.g. by Group Admin / Host or quorum)
+export function concludeSignalFeedback(
+  admin: UserProfile,
+  signalId: string,
+  forcedOutcome?: "tp" | "sl"
+): { success: boolean; error?: string; signal?: SignalItem; group?: SignalGroup } {
+  const allSignals = getSignals();
+  const sig = allSignals.find((s) => s.id === signalId);
+
+  if (!sig) return { success: false, error: "Signal not found." };
+  const isAdmin =
+    sig.adminEmail.toLowerCase() === admin.email.toLowerCase() ||
+    admin.email.toLowerCase() === "sngxworld@gmail.com" ||
+    admin.role === "admin";
+  if (!isAdmin) {
+    return { success: false, error: "Only the group admin or host can conclude feedback." };
+  }
 
   sig.status = "closed";
   sig.closedAt = new Date().toISOString();
 
-  // Slide 10: If >=80% voted TP -> TP Win. If >=80% voted SL -> SL Loss. Under 75% -> inconclusive.
-  if (tpPercent >= 80) {
-    sig.result = "tp";
-  } else if (slPercent >= 80) {
-    sig.result = "sl";
+  if (forcedOutcome) {
+    sig.result = forcedOutcome;
   } else {
-    sig.result = "inconclusive";
+    const votes = sig.votes || {};
+    const totalVotes = Object.keys(votes).length;
+    if (totalVotes === 0) {
+      sig.result = "inconclusive";
+    } else {
+      const tpVotes = Object.values(votes).filter((v) => v === "tp").length;
+      const slVotes = Object.values(votes).filter((v) => v === "sl").length;
+      const tpPercent = (tpVotes / totalVotes) * 100;
+      const slPercent = (slVotes / totalVotes) * 100;
+      if (tpPercent >= 75 || tpVotes > slVotes) {
+        sig.result = "tp";
+      } else if (slPercent >= 75 || slVotes > tpVotes) {
+        sig.result = "sl";
+      } else {
+        sig.result = "inconclusive";
+      }
+    }
   }
 
-  // Recalculate parent group win rate
-  recalculateGroupStats(sig.groupId);
-  return sig.result;
+  const idx = allSignals.findIndex((s) => s.id === sig.id);
+  if (idx >= 0) {
+    allSignals[idx] = { ...sig };
+  }
+  saveSignals(allSignals);
+
+  const updatedGroup = recalculateGroupStats(sig.groupId, allSignals);
+
+  // Sync conclusion to server
+  fetch(`/api/community/signals/${signalId}/conclude`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ result: sig.result, status: "closed", adminEmail: admin.email }),
+  }).catch(() => {});
+
+  return { success: true, signal: sig, group: updatedGroup };
 }
 
-export function recalculateGroupStats(groupId: string) {
-  const allSignals = getSignals();
+export function recalculateGroupStats(groupId: string, overrideSignals?: SignalItem[]): SignalGroup | undefined {
+  const allSignals = overrideSignals || getSignals();
   const groupSignals = allSignals.filter((s) => s.groupId === groupId && s.status === "closed");
 
   const totalClosed = groupSignals.length;
@@ -812,7 +964,7 @@ export function recalculateGroupStats(groupId: string) {
   const decisive = won + lost;
   const winRate = decisive > 0 ? parseFloat(((won / decisive) * 100).toFixed(2)) : 0;
 
-  const groups = getSignalGroups();
+  const groups = getSignalGroups(true);
   const group = groups.find((g) => g.id === groupId);
 
   if (group) {
@@ -828,7 +980,9 @@ export function recalculateGroupStats(groupId: string) {
     }
 
     saveSignalGroups(groups);
+    return group;
   }
+  return undefined;
 }
 
 // --- DIRECT MESSAGING STORE ---
@@ -1235,14 +1389,11 @@ export async function initCommunitySync(): Promise<void> {
       }
 
       // 2. Merge Signal Groups (Union by ID)
-      const localGroups = getSignalGroups();
+      const localGroups = getSignalGroups(true);
       const grpMap = new Map<string, SignalGroup>();
       localGroups.forEach((g) => grpMap.set(g.id, g));
       (data.signalGroups || []).forEach((g: SignalGroup) => grpMap.set(g.id, { ...(grpMap.get(g.id) || {}), ...g }));
       const mergedGroups = Array.from(grpMap.values());
-      if (mergedGroups.length > 0) {
-        localStorage.setItem(GROUPS_STORAGE_KEY, JSON.stringify(mergedGroups));
-      }
 
       // 3. Merge Signals (Union by ID)
       const localSignals = getSignals();
@@ -1254,6 +1405,30 @@ export async function initCommunitySync(): Promise<void> {
       );
       if (mergedSignals.length > 0) {
         localStorage.setItem(SIGNALS_STORAGE_KEY, JSON.stringify(mergedSignals));
+      }
+
+      // Cross-audit and recalculate group statistics directly against merged signals
+      mergedGroups.forEach((g) => {
+        const closed = mergedSignals.filter((s) => s.groupId === g.id && s.status === "closed");
+        const totalClosed = closed.length;
+        const won = closed.filter((s) => s.result === "tp").length;
+        const lost = closed.filter((s) => s.result === "sl").length;
+        const decisive = won + lost;
+        const winRate = decisive > 0 ? parseFloat(((won / decisive) * 100).toFixed(2)) : 0;
+        const qualifiesVip = totalClosed >= 30 && winRate >= 75.0;
+
+        g.totalSignals = totalClosed;
+        g.wonSignals = won;
+        g.lostSignals = lost;
+        g.winRate = winRate;
+        if (qualifiesVip) {
+          g.isVerified = true;
+          g.adminRole = "verified_signal_provider";
+        }
+      });
+
+      if (mergedGroups.length > 0) {
+        localStorage.setItem(GROUPS_STORAGE_KEY, JSON.stringify(mergedGroups));
       }
 
       // 4. Merge Direct Messages (Union by ID)

@@ -5,6 +5,7 @@ import {
   getSignals,
   finishTradeStartFeedback,
   castSignalVote,
+  concludeSignalFeedback,
   recalculateGroupStats,
   updateGroupSubscriptionPricing,
   adminToggleGroupVerification,
@@ -160,7 +161,44 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
   const isGroupAdmin = group.adminEmail.toLowerCase() === currentUser.email.toLowerCase();
   const isAdmin = isGroupAdmin || isHost;
 
-  const isEligibleVip = group.isVerified || (group.totalSignals >= 30 && group.winRate >= 75.0) || isHost;
+  // Live computed statistics directly from recorded trade signals of this group
+  const closedSignals = signals.filter((s) => s.status === "closed");
+  const liveTotalClosed = closedSignals.length;
+  const liveWonSignals = closedSignals.filter((s) => s.result === "tp").length;
+  const liveLostSignals = closedSignals.filter((s) => s.result === "sl").length;
+  const liveDecisive = liveWonSignals + liveLostSignals;
+  const liveWinRate = liveDecisive > 0 ? parseFloat(((liveWonSignals / liveDecisive) * 100).toFixed(2)) : 0;
+
+  const displayTotalSignals = Math.max(liveTotalClosed, group.totalSignals || 0);
+  const displayWonSignals = liveTotalClosed > 0 ? liveWonSignals : (group.wonSignals || 0);
+  const displayLostSignals = liveTotalClosed > 0 ? liveLostSignals : (group.lostSignals || 0);
+  const displayWinRate = liveTotalClosed > 0 ? liveWinRate : (group.winRate || 0);
+
+  // VIP Qualification check (30 closed trades & 75%–85%+ win rate)
+  const isVipQualified = group.isVerified || (displayTotalSignals >= 30 && displayWinRate >= 75.0);
+  const isEligibleVip = isVipQualified || isHost;
+
+  // Keep group state synchronized with live signals and VIP qualification
+  useEffect(() => {
+    if (
+      group.totalSignals !== displayTotalSignals ||
+      group.winRate !== displayWinRate ||
+      group.wonSignals !== displayWonSignals ||
+      group.lostSignals !== displayLostSignals ||
+      (isVipQualified && !group.isVerified)
+    ) {
+      setGroup((prev) => ({
+        ...prev,
+        totalSignals: displayTotalSignals,
+        winRate: displayWinRate,
+        wonSignals: displayWonSignals,
+        lostSignals: displayLostSignals,
+        isVerified: isVipQualified ? true : prev.isVerified,
+        adminRole: isVipQualified ? "verified_signal_provider" : prev.adminRole,
+      }));
+      recalculateGroupStats(group.id);
+    }
+  }, [displayTotalSignals, displayWinRate, displayWonSignals, displayLostSignals, isVipQualified, group.id]);
 
   // Real-time Chat & Permission Status
   const userChatStatus = canUserChatInGroup(currentUser, group);
@@ -230,7 +268,26 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
   }, [activeTab]);
 
   const refreshSignals = () => {
-    setSignals(getSignals().filter((s) => s.groupId === group.id));
+    const updatedSignals = getSignals().filter((s) => s.groupId === group.id);
+    setSignals(updatedSignals);
+    const updatedGroup = recalculateGroupStats(group.id, updatedSignals);
+    if (updatedGroup) {
+      setGroup(updatedGroup);
+    }
+  };
+
+  const handleConcludeFeedback = (sigId: string) => {
+    const res = concludeSignalFeedback(currentUser, sigId);
+    if (res.success) {
+      setVoteMessage(`Feedback concluded! Certified outcome: ${res.signal?.result?.toUpperCase() || "RESOLVED"}`);
+      setTimeout(() => setVoteMessage(null), 3500);
+      refreshSignals();
+      if (res.group) {
+        setGroup(res.group);
+      }
+    } else {
+      alert(res.error || "Failed to conclude feedback.");
+    }
   };
 
   const refreshChat = () => {
@@ -656,7 +713,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   className="text-blue-400 hover:text-blue-300 font-bold transition-colors"
                   title="View trade signals & win rate"
                 >
-                  {group.winRate > 0 ? `${group.winRate}% Win Rate` : "Win Rate calculating..."} ({group.totalSignals} closed)
+                  {displayTotalSignals > 0 ? `${displayWinRate}% Win Rate` : "Win Rate calculating..."} ({displayTotalSignals} closed)
                 </button>
               </p>
             </div>
@@ -751,34 +808,34 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
         {/* VIP Qualification Progress Banner */}
         <div className="mt-3 p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
           <div className="flex items-center gap-2.5">
-            <Award className={`w-4 h-4 shrink-0 ${group.isVerified ? "text-blue-400" : "text-purple-400"}`} />
+            <Award className={`w-4 h-4 shrink-0 ${isVipQualified ? "text-blue-400" : "text-purple-400"}`} />
             <div>
               <span className="font-bold text-white block">
-                {group.isVerified
+                {isVipQualified
                   ? "VIP Status: Qualified & Verified (75%–85%+ Win Rate)"
                   : "VIP Status Progress Tracker (30 Closed Trades & 75%–85% Win Rate)"}
               </span>
               <span className="text-[11px] text-slate-400">
-                Closed Trades: <strong className="text-blue-300">{group.totalSignals}/30</strong> • Win Rate: <strong className="text-blue-400">{group.winRate}%</strong> • Won: {group.wonSignals} | Lost: {group.lostSignals}
+                Closed Trades: <strong className="text-blue-300">{displayTotalSignals}/30</strong> • Win Rate: <strong className="text-blue-400">{displayWinRate}%</strong> • Won: {displayWonSignals} | Lost: {displayLostSignals}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {group.isVerified ? (
+            {isVipQualified ? (
               <span className="px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/40 text-[10px] font-bold">
                 VIP Monetization Active
               </span>
             ) : (
               <span className="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 text-[10px]">
-                {Math.max(0, 30 - group.totalSignals)} more trades needed
+                {Math.max(0, 30 - displayTotalSignals)} more trades needed
               </span>
             )}
           </div>
         </div>
 
         {/* Free Tier Disclaimer Alert */}
-        {!group.isVerified && (
+        {!isVipQualified && (
           <div className="mt-3 p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center gap-2.5 text-xs text-purple-300 font-mono">
             <ShieldAlert className="w-4 h-4 text-purple-400 shrink-0" />
             <span>ALERT: THESE AREN'T VERIFIED SIGNALS SO TAKE YOUR OWN RISK</span>
@@ -1047,7 +1104,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                             <span>3-Day Member Voting Window Active (Results Hidden)</span>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-xs font-mono text-slate-500 mr-2">Did trade hit:</span>
                             <button
                               onClick={() => handleVote(sig.id, "tp")}
@@ -1069,14 +1126,36 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                             >
                               <ThumbsDown className="w-3.5 h-3.5" /> [ SL ] {hasVoted === "sl" ? "✓" : ""}
                             </button>
+
+                            {isAdmin && (
+                              <button
+                                onClick={() => handleConcludeFeedback(sig.id)}
+                                className="px-3 py-2 rounded-xl bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all ml-1"
+                                title="Conclude voting and certify outcome into Win Rate"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Conclude & Certify
+                              </button>
+                            )}
                           </div>
                         </div>
                       )}
 
                       {isClosed && (
-                        <div className="text-xs font-mono text-slate-400 flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                          <span>Trade feedback concluded & certified. Verified Outcome: <strong className="text-white uppercase">{sig.result}</strong></span>
+                        <div className="w-full flex flex-wrap items-center justify-between gap-3">
+                          <div className="text-xs font-mono text-slate-400 flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                            <span>Trade feedback concluded & certified. Verified Outcome: <strong className="text-white uppercase">{sig.result}</strong></span>
+                          </div>
+
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleConcludeFeedback(sig.id)}
+                              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-mono flex items-center gap-1 transition-colors"
+                              title="Re-certify outcome from recorded member votes"
+                            >
+                              <CheckCircle2 className="w-3 h-3 text-blue-400" /> Recalculate
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -2150,7 +2229,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                     VIP Monthly subscriptions can only be enabled after completing 30 closed trades with an audited 75%–85%+ win rate calculation.
                   </p>
                   <p className="text-[10px] text-slate-400 pt-1">
-                    Current: {group.totalSignals}/30 trades • {group.winRate}% win rate
+                    Current: {displayTotalSignals}/30 trades • {displayWinRate}% win rate
                   </p>
                 </div>
               ) : (
