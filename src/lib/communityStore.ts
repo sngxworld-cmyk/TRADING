@@ -172,10 +172,10 @@ export function getSignalGroups(skipSync = false): SignalGroup[] {
     }
 
     groups.forEach((g) => {
-      const closed = allSignals.filter((s) => s.groupId === g.id && s.status === "closed");
+      const closed = allSignals.filter((s) => s.groupId === g.id && (s.status || "").toLowerCase() === "closed");
       const totalClosed = closed.length;
-      const won = closed.filter((s) => s.result === "tp").length;
-      const lost = closed.filter((s) => s.result === "sl").length;
+      const won = closed.filter((s) => (s.result || "").toLowerCase() === "tp").length;
+      const lost = closed.filter((s) => (s.result || "").toLowerCase() === "sl").length;
       const decisive = won + lost;
       const winRate = decisive > 0 ? parseFloat(((won / decisive) * 100).toFixed(2)) : 0;
       const qualifiesVip = totalClosed >= 30 && winRate >= 75.0;
@@ -195,6 +195,27 @@ export function getSignalGroups(skipSync = false): SignalGroup[] {
           g.isVerified = true;
           g.adminRole = "verified_signal_provider";
         }
+        hasChanges = true;
+      }
+
+      if (!Array.isArray(g.members)) {
+        g.members = g.adminEmail ? [g.adminEmail] : [];
+        hasChanges = true;
+      }
+      if (typeof g.membersCount !== "number" || g.membersCount !== g.members.length) {
+        g.membersCount = g.members.length;
+        hasChanges = true;
+      }
+      if (!Array.isArray(g.pendingMembers)) {
+        g.pendingMembers = [];
+        hasChanges = true;
+      }
+      if (!Array.isArray(g.pendingRequests)) {
+        g.pendingRequests = [];
+        hasChanges = true;
+      }
+      if (typeof g.votingPeriodDays !== "number" || g.votingPeriodDays <= 0) {
+        g.votingPeriodDays = 3;
         hasChanges = true;
       }
     });
@@ -333,6 +354,10 @@ export function createSignalGroup(
     lostSignals: 0,
     winRate: 0,
     createdAt: new Date().toISOString(),
+    votingPeriodDays: 3,
+    requireApproval: false,
+    pendingMembers: [],
+    pendingRequests: [],
   };
 
   const groups = getSignalGroups();
@@ -534,7 +559,218 @@ export function removeMemberFromSignalGroup(
   return { success: true, group };
 }
 
-// Group Admin Update Group Settings (Name, Description, Logo, Chat Mode, Visibility)
+// Member Joins Signal Group (Pending users restricted; Free groups instant; Verified groups support approval gate)
+export function joinSignalGroup(
+  user: UserProfile,
+  groupId: string
+): { success: boolean; error?: string; pendingApproval?: boolean; group?: SignalGroup } {
+  if (!user) return { success: false, error: "You must be logged in to join a signal group." };
+
+  // Strict Rule: New registered pending users cannot join signal groups. Allowed only for approved members who paid fee to Host Admin.
+  if (isPendingUser(user)) {
+    return {
+      success: false,
+      error: "New registered pending users cannot join signal groups. Signal access is only permitted for active members who have completed their registration fee payment to the Host Admin.",
+    };
+  }
+
+  const groups = getSignalGroups();
+  const group = groups.find((g) => g.id === groupId);
+  if (!group) return { success: false, error: "Signal group not found." };
+
+  const userEmail = (user.email || "").trim().toLowerCase();
+  if (!group.members) group.members = [];
+  if (!group.pendingMembers) group.pendingMembers = [];
+  if (!group.pendingRequests) group.pendingRequests = [];
+
+  // If already a member, return success immediately
+  if (group.members.map((e) => e.toLowerCase()).includes(userEmail)) {
+    return { success: true, group };
+  }
+
+  // Approval Gate:
+  // Verified groups (or groups with requireApproval enabled, or paid VIP groups) require Group Admin approval
+  const isApprovalRequired = Boolean(
+    group.requireApproval ||
+    (group.isVerified && group.requireApproval !== false) ||
+    group.isPaid
+  );
+
+  if (isApprovalRequired) {
+    if (!group.pendingMembers.map((e) => e.toLowerCase()).includes(userEmail)) {
+      group.pendingMembers.push(user.email);
+      group.pendingRequests.push({
+        email: user.email,
+        username: user.username,
+        displayName: user.displayName || user.username,
+        photoURL: user.photoURL,
+        requestedAt: new Date().toISOString(),
+      });
+      saveSignalGroups(groups);
+
+      // Sync request to backend
+      fetch(`/api/community/groups/${groupId}/join-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userEmail: user.email,
+          username: user.username,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+        }),
+      }).catch(() => {});
+    }
+
+    return {
+      success: true,
+      pendingApproval: true,
+      error: "Join request submitted! The group administrator must verify your payment before approving your membership.",
+      group,
+    };
+  }
+
+  // Free Signal Group (Instant Join - no approval required)
+  group.members.push(user.email);
+  group.membersCount = group.members.length;
+  group.pendingMembers = group.pendingMembers.filter((e) => e.toLowerCase() !== userEmail);
+  group.pendingRequests = group.pendingRequests.filter((r) => r.email.toLowerCase() !== userEmail);
+
+  saveSignalGroups(groups);
+
+  // Sync to server
+  fetch(`/api/community/groups/${groupId}/join`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userEmail: user.email }),
+  }).catch(() => {});
+
+  // Welcome announcement in group chat
+  const welcomeMsg: GroupChatMessage = {
+    id: `msg_join_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    groupId: group.id,
+    senderId: "usr_sys_join",
+    senderEmail: "system@community.net",
+    senderUsername: "Community System",
+    senderDisplayName: "System",
+    senderRole: "moderator",
+    content: `👋 Welcome @${user.displayName || user.username || user.email.split("@")[0]} to ${group.name}!`,
+    isAnnouncement: true,
+    createdAt: new Date().toISOString(),
+  };
+  const key = `${GROUP_CHAT_STORAGE_PREFIX}${groupId}`;
+  const msgs = getGroupChatMessages(groupId);
+  msgs.push(welcomeMsg);
+  localStorage.setItem(key, JSON.stringify(msgs));
+
+  return { success: true, group };
+}
+
+// Group Admin or Host Approves Join Request for Verified Group
+export function approveJoinRequest(
+  admin: UserProfile,
+  groupId: string,
+  targetEmail: string
+): { success: boolean; error?: string; group?: SignalGroup } {
+  const groups = getSignalGroups();
+  const group = groups.find((g) => g.id === groupId);
+  if (!group) return { success: false, error: "Signal group not found." };
+
+  const adminEmail = (admin.email || "").trim().toLowerCase();
+  const isHost = adminEmail === "sngxworld@gmail.com" || admin.role === "admin";
+  const isGroupAdmin = (group.adminEmail || "").toLowerCase() === adminEmail;
+  if (!isHost && !isGroupAdmin) {
+    return { success: false, error: "Only the group administrator or host can approve member requests." };
+  }
+
+  const cleanTarget = targetEmail.trim().toLowerCase();
+  if (!group.members) group.members = [];
+  if (!group.members.map((e) => e.toLowerCase()).includes(cleanTarget)) {
+    group.members.push(targetEmail.trim());
+    group.membersCount = group.members.length;
+  }
+
+  if (group.pendingMembers) {
+    group.pendingMembers = group.pendingMembers.filter((e) => e.toLowerCase() !== cleanTarget);
+  }
+  if (group.pendingRequests) {
+    group.pendingRequests = group.pendingRequests.filter((r) => r.email.toLowerCase() !== cleanTarget);
+  }
+
+  saveSignalGroups(groups);
+
+  fetch(`/api/community/groups/${groupId}/requests/${encodeURIComponent(targetEmail)}/approve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ adminEmail: admin.email }),
+  }).catch(() => {});
+
+  return { success: true, group };
+}
+
+// Group Admin or Host Rejects Join Request
+export function rejectJoinRequest(
+  admin: UserProfile,
+  groupId: string,
+  targetEmail: string
+): { success: boolean; error?: string; group?: SignalGroup } {
+  const groups = getSignalGroups();
+  const group = groups.find((g) => g.id === groupId);
+  if (!group) return { success: false, error: "Signal group not found." };
+
+  const adminEmail = (admin.email || "").trim().toLowerCase();
+  const isHost = adminEmail === "sngxworld@gmail.com" || admin.role === "admin";
+  const isGroupAdmin = (group.adminEmail || "").toLowerCase() === adminEmail;
+  if (!isHost && !isGroupAdmin) {
+    return { success: false, error: "Only the group administrator or host can reject member requests." };
+  }
+
+  const cleanTarget = targetEmail.trim().toLowerCase();
+  if (group.pendingMembers) {
+    group.pendingMembers = group.pendingMembers.filter((e) => e.toLowerCase() !== cleanTarget);
+  }
+  if (group.pendingRequests) {
+    group.pendingRequests = group.pendingRequests.filter((r) => r.email.toLowerCase() !== cleanTarget);
+  }
+
+  saveSignalGroups(groups);
+
+  fetch(`/api/community/groups/${groupId}/requests/${encodeURIComponent(targetEmail)}/reject`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ adminEmail: admin.email }),
+  }).catch(() => {});
+
+  return { success: true, group };
+}
+
+// Member Leaves Signal Group
+export function leaveSignalGroup(
+  user: UserProfile,
+  groupId: string
+): { success: boolean; error?: string; group?: SignalGroup } {
+  const groups = getSignalGroups();
+  const group = groups.find((g) => g.id === groupId);
+  if (!group) return { success: false, error: "Signal group not found." };
+
+  const userEmail = (user.email || "").trim().toLowerCase();
+  if ((group.adminEmail || "").toLowerCase() === userEmail) {
+    return { success: false, error: "The group creator cannot leave their own group." };
+  }
+
+  group.members = (group.members || []).filter((m) => m.toLowerCase() !== userEmail);
+  group.membersCount = group.members.length;
+  saveSignalGroups(groups);
+
+  fetch(`/api/community/groups/${groupId}/leave`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userEmail: user.email }),
+  }).catch(() => {});
+
+  return { success: true, group };
+}
+
+// Group Admin Update Group Settings (Name, Description, Logo, Chat Mode, Visibility, Voting Period, Approval Gate)
 export function updateSignalGroupDetails(
   admin: UserProfile,
   groupId: string,
@@ -544,6 +780,8 @@ export function updateSignalGroupDetails(
     logoUrl?: string;
     adminOnlyChat?: boolean;
     hideMembers?: boolean;
+    votingPeriodDays?: number;
+    requireApproval?: boolean;
   }
 ): { success: boolean; error?: string; group?: SignalGroup } {
   const groups = getSignalGroups();
@@ -574,6 +812,12 @@ export function updateSignalGroupDetails(
   }
   if (updates.hideMembers !== undefined) {
     group.hideMembers = updates.hideMembers;
+  }
+  if (updates.votingPeriodDays !== undefined && updates.votingPeriodDays > 0) {
+    group.votingPeriodDays = updates.votingPeriodDays;
+  }
+  if (updates.requireApproval !== undefined) {
+    group.requireApproval = updates.requireApproval;
   }
 
   saveSignalGroups(groups);
@@ -658,9 +902,13 @@ export function getSignals(): SignalItem[] {
       sig.closedAt = new Date().toISOString();
       if (totalVotes === 0) {
         sig.result = "inconclusive";
+        sig.tpVotesCount = 0;
+        sig.slVotesCount = 0;
       } else {
-        const tpVotes = Object.values(votes).filter((v) => v === "tp").length;
-        const slVotes = Object.values(votes).filter((v) => v === "sl").length;
+        const tpVotes = Object.values(votes).filter((v) => (v as string || "").toLowerCase() === "tp").length;
+        const slVotes = Object.values(votes).filter((v) => (v as string || "").toLowerCase() === "sl").length;
+        sig.tpVotesCount = tpVotes;
+        sig.slVotesCount = slVotes;
         const tpPercent = (tpVotes / totalVotes) * 100;
         const slPercent = (slVotes / totalVotes) * 100;
         if (tpPercent >= 75 || tpVotes > slVotes) {
@@ -782,10 +1030,11 @@ export function postSignal(
   return { success: true, signal: newSignal };
 }
 
-// Slide 7 & 10: Finish Trade -> Start 3-day feedback voting window
+// Slide 7 & 10: Finish Trade -> Start feedback voting window (Configurable duration, default 3 days)
 export function finishTradeStartFeedback(
   admin: UserProfile,
-  signalId: string
+  signalId: string,
+  customDurationDays?: number
 ): { success: boolean; error?: string; signal?: SignalItem } {
   const allSignals = getSignals();
   const sig = allSignals.find((s) => s.id === signalId);
@@ -795,9 +1044,13 @@ export function finishTradeStartFeedback(
     return { success: false, error: "Only the group admin can mark this trade as finished." };
   }
 
-  // 3-day feedback window
+  const groups = getSignalGroups();
+  const group = groups.find((g) => g.id === sig.groupId);
+  const durationDays = customDurationDays || group?.votingPeriodDays || 3;
+
+  // Feedback voting window
   sig.status = "voting";
-  sig.votingEndsAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+  sig.votingEndsAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
   sig.votes = sig.votes || {};
 
   saveSignals(allSignals);
@@ -806,6 +1059,7 @@ export function finishTradeStartFeedback(
   fetch(`/api/community/signals/${signalId}/finish`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ durationDays }),
   }).catch(() => {});
 
   return { success: true, signal: sig };
@@ -829,7 +1083,7 @@ export function castSignalVote(
     // Process results if time has elapsed
     evaluateSignalResults(sig);
     saveSignals(allSignals);
-    return { success: false, error: "The 3-day feedback voting window for this trade has concluded." };
+    return { success: false, error: "The feedback voting window for this trade has concluded." };
   }
 
   if (!sig.votes) sig.votes = {};
@@ -837,8 +1091,8 @@ export function castSignalVote(
 
   // Recount votes
   const allVotes = Object.values(sig.votes);
-  sig.tpVotesCount = allVotes.filter((v) => v === "tp").length;
-  sig.slVotesCount = allVotes.filter((v) => v === "sl").length;
+  sig.tpVotesCount = allVotes.filter((v) => (v as string || "").toLowerCase() === "tp").length;
+  sig.slVotesCount = allVotes.filter((v) => (v as string || "").toLowerCase() === "sl").length;
 
   saveSignals(allSignals);
 
@@ -852,19 +1106,22 @@ export function castSignalVote(
   return { success: true };
 }
 
-// Slide 10: Automated Win Rate & Voting Calculation Engine
+// Slide 10: Automated Win Rate & Voting Calculation Engine (Strict Member Votes)
 export function evaluateSignalResults(sig: SignalItem): "tp" | "sl" | "inconclusive" {
   const votes = sig.votes || {};
   const totalVotes = Object.keys(votes).length;
 
   sig.status = "closed";
-  sig.closedAt = new Date().toISOString();
+  sig.closedAt = sig.closedAt || new Date().toISOString();
+
+  const tpVotes = Object.values(votes).filter((v) => (v as string || "").toLowerCase() === "tp").length;
+  const slVotes = Object.values(votes).filter((v) => (v as string || "").toLowerCase() === "sl").length;
+  sig.tpVotesCount = tpVotes;
+  sig.slVotesCount = slVotes;
 
   if (totalVotes === 0) {
     sig.result = "inconclusive";
   } else {
-    const tpVotes = Object.values(votes).filter((v) => v === "tp").length;
-    const slVotes = Object.values(votes).filter((v) => v === "sl").length;
     const tpPercent = (tpVotes / totalVotes) * 100;
     const slPercent = (slVotes / totalVotes) * 100;
 
@@ -893,11 +1150,10 @@ export function evaluateSignalResults(sig: SignalItem): "tp" | "sl" | "inconclus
   return sig.result;
 }
 
-// Conclude feedback and certify outcome immediately (e.g. by Group Admin / Host or quorum)
+// Conclude feedback and certify outcome strictly based on member votes (No manual direct override)
 export function concludeSignalFeedback(
   admin: UserProfile,
-  signalId: string,
-  forcedOutcome?: "tp" | "sl"
+  signalId: string
 ): { success: boolean; error?: string; signal?: SignalItem; group?: SignalGroup } {
   const allSignals = getSignals();
   const sig = allSignals.find((s) => s.id === signalId);
@@ -911,30 +1167,8 @@ export function concludeSignalFeedback(
     return { success: false, error: "Only the group admin or host can conclude feedback." };
   }
 
-  sig.status = "closed";
-  sig.closedAt = new Date().toISOString();
-
-  if (forcedOutcome) {
-    sig.result = forcedOutcome;
-  } else {
-    const votes = sig.votes || {};
-    const totalVotes = Object.keys(votes).length;
-    if (totalVotes === 0) {
-      sig.result = "inconclusive";
-    } else {
-      const tpVotes = Object.values(votes).filter((v) => v === "tp").length;
-      const slVotes = Object.values(votes).filter((v) => v === "sl").length;
-      const tpPercent = (tpVotes / totalVotes) * 100;
-      const slPercent = (slVotes / totalVotes) * 100;
-      if (tpPercent >= 75 || tpVotes > slVotes) {
-        sig.result = "tp";
-      } else if (slPercent >= 75 || slVotes > tpVotes) {
-        sig.result = "sl";
-      } else {
-        sig.result = "inconclusive";
-      }
-    }
-  }
+  // Strictly evaluate member votes
+  evaluateSignalResults(sig);
 
   const idx = allSignals.findIndex((s) => s.id === sig.id);
   if (idx >= 0) {
@@ -948,7 +1182,7 @@ export function concludeSignalFeedback(
   fetch(`/api/community/signals/${signalId}/conclude`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ result: sig.result, status: "closed", adminEmail: admin.email }),
+    body: JSON.stringify({ signal: sig, result: sig.result, status: "closed", adminEmail: admin.email }),
   }).catch(() => {});
 
   return { success: true, signal: sig, group: updatedGroup };
@@ -956,11 +1190,11 @@ export function concludeSignalFeedback(
 
 export function recalculateGroupStats(groupId: string, overrideSignals?: SignalItem[]): SignalGroup | undefined {
   const allSignals = overrideSignals || getSignals();
-  const groupSignals = allSignals.filter((s) => s.groupId === groupId && s.status === "closed");
+  const groupSignals = allSignals.filter((s) => s.groupId === groupId && (s.status || "").toLowerCase() === "closed");
 
   const totalClosed = groupSignals.length;
-  const won = groupSignals.filter((s) => s.result === "tp").length;
-  const lost = groupSignals.filter((s) => s.result === "sl").length;
+  const won = groupSignals.filter((s) => (s.result || "").toLowerCase() === "tp").length;
+  const lost = groupSignals.filter((s) => (s.result || "").toLowerCase() === "sl").length;
   const decisive = won + lost;
   const winRate = decisive > 0 ? parseFloat(((won / decisive) * 100).toFixed(2)) : 0;
 
@@ -1409,10 +1643,10 @@ export async function initCommunitySync(): Promise<void> {
 
       // Cross-audit and recalculate group statistics directly against merged signals
       mergedGroups.forEach((g) => {
-        const closed = mergedSignals.filter((s) => s.groupId === g.id && s.status === "closed");
+        const closed = mergedSignals.filter((s) => s.groupId === g.id && (s.status || "").toLowerCase() === "closed");
         const totalClosed = closed.length;
-        const won = closed.filter((s) => s.result === "tp").length;
-        const lost = closed.filter((s) => s.result === "sl").length;
+        const won = closed.filter((s) => (s.result || "").toLowerCase() === "tp").length;
+        const lost = closed.filter((s) => (s.result || "").toLowerCase() === "sl").length;
         const decisive = won + lost;
         const winRate = decisive > 0 ? parseFloat(((won / decisive) * 100).toFixed(2)) : 0;
         const qualifiesVip = totalClosed >= 30 && winRate >= 75.0;

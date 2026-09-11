@@ -140,6 +140,16 @@ export interface SignalGroup {
   lostSignals: number;
   winRate: number; // Percentage (e.g. 86.67)
   createdAt: string;
+  votingPeriodDays?: number; // Configurable voting feedback duration in days (default: 3)
+  requireApproval?: boolean; // Approval gate toggle for verified/paid groups
+  pendingMembers?: string[]; // List of user emails awaiting group admin approval
+  pendingRequests?: {
+    email: string;
+    username?: string;
+    displayName?: string;
+    photoURL?: string;
+    requestedAt: string;
+  }[];
 }
 
 export interface DirectMessage {

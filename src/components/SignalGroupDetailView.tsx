@@ -21,6 +21,10 @@ import {
   addMemberToSignalGroup,
   removeMemberFromSignalGroup,
   updateSignalGroupDetails,
+  joinSignalGroup,
+  approveJoinRequest,
+  rejectJoinRequest,
+  leaveSignalGroup,
 } from "../lib/communityStore";
 import { downloadImageToLocal } from "../utils/fileUtils";
 import {
@@ -106,8 +110,15 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
   const [editGroupLogo, setEditGroupLogo] = useState(group.logoUrl || "");
   const [editAdminOnlyChat, setEditAdminOnlyChat] = useState(group.adminOnlyChat);
   const [editHideMembers, setEditHideMembers] = useState(group.hideMembers || false);
+  const [editVotingPeriodDays, setEditVotingPeriodDays] = useState(group.votingPeriodDays || 3);
+  const [editRequireApproval, setEditRequireApproval] = useState(group.requireApproval ?? false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
+
+  // Join Workflow State
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const [joinSuccessMsg, setJoinSuccessMsg] = useState<string | null>(null);
 
   // Add Member State
   const [newMemberInput, setNewMemberInput] = useState("");
@@ -160,12 +171,15 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
     currentUser.email.toLowerCase() === "sngxworld@gmail.com" || currentUser.role === "admin";
   const isGroupAdmin = group.adminEmail.toLowerCase() === currentUser.email.toLowerCase();
   const isAdmin = isGroupAdmin || isHost;
+  const userCleanEmail = (currentUser.email || "").trim().toLowerCase();
+  const isMember = isAdmin || (group.members || []).map((m) => m.toLowerCase()).includes(userCleanEmail);
+  const isPendingApproval = (group.pendingMembers || []).map((m) => m.toLowerCase()).includes(userCleanEmail);
 
   // Live computed statistics directly from recorded trade signals of this group
-  const closedSignals = signals.filter((s) => s.status === "closed");
+  const closedSignals = signals.filter((s) => (s.status || "").toLowerCase() === "closed");
   const liveTotalClosed = closedSignals.length;
-  const liveWonSignals = closedSignals.filter((s) => s.result === "tp").length;
-  const liveLostSignals = closedSignals.filter((s) => s.result === "sl").length;
+  const liveWonSignals = closedSignals.filter((s) => (s.result || "").toLowerCase() === "tp").length;
+  const liveLostSignals = closedSignals.filter((s) => (s.result || "").toLowerCase() === "sl").length;
   const liveDecisive = liveWonSignals + liveLostSignals;
   const liveWinRate = liveDecisive > 0 ? parseFloat(((liveWonSignals / liveDecisive) * 100).toFixed(2)) : 0;
 
@@ -279,7 +293,8 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
   const handleConcludeFeedback = (sigId: string) => {
     const res = concludeSignalFeedback(currentUser, sigId);
     if (res.success) {
-      setVoteMessage(`Feedback concluded! Certified outcome: ${res.signal?.result?.toUpperCase() || "RESOLVED"}`);
+      const outcome = (res.signal?.result || "RESOLVED").toUpperCase();
+      setVoteMessage(`Feedback concluded! Certified outcome from member votes: ${outcome}`);
       setTimeout(() => setVoteMessage(null), 3500);
       refreshSignals();
       if (res.group) {
@@ -305,8 +320,10 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
   };
 
   const handleFinishTrade = (sigId: string) => {
-    const res = finishTradeStartFeedback(currentUser, sigId);
+    const res = finishTradeStartFeedback(currentUser, sigId, group.votingPeriodDays || 3);
     if (res.success) {
+      setVoteMessage(`Trade finished! Feedback voting window (${group.votingPeriodDays || 3} days) started.`);
+      setTimeout(() => setVoteMessage(null), 3500);
       refreshSignals();
     } else {
       alert(res.error || "Failed to initiate trade feedback.");
@@ -316,11 +333,84 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
   const handleVote = (sigId: string, vote: "tp" | "sl") => {
     const res = castSignalVote(currentUser, sigId, vote);
     if (res.success) {
-      setVoteMessage(`Vote recorded: ${vote.toUpperCase()}! Results remain hidden until 3-day window ends.`);
+      setVoteMessage(`Vote recorded: ${vote.toUpperCase()}! Live results remain hidden until voting ends.`);
       setTimeout(() => setVoteMessage(null), 3500);
       refreshSignals();
     } else {
       alert(res.error || "Voting failed.");
+    }
+  };
+
+  // Join Signal Group Workflow (Pending users restricted; Free groups instant; Verified groups approval gate)
+  const handleJoinGroup = () => {
+    setJoinError(null);
+    setJoinSuccessMsg(null);
+
+    if (isPendingUser(currentUser)) {
+      setJoinError("New registered pending users cannot join signal groups. Signal access is reserved for active members who have completed their registration fee payment to the Host Admin (@sngxworld@gmail.com).");
+      return;
+    }
+
+    setJoinLoading(true);
+    const res = joinSignalGroup(currentUser, group.id);
+    setJoinLoading(false);
+
+    if (res.success) {
+      if (res.group) {
+        setGroup(res.group);
+      }
+      if (res.pendingApproval) {
+        setJoinSuccessMsg("Join request submitted! The group administrator must verify your payment before approving your membership.");
+      } else {
+        setJoinSuccessMsg(`Welcome! You are now a member of ${group.name}. Trade setups are unlocked!`);
+        refreshSignals();
+        refreshChat();
+      }
+      setTimeout(() => setJoinSuccessMsg(null), 6000);
+    } else {
+      setJoinError(res.error || "Failed to join group.");
+      setTimeout(() => setJoinError(null), 6000);
+    }
+  };
+
+  // Member Leaves Signal Group
+  const handleLeaveGroup = () => {
+    if (isAdmin) {
+      alert("The group administrator cannot leave their own group.");
+      return;
+    }
+
+    const res = leaveSignalGroup(currentUser, group.id);
+    if (res.success && res.group) {
+      setGroup(res.group);
+      setJoinSuccessMsg("You have left the signal group.");
+      setTimeout(() => setJoinSuccessMsg(null), 4000);
+    } else {
+      alert(res.error || "Failed to leave group.");
+    }
+  };
+
+  // Group Admin Approves Join Request
+  const handleApproveRequest = (targetEmail: string) => {
+    const res = approveJoinRequest(currentUser, group.id, targetEmail);
+    if (res.success && res.group) {
+      setGroup(res.group);
+      setChatSuccessToast(`Approved member ${targetEmail}!`);
+      setTimeout(() => setChatSuccessToast(null), 3500);
+    } else {
+      alert(res.error || "Failed to approve request.");
+    }
+  };
+
+  // Group Admin Rejects Join Request
+  const handleRejectRequest = (targetEmail: string) => {
+    const res = rejectJoinRequest(currentUser, group.id, targetEmail);
+    if (res.success && res.group) {
+      setGroup(res.group);
+      setChatSuccessToast(`Rejected join request from ${targetEmail}.`);
+      setTimeout(() => setChatSuccessToast(null), 3500);
+    } else {
+      alert(res.error || "Failed to reject request.");
     }
   };
 
@@ -592,6 +682,8 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
       logoUrl: editGroupLogo,
       adminOnlyChat: editAdminOnlyChat,
       hideMembers: editHideMembers,
+      votingPeriodDays: Math.max(1, Number(editVotingPeriodDays) || 3),
+      requireApproval: editRequireApproval,
     });
 
     if (res.success && res.group) {
@@ -746,6 +838,8 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                   setEditGroupLogo(group.logoUrl || "");
                   setEditAdminOnlyChat(group.adminOnlyChat);
                   setEditHideMembers(group.hideMembers || false);
+                  setEditVotingPeriodDays(group.votingPeriodDays || 3);
+                  setEditRequireApproval(group.requireApproval ?? false);
                   setIsGroupSettingsOpen(true);
                 }}
                 className="px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-white text-xs font-mono flex items-center gap-1.5 transition-colors"
@@ -797,8 +891,61 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 <Plus className="w-4 h-4" /> Give a Signal
               </button>
             )}
+
+            {/* Non-Admin Member / Visitor Join Controls */}
+            {!isAdmin && (
+              <div className="flex items-center gap-2">
+                {isMember ? (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold">
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Member</span>
+                    <button
+                      type="button"
+                      onClick={handleLeaveGroup}
+                      className="text-[10px] text-slate-400 hover:text-rose-400 underline font-normal ml-1"
+                      title="Leave group"
+                    >
+                      Leave
+                    </button>
+                  </div>
+                ) : isPendingApproval ? (
+                  <div className="px-3 py-1.5 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs font-mono font-bold flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-amber-400 animate-spin" />
+                    <span>Pending Approval</span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleJoinGroup}
+                    disabled={joinLoading}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 transition-all"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    {joinLoading
+                      ? "Joining..."
+                      : (group.isVerified && group.requireApproval !== false)
+                      ? "Request to Join"
+                      : "Join Group"}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Join Error / Success Banners */}
+        {joinSuccessMsg && (
+          <div className="mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono flex items-center gap-2 animate-in fade-in">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{joinSuccessMsg}</span>
+          </div>
+        )}
+        {joinError && (
+          <div className="mt-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono flex items-center gap-2 animate-in fade-in">
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>{joinError}</span>
+          </div>
+        )}
 
         {/* Group Description */}
         <p className="mt-4 text-xs text-slate-300 bg-slate-950/60 border border-slate-800/80 rounded-xl p-3.5 leading-relaxed">
@@ -973,7 +1120,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                       )}
                       {sig.status === "voting" && (
                         <span className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-mono font-bold flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> 3-DAY FEEDBACK VOTING
+                          <Clock className="w-3 h-3 text-amber-400 animate-pulse" /> {group.votingPeriodDays || 3}-DAY FEEDBACK VOTING
                         </span>
                       )}
                       {sig.status === "closed" && (
@@ -1089,26 +1236,36 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                     {/* Signal Footer Actions: Finish Trade & Voting */}
                     <div className="p-4 bg-slate-950/60 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
                       {sig.status === "open" && isAdmin && (
-                        <button
-                          onClick={() => handleFinishTrade(sig.id)}
-                          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs uppercase tracking-wider font-mono flex items-center justify-center gap-2 shadow-lg shadow-amber-600/20 transition-all"
-                        >
-                          <Clock className="w-4 h-4" /> Trade Finish Start Feedback (3 Days)
-                        </button>
+                        <div className="flex items-center gap-2 flex-wrap w-full">
+                          <button
+                            onClick={() => handleFinishTrade(sig.id)}
+                            className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs uppercase tracking-wider font-mono flex items-center gap-1.5 shadow-lg shadow-amber-600/20 transition-all"
+                            title={`Open ${group.votingPeriodDays || 3}-day member feedback voting window`}
+                          >
+                            <Clock className="w-3.5 h-3.5" /> Finish Trade & Start Feedback ({group.votingPeriodDays || 3} Days)
+                          </button>
+                          <button
+                            onClick={() => handleConcludeFeedback(sig.id)}
+                            className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs uppercase tracking-wider font-mono flex items-center gap-1.5 shadow-lg shadow-blue-600/20 transition-all"
+                            title="Conclude trade and certify outcome from member votes"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Conclude & Certify Votes
+                          </button>
+                        </div>
                       )}
 
                       {isVotingActive && (
                         <div className="w-full flex flex-wrap items-center justify-between gap-3">
                           <div className="text-xs font-mono text-slate-400 flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-amber-400" />
-                            <span>3-Day Member Voting Window Active (Results Hidden)</span>
+                            <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
+                            <span>{group.votingPeriodDays || 3}-Day Feedback Window Active (Results Hidden until conclusion)</span>
                           </div>
 
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-mono text-slate-500 mr-2">Did trade hit:</span>
+                            <span className="text-xs font-mono text-slate-500 mr-1">Your Vote:</span>
                             <button
                               onClick={() => handleVote(sig.id, "tp")}
-                              className={`px-4 py-2 rounded-xl text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all ${
+                              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all ${
                                 hasVoted === "tp"
                                   ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30"
                                   : "bg-slate-800 hover:bg-emerald-950/60 text-emerald-400 border border-emerald-500/30"
@@ -1118,7 +1275,7 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                             </button>
                             <button
                               onClick={() => handleVote(sig.id, "sl")}
-                              className={`px-4 py-2 rounded-xl text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all ${
+                              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all ${
                                 hasVoted === "sl"
                                   ? "bg-rose-600 text-white shadow-lg shadow-rose-600/30"
                                   : "bg-slate-800 hover:bg-rose-950/60 text-rose-400 border border-rose-500/30"
@@ -1130,10 +1287,10 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                             {isAdmin && (
                               <button
                                 onClick={() => handleConcludeFeedback(sig.id)}
-                                className="px-3 py-2 rounded-xl bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1.5 transition-all ml-1"
-                                title="Conclude voting and certify outcome into Win Rate"
+                                className="px-3 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-bold font-mono uppercase tracking-wider flex items-center gap-1 ml-1 transition-all"
+                                title="Certify outcome based on member votes"
                               >
-                                <CheckCircle2 className="w-3.5 h-3.5" /> Conclude & Certify
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Certify From Member Votes
                               </button>
                             )}
                           </div>
@@ -1144,16 +1301,24 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                         <div className="w-full flex flex-wrap items-center justify-between gap-3">
                           <div className="text-xs font-mono text-slate-400 flex items-center gap-2">
                             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                            <span>Trade feedback concluded & certified. Verified Outcome: <strong className="text-white uppercase">{sig.result}</strong></span>
+                            <span>
+                              Certified Outcome:{" "}
+                              <strong className={`uppercase ${sig.result === "tp" ? "text-emerald-400 font-bold" : sig.result === "sl" ? "text-rose-400 font-bold" : "text-amber-400"}`}>
+                                {sig.result === "tp" ? "HIT TP (WIN)" : sig.result === "sl" ? "HIT SL (LOSS)" : (sig.result || "INCONCLUSIVE")}
+                              </strong>
+                              <span className="text-[11px] text-slate-500 ml-2">
+                                ({sig.tpVotesCount ?? 0} TP Votes • {sig.slVotesCount ?? 0} SL Votes)
+                              </span>
+                            </span>
                           </div>
 
                           {isAdmin && (
                             <button
                               onClick={() => handleConcludeFeedback(sig.id)}
                               className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[11px] font-mono flex items-center gap-1 transition-colors"
-                              title="Re-certify outcome from recorded member votes"
+                              title="Re-verify outcome from recorded member votes"
                             >
-                              <CheckCircle2 className="w-3 h-3 text-blue-400" /> Recalculate
+                              <CheckCircle2 className="w-3 h-3 text-blue-400" /> Re-verify Votes
                             </button>
                           )}
                         </div>
@@ -1681,6 +1846,66 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
 
           {/* Members List */}
           <div className="space-y-3">
+            {/* Pending Member Join Requests Queue (Admin Only) */}
+            {isAdmin && ((group.pendingRequests && group.pendingRequests.length > 0) || (group.pendingMembers && group.pendingMembers.length > 0)) && (
+              <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/40 space-y-3 animate-in fade-in mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-amber-300 font-mono font-bold text-xs">
+                    <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
+                    <span>Pending Join Requests ({group.pendingRequests?.length || group.pendingMembers?.length || 0})</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-amber-400/80 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-500/30">
+                    Verify Fee / Subscription Payment
+                  </span>
+                </div>
+
+                <div className="divide-y divide-amber-900/40 border border-amber-500/20 rounded-xl overflow-hidden bg-slate-950/70">
+                  {(group.pendingRequests && group.pendingRequests.length > 0
+                    ? group.pendingRequests
+                    : (group.pendingMembers || []).map((email) => ({
+                        email,
+                        username: email.split("@")[0],
+                        displayName: email.split("@")[0],
+                        photoURL: "",
+                        requestedAt: new Date().toISOString(),
+                      }))
+                  ).map((req) => (
+                    <div key={req.email} className="p-3 flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-amber-950/50 border border-amber-500/30 flex items-center justify-center font-bold text-amber-300 text-xs">
+                          {req.email.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-200">{req.displayName || req.username || req.email.split("@")[0]}</span>
+                            <span className="text-[10px] text-amber-400 bg-amber-950/60 px-1.5 py-0.2 rounded border border-amber-500/30">Awaiting Approval</span>
+                          </div>
+                          <span className="text-[11px] text-slate-400">{req.email}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleApproveRequest(req.email)}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/30 transition-all"
+                        >
+                          <Check className="w-3.5 h-3.5" /> Approve
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRejectRequest(req.email)}
+                          className="px-3 py-1.5 rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-300 border border-rose-800/60 text-xs font-bold flex items-center gap-1.5 transition-all"
+                        >
+                          <X className="w-3.5 h-3.5" /> Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider font-mono flex items-center gap-2">
                 <span>Group Participants ({group.members.length})</span>
@@ -2162,6 +2387,50 @@ export const SignalGroupDetailView: React.FC<SignalGroupDetailViewProps> = ({
                 <p className="text-[10px] text-slate-500">
                   {group.isPaid ? `Active VIP Price: $${group.priceUsd}/month` : "Currently Free Community Group"}
                 </p>
+              </div>
+
+              {/* POINT 5: Feedback Voting Window & Member Approval Gate */}
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                <div className="text-xs font-bold text-blue-300 uppercase tracking-wider">
+                  Point 5: Voting Window & Access Approval
+                </div>
+
+                <div>
+                  <label className="block text-[11px] text-slate-300 mb-1">
+                    Feedback Voting Period (Days)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={editVotingPeriodDays}
+                      onChange={(e) => setEditVotingPeriodDays(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                      className="w-24 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:border-blue-500 focus:outline-none font-mono"
+                    />
+                    <span className="text-[11px] text-slate-400">
+                      Days of community voting after trade finishes (default: 3)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-200 block">Require Approval to Join</span>
+                    <span className="text-[10px] text-slate-500 block">
+                      Admin must approve applicant requests before granting signal access
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditRequireApproval(!editRequireApproval)}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      editRequireApproval ? "bg-amber-600 text-white" : "bg-slate-800 text-slate-400"
+                    }`}
+                  >
+                    {editRequireApproval ? "APPROVAL REQUIRED" : "OPEN JOIN"}
+                  </button>
+                </div>
               </div>
 
               <div className="flex gap-2.5 pt-2">

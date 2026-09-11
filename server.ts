@@ -2840,6 +2840,166 @@ app.use((req, res, next) => {
     return res.json({ success: true, count: communitySignalGroups.length });
   });
 
+  // Signal Groups: Member Joins Group (Pending user check; Instant for free; Approval queue for verified)
+  app.post("/api/community/groups/:groupId/join", (req, res) => {
+    const { groupId } = req.params;
+    const { userEmail } = req.body;
+    if (!userEmail) return res.status(400).json({ error: "User email is required." });
+
+    const currentDb = getDB();
+    const cleanEmail = userEmail.trim().toLowerCase();
+
+    // Check if user is pending
+    const userRecord = (currentDb.users || []).find((u: any) => (u.email || "").toLowerCase() === cleanEmail);
+    const isPending = userRecord && (userRecord.status === "pending" || userRecord.platformRole === "pending_user") && cleanEmail !== "sngxworld@gmail.com";
+    if (isPending) {
+      return res.status(403).json({
+        error: "New registered pending users cannot join signal groups. Signal access is only permitted for active members who have completed their registration fee payment to the Host Admin.",
+      });
+    }
+
+    const groups = currentDb.communitySignalGroups || communitySignalGroups || [];
+    const group = groups.find((g: any) => g.id === groupId);
+    if (!group) return res.status(404).json({ error: "Signal group not found." });
+
+    if (!Array.isArray(group.members)) group.members = [];
+    if (!Array.isArray(group.pendingMembers)) group.pendingMembers = [];
+    if (!Array.isArray(group.pendingRequests)) group.pendingRequests = [];
+
+    if (!group.members.map((m: string) => m.toLowerCase()).includes(cleanEmail)) {
+      group.members.push(userEmail);
+      group.membersCount = group.members.length;
+    }
+    group.pendingMembers = group.pendingMembers.filter((m: string) => m.toLowerCase() !== cleanEmail);
+    group.pendingRequests = group.pendingRequests.filter((r: any) => (r.email || "").toLowerCase() !== cleanEmail);
+
+    communitySignalGroups = groups;
+    currentDb.communitySignalGroups = groups;
+    saveDB(currentDb);
+
+    return res.json({ success: true, group });
+  });
+
+  // Signal Groups: Submit Join Request (For verified or approval-gated groups)
+  app.post("/api/community/groups/:groupId/join-request", (req, res) => {
+    const { groupId } = req.params;
+    const { userEmail, username, displayName, photoURL } = req.body;
+    if (!userEmail) return res.status(400).json({ error: "User email is required." });
+
+    const currentDb = getDB();
+    const cleanEmail = userEmail.trim().toLowerCase();
+
+    const userRecord = (currentDb.users || []).find((u: any) => (u.email || "").toLowerCase() === cleanEmail);
+    const isPending = userRecord && (userRecord.status === "pending" || userRecord.platformRole === "pending_user") && cleanEmail !== "sngxworld@gmail.com";
+    if (isPending) {
+      return res.status(403).json({
+        error: "New registered pending users cannot join signal groups. Signal access is only permitted for active members who have completed their registration fee payment to the Host Admin.",
+      });
+    }
+
+    const groups = currentDb.communitySignalGroups || communitySignalGroups || [];
+    const group = groups.find((g: any) => g.id === groupId);
+    if (!group) return res.status(404).json({ error: "Signal group not found." });
+
+    if (!Array.isArray(group.pendingMembers)) group.pendingMembers = [];
+    if (!Array.isArray(group.pendingRequests)) group.pendingRequests = [];
+
+    if (!group.pendingMembers.map((m: string) => m.toLowerCase()).includes(cleanEmail)) {
+      group.pendingMembers.push(userEmail);
+      group.pendingRequests.push({
+        email: userEmail,
+        username: username || cleanEmail.split("@")[0],
+        displayName: displayName || username || cleanEmail.split("@")[0],
+        photoURL: photoURL || "",
+        requestedAt: new Date().toISOString(),
+      });
+    }
+
+    communitySignalGroups = groups;
+    currentDb.communitySignalGroups = groups;
+    saveDB(currentDb);
+
+    return res.json({ success: true, group });
+  });
+
+  // Signal Groups: Group Admin Approves Join Request
+  app.post("/api/community/groups/:groupId/requests/:targetEmail/approve", (req, res) => {
+    const { groupId, targetEmail } = req.params;
+    const currentDb = getDB();
+    const cleanEmail = decodeURIComponent(targetEmail).trim().toLowerCase();
+
+    const groups = currentDb.communitySignalGroups || communitySignalGroups || [];
+    const group = groups.find((g: any) => g.id === groupId);
+    if (!group) return res.status(404).json({ error: "Signal group not found." });
+
+    if (!Array.isArray(group.members)) group.members = [];
+    if (!Array.isArray(group.pendingMembers)) group.pendingMembers = [];
+    if (!Array.isArray(group.pendingRequests)) group.pendingRequests = [];
+
+    if (!group.members.map((m: string) => m.toLowerCase()).includes(cleanEmail)) {
+      group.members.push(cleanEmail);
+      group.membersCount = group.members.length;
+    }
+
+    group.pendingMembers = group.pendingMembers.filter((m: string) => m.toLowerCase() !== cleanEmail);
+    group.pendingRequests = group.pendingRequests.filter((r: any) => (r.email || "").toLowerCase() !== cleanEmail);
+
+    communitySignalGroups = groups;
+    currentDb.communitySignalGroups = groups;
+    saveDB(currentDb);
+
+    return res.json({ success: true, group });
+  });
+
+  // Signal Groups: Group Admin Rejects Join Request
+  app.post("/api/community/groups/:groupId/requests/:targetEmail/reject", (req, res) => {
+    const { groupId, targetEmail } = req.params;
+    const currentDb = getDB();
+    const cleanEmail = decodeURIComponent(targetEmail).trim().toLowerCase();
+
+    const groups = currentDb.communitySignalGroups || communitySignalGroups || [];
+    const group = groups.find((g: any) => g.id === groupId);
+    if (!group) return res.status(404).json({ error: "Signal group not found." });
+
+    if (Array.isArray(group.pendingMembers)) {
+      group.pendingMembers = group.pendingMembers.filter((m: string) => m.toLowerCase() !== cleanEmail);
+    }
+    if (Array.isArray(group.pendingRequests)) {
+      group.pendingRequests = group.pendingRequests.filter((r: any) => (r.email || "").toLowerCase() !== cleanEmail);
+    }
+
+    communitySignalGroups = groups;
+    currentDb.communitySignalGroups = groups;
+    saveDB(currentDb);
+
+    return res.json({ success: true, group });
+  });
+
+  // Signal Groups: Leave Group
+  app.post("/api/community/groups/:groupId/leave", (req, res) => {
+    const { groupId } = req.params;
+    const { userEmail } = req.body;
+    if (!userEmail) return res.status(400).json({ error: "User email is required." });
+
+    const currentDb = getDB();
+    const cleanEmail = userEmail.trim().toLowerCase();
+
+    const groups = currentDb.communitySignalGroups || communitySignalGroups || [];
+    const group = groups.find((g: any) => g.id === groupId);
+    if (!group) return res.status(404).json({ error: "Signal group not found." });
+
+    if (Array.isArray(group.members)) {
+      group.members = group.members.filter((m: string) => m.toLowerCase() !== cleanEmail);
+      group.membersCount = group.members.length;
+    }
+
+    communitySignalGroups = groups;
+    currentDb.communitySignalGroups = groups;
+    saveDB(currentDb);
+
+    return res.json({ success: true, group });
+  });
+
   // SIGNALS: GET All Signals across all groups
   app.get("/api/community/signals", (req, res) => {
     const { groupId } = req.query;
@@ -2898,16 +3058,18 @@ app.use((req, res, next) => {
     return res.json({ success: true, count: communitySignals.length });
   });
 
-  // SIGNALS: Finish Trade / Set 3-Day Feedback Window
+  // SIGNALS: Finish Trade / Set Feedback Voting Window (Configurable durationDays, default 3)
   app.post("/api/community/signals/:signalId/finish", (req, res) => {
     const { signalId } = req.params;
+    const { durationDays = 3 } = req.body || {};
     const currentDb = getDB();
     const signals = currentDb.communitySignals || [];
     const target = signals.find((s: any) => s.id === signalId);
     if (!target) return res.status(404).json({ error: "Signal not found." });
 
+    const days = typeof durationDays === "number" && durationDays > 0 ? durationDays : 3;
     target.status = "voting";
-    target.votingEndsAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+    target.votingEndsAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     target.votes = target.votes || {};
 
     communitySignals = signals;
@@ -2948,10 +3110,10 @@ app.use((req, res, next) => {
     let changed = false;
 
     targetGroups.forEach((g: any) => {
-      const closed = signals.filter((s: any) => s.groupId === g.id && s.status === "closed");
+      const closed = signals.filter((s: any) => s.groupId === g.id && (s.status || "").toLowerCase() === "closed");
       const totalClosed = closed.length;
-      const won = closed.filter((s: any) => s.result === "tp").length;
-      const lost = closed.filter((s: any) => s.result === "sl").length;
+      const won = closed.filter((s: any) => (s.result || "").toLowerCase() === "tp").length;
+      const lost = closed.filter((s: any) => (s.result || "").toLowerCase() === "sl").length;
       const decisive = won + lost;
       const winRate = decisive > 0 ? parseFloat(((won / decisive) * 100).toFixed(2)) : 0;
       const qualifiesVip = totalClosed >= 30 && winRate >= 75.0;
@@ -2985,25 +3147,37 @@ app.use((req, res, next) => {
   // SIGNALS: Conclude Feedback & Certify Outcome (TP / SL / Inconclusive)
   app.post("/api/community/signals/:signalId/conclude", (req, res) => {
     const { signalId } = req.params;
-    const { result, status } = req.body;
+    const { result, status, signal: fallbackSignal } = req.body;
     const currentDb = getDB();
-    const signals = currentDb.communitySignals || [];
-    const target = signals.find((s: any) => s.id === signalId);
-    if (!target) return res.status(404).json({ error: "Signal not found." });
+    if (!currentDb.communitySignals) currentDb.communitySignals = [];
+    const signals = currentDb.communitySignals;
+    let target = signals.find((s: any) => s.id === signalId);
+    
+    if (!target) {
+      if (fallbackSignal && fallbackSignal.id) {
+        target = { ...fallbackSignal };
+        signals.unshift(target);
+      } else {
+        return res.status(404).json({ error: "Signal not found." });
+      }
+    }
 
-    target.status = status || "closed";
+    target.status = (status || "closed").toLowerCase();
     target.closedAt = new Date().toISOString();
 
+    const votes = target.votes || {};
+    const totalVotes = Object.keys(votes).length;
+    const tpCount = Object.values(votes).filter((v) => (v as string || "").toLowerCase() === "tp").length;
+    const slCount = Object.values(votes).filter((v) => (v as string || "").toLowerCase() === "sl").length;
+    target.tpVotesCount = tpCount;
+    target.slVotesCount = slCount;
+
     if (result) {
-      target.result = result;
+      target.result = result.toLowerCase();
     } else {
-      const votes = target.votes || {};
-      const totalVotes = Object.keys(votes).length;
       if (totalVotes === 0) {
         target.result = "inconclusive";
       } else {
-        const tpCount = Object.values(votes).filter((v) => v === "tp").length;
-        const slCount = Object.values(votes).filter((v) => v === "sl").length;
         const tpPct = (tpCount / totalVotes) * 100;
         const slPct = (slCount / totalVotes) * 100;
         if (tpPct >= 75 || tpCount > slCount) {
