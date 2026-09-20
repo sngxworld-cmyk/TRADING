@@ -154,41 +154,41 @@ export const AccountSuspendedModal: React.FC<AccountSuspendedModalProps> = ({
     <div
       ref={gateRef}
       id="account-suspended-fullscreen-gate"
-      className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/98 backdrop-blur-2xl p-3 sm:p-5 overflow-y-auto select-none"
+      className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/98 backdrop-blur-2xl p-2.5 sm:p-5 overflow-y-auto select-none"
       style={{ userSelect: "none", WebkitUserSelect: "none" }}
     >
-      <div className={`w-full max-w-lg bg-slate-900 border ${isBanned ? "border-rose-600/70 shadow-rose-950/60" : "border-amber-500/50 shadow-amber-950/50"} shadow-2xl rounded-3xl overflow-hidden p-6 sm:p-8 flex flex-col items-center text-center relative max-h-[94vh] overflow-y-auto overscroll-contain animate-in fade-in zoom-in-95 duration-300`}>
+      <div className={`w-full max-w-lg bg-slate-900 border ${isBanned ? "border-rose-600/70 shadow-rose-950/60" : "border-amber-500/50 shadow-amber-950/50"} shadow-2xl rounded-2xl sm:rounded-3xl overflow-x-hidden p-4 sm:p-6 md:p-8 flex flex-col items-center text-center relative max-h-[92vh] overflow-y-auto overscroll-contain animate-in fade-in zoom-in-95 duration-300`}>
         {/* Top Glowing Header Accent Bar */}
-        <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-64 h-2 ${isBanned ? "bg-gradient-to-r from-red-600 via-rose-500 to-red-700 shadow-rose-500/60" : "bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 shadow-amber-500/60"} rounded-b-full shadow-lg`} />
+        <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-48 sm:w-64 h-2 ${isBanned ? "bg-gradient-to-r from-red-600 via-rose-500 to-red-700 shadow-rose-500/60" : "bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 shadow-amber-500/60"} rounded-b-full shadow-lg`} />
 
         {/* Lottie Animation */}
-        <div className="mb-4 mt-2">
+        <div className="mb-3 mt-1">
           <AuthLottieAnimation
             type={isBanned ? "account-suspended" : "trial-expired"}
-            className="w-24 h-24 sm:w-28 sm:h-28 mx-auto"
+            className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 mx-auto"
           />
         </div>
 
         {/* Status Badge */}
         {isBanned ? (
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-mono mb-3">
-            <AlertOctagon className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+          <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-300 text-[11px] sm:text-xs font-mono mb-3 max-w-full flex-wrap text-center">
+            <AlertOctagon className="w-3.5 h-3.5 text-rose-400 animate-pulse shrink-0" />
             <span>Account Banned &bull; Strict Lockout</span>
           </div>
         ) : isRevokedSubscribed ? (
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-mono mb-3">
-            <UserX className="w-3.5 h-3.5 text-amber-400" />
+          <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[11px] sm:text-xs font-mono mb-3 max-w-full flex-wrap text-center">
+            <UserX className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span>Access Revoked &bull; Subscribed Account</span>
           </div>
         ) : (
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-mono mb-3">
-            <AlertOctagon className="w-3.5 h-3.5 text-rose-400" />
+          <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-300 text-[11px] sm:text-xs font-mono mb-3 max-w-full flex-wrap text-center">
+            <AlertOctagon className="w-3.5 h-3.5 text-rose-400 shrink-0" />
             <span>Account Suspended</span>
           </div>
         )}
 
         {/* Title */}
-        <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mb-2 font-mono">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight mb-2 font-mono">
           {isBanned
             ? "Your Account Has Been Banned"
             : isRevokedSubscribed
@@ -198,31 +198,31 @@ export const AccountSuspendedModal: React.FC<AccountSuspendedModalProps> = ({
 
         {/* Subtitle for Revoked Subscribed */}
         {isRevokedSubscribed && (
-          <p className="text-amber-400 font-bold text-sm sm:text-base font-mono mb-2">
+          <p className="text-amber-400 font-bold text-xs sm:text-sm font-mono mb-2">
             Contact the Owner or a Moderator
           </p>
         )}
 
         {/* Description Box */}
-        <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-5 bg-slate-950/80 border border-slate-800/90 p-4 rounded-2xl text-left">
+        <p className="w-full text-slate-300 text-xs sm:text-sm leading-relaxed mb-4 bg-slate-950/80 border border-slate-800/90 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl text-left break-words">
           {isBanned ? (
             <>
-              Your account <span className="text-white font-mono font-semibold">{user.email}</span> has been strictly banned by the Host Administrator. All trial privileges and workspace access are locked out. You cannot use TrackerX unless you submit a ban appeal and the Master Owner approves it.
+              Your account <span className="text-white font-mono font-semibold break-all">{user.email}</span> has been strictly banned by the Host Administrator. All trial privileges and workspace access are locked out. You cannot use TrackerX unless you submit a ban appeal and the Master Owner approves it.
             </>
           ) : isRevokedSubscribed ? (
             <>
-              Your subscribed account access for <span className="text-white font-mono font-semibold">{user.email}</span> has been revoked by administration. To restore your trading workspace and journal, please reach out directly to the Master Owner or an official Moderator.
+              Your subscribed account access for <span className="text-white font-mono font-semibold break-all">{user.email}</span> has been revoked by administration. To restore your trading workspace and journal, please reach out directly to the Master Owner or an official Moderator.
             </>
           ) : (
             <>
-              Access for <span className="text-white font-mono font-semibold">{user.email}</span> has been suspended. Please contact the administrator.
+              Access for <span className="text-white font-mono font-semibold break-all">{user.email}</span> has been suspended. Please contact the administrator.
             </>
           )}
         </p>
 
         {/* Ban Reason Box if provided */}
         {user.bannedReason && (
-          <div className="w-full bg-rose-950/40 border border-rose-500/40 rounded-2xl p-3.5 sm:p-4 mb-5 text-left">
+          <div className="w-full bg-rose-950/40 border border-rose-500/40 rounded-xl p-3 sm:p-4 mb-4 text-left break-words">
             <span className="text-[10px] text-rose-300 uppercase font-mono font-bold tracking-wider block mb-1">
               Stated Reason from Host Admin:
             </span>
@@ -231,7 +231,7 @@ export const AccountSuspendedModal: React.FC<AccountSuspendedModalProps> = ({
         )}
 
         {/* Direct Contact Buttons */}
-        <div className={`w-full ${isBanned ? "bg-rose-950/30 border-rose-500/30" : "bg-amber-950/30 border-amber-500/30"} border rounded-2xl p-4 sm:p-5 mb-5 text-left space-y-3`}>
+        <div className={`w-full ${isBanned ? "bg-rose-950/30 border-rose-500/30" : "bg-amber-950/30 border-amber-500/30"} border rounded-xl sm:rounded-2xl p-3.5 sm:p-4 mb-4 text-left space-y-2.5`}>
           <div className="flex items-center justify-between">
             <span className={`text-[11px] ${isBanned ? "text-rose-300" : "text-amber-300"} uppercase font-mono font-bold tracking-wider`}>
               Official Hotline
@@ -239,13 +239,13 @@ export const AccountSuspendedModal: React.FC<AccountSuspendedModalProps> = ({
             <span className="text-[10px] text-slate-400 font-mono">Master Owner Hotline</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <a
               href={`tel:${rawPhone}`}
-              className="py-2.5 px-3.5 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-700 text-white font-mono font-bold text-xs flex items-center justify-between transition-all group"
+              className="py-2.5 px-3 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-700 text-white font-mono font-bold text-xs flex items-center justify-between transition-all group"
             >
               <div className="flex items-center gap-2">
-                <PhoneCall className="w-4 h-4 text-emerald-400 group-hover:animate-bounce" />
+                <PhoneCall className="w-4 h-4 text-emerald-400 group-hover:animate-bounce shrink-0" />
                 <span>Call Owner</span>
               </div>
               <span className="text-[10px] text-slate-400 font-sans">{phoneContact}</span>
@@ -259,9 +259,9 @@ export const AccountSuspendedModal: React.FC<AccountSuspendedModalProps> = ({
               )}`}
               target="_blank"
               rel="noreferrer"
-              className="py-2.5 px-3.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-200 font-mono font-bold text-xs flex items-center justify-center gap-2 transition-all"
+              className="py-2.5 px-3 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-200 font-mono font-bold text-xs flex items-center justify-center gap-2 transition-all"
             >
-              <MessageSquare className="w-4 h-4 text-emerald-400" />
+              <MessageSquare className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>WhatsApp Owner</span>
             </a>
           </div>
@@ -269,10 +269,10 @@ export const AccountSuspendedModal: React.FC<AccountSuspendedModalProps> = ({
 
         {/* Ban Appeal Section for Banned Users */}
         {isBanned && (
-          <div className="w-full bg-slate-950/90 border border-slate-800 rounded-2xl p-4 sm:p-5 mb-5 text-left">
-            <div className="flex items-center justify-between mb-3">
+          <div className="w-full bg-slate-950/90 border border-slate-800 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 mb-4 text-left">
+            <div className="flex items-center justify-between mb-2.5">
               <div className="flex items-center gap-2 text-white text-xs font-bold font-mono uppercase">
-                <ShieldAlert className="w-4 h-4 text-rose-400" />
+                <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
                 <span>Submit Ban Appeal</span>
               </div>
               {appealSubmitted && (
@@ -284,11 +284,11 @@ export const AccountSuspendedModal: React.FC<AccountSuspendedModalProps> = ({
             </div>
 
             {appealSubmitted ? (
-              <div className="p-3 bg-amber-950/30 border border-amber-500/40 rounded-xl text-xs text-amber-200 font-sans">
+              <div className="p-3 bg-amber-950/30 border border-amber-500/40 rounded-xl text-xs text-amber-200 font-sans leading-relaxed">
                 Your ban appeal has been recorded and submitted to the Master Owner. If the appeal is accepted, the owner will unban your account and access will be immediately restored. You can click <span className="font-bold text-white font-mono">Check Status</span> below at any time.
               </div>
             ) : (
-              <form onSubmit={handleAppealSubmit} className="space-y-3">
+              <form onSubmit={handleAppealSubmit} className="space-y-2.5">
                 <label className="text-[11px] text-slate-400 block font-sans">
                   Provide your appeal explanation for the Master Owner:
                 </label>
@@ -297,7 +297,7 @@ export const AccountSuspendedModal: React.FC<AccountSuspendedModalProps> = ({
                   value={appealNotes}
                   onChange={(e) => setAppealNotes(e.target.value)}
                   placeholder="Explain why your ban should be reviewed or lifted..."
-                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 font-sans transition-colors resize-none"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 sm:p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 font-sans transition-colors resize-none"
                   required
                 />
                 <button
@@ -315,7 +315,7 @@ export const AccountSuspendedModal: React.FC<AccountSuspendedModalProps> = ({
 
         {/* Feedback Message */}
         {refreshFeedback && (
-          <div className="text-[11px] text-slate-300 font-mono mb-4 p-2.5 rounded-xl bg-slate-950 border border-slate-700/60 animate-in fade-in w-full text-center">
+          <div className="text-[11px] text-slate-300 font-mono mb-3 p-2.5 rounded-xl bg-slate-950 border border-slate-700/60 animate-in fade-in w-full text-center">
             {refreshFeedback}
           </div>
         )}

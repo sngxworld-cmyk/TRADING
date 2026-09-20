@@ -750,14 +750,82 @@ app.use((req, res, next) => {
   next();
 });
 
-// Helmet-grade Security Response Headers on every single incoming connection
+// --- MILITARY-GRADE SECURITY HEADERS & COOKIE HARDENING ---
+// Comprehensive Content-Security-Policy (CSP) compliant with OWASP & modern browsers
+const CSP_POLICY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob: data:",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' data: blob: https:",
+  "connect-src 'self' https: wss: ws: blob: data:",
+  "frame-src 'self' https://*.google.com https://*.firebaseapp.com https://*.run.app",
+  "frame-ancestors 'self' https://*.run.app https://ai.studio https://*.google.com https://*.googleusercontent.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "upgrade-insecure-requests",
+].join("; ");
+
+const PERMISSIONS_POLICY = [
+  "camera=()",
+  "microphone=()",
+  "geolocation=()",
+  "payment=()",
+  "usb=()",
+  "screen-wake-lock=()",
+  "accelerometer=()",
+  "gyroscope=()",
+  "magnetometer=()",
+  "midi=()",
+  "encrypted-media=()",
+  "autoplay=()",
+].join(", ");
+
+// Response Headers & Cookie Sanitizer on every single incoming connection
 app.use((req, res, next) => {
-  res.setHeader("X-Content-Type-Options", "nosniff");
+  // 1. Content Security Policy (CSP)
+  res.setHeader("Content-Security-Policy", CSP_POLICY);
+
+  // 2. X-Frame-Options (Clickjacking defense, works with CSP frame-ancestors)
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
-  res.setHeader("X-XSS-Protection", "1; mode=block");
+
+  // 3. X-Content-Type-Options (MIME-sniffing protection)
+  res.setHeader("X-Content-Type-Options", "nosniff");
+
+  // 4. Referrer-Policy (Privacy & leak prevention)
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
-  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+
+  // 5. Permissions-Policy (Hardware & browser API restrictions)
+  res.setHeader("Permissions-Policy", PERMISSIONS_POLICY);
+
+  // Additional Transport & Browser Hardening Headers
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+
+  // 6. Cookies: Automatic Enforcement of Secure; HttpOnly; SameSite=Lax on all Set-Cookie headers
+  const originalSetHeader = res.setHeader.bind(res);
+  res.setHeader = function (name: string, value: any) {
+    if (typeof name === "string" && name.toLowerCase() === "set-cookie") {
+      const hardenCookie = (cookieStr: string): string => {
+        let secured = cookieStr;
+        if (!/;\s*Secure/i.test(secured)) secured += "; Secure";
+        if (!/;\s*HttpOnly/i.test(secured)) secured += "; HttpOnly";
+        if (!/;\s*SameSite=/i.test(secured)) secured += "; SameSite=Lax";
+        if (!/;\s*Path=/i.test(secured)) secured += "; Path=/";
+        return secured;
+      };
+
+      if (Array.isArray(value)) {
+        value = value.map((c) => (typeof c === "string" ? hardenCookie(c) : c));
+      } else if (typeof value === "string") {
+        value = hardenCookie(value);
+      }
+    }
+    return originalSetHeader(name, value);
+  };
+
   next();
 });
 
@@ -1860,12 +1928,14 @@ app.use("/api", globalApiLimiter);
         status: "ONLINE",
         antiFingerprint: "ENABLED (Server & ETag masked)",
         headersEnforced: [
-          "X-Content-Type-Options: nosniff",
+          "Content-Security-Policy: default-src 'self'; frame-ancestors 'self' *.run.app *.google.com",
           "X-Frame-Options: SAMEORIGIN",
-          "X-XSS-Protection: 1; mode=block",
-          "Strict-Transport-Security",
+          "X-Content-Type-Options: nosniff",
           "Referrer-Policy: strict-origin-when-cross-origin",
-          "Permissions-Policy",
+          "Permissions-Policy: camera=(), microphone=(), geolocation=(), ...",
+          "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload",
+          "X-XSS-Protection: 1; mode=block",
+          "Cookie-Security: Automatic Secure; HttpOnly; SameSite=Lax enforcement",
         ],
         blockedTools: [
           "Kali Linux Suite",

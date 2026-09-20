@@ -4,7 +4,7 @@
       "id": "usr_admin_master",
       "email": "sngxworld@gmail.com",
       "username": "SNGxADMIN009",
-      "password": "scrypt:aa96eeee81a0ed01a70e0518eccaf6fc:cd9ddb21acada76f7f3bf5125de07d54664885d537ff97e9bf34a2ec66b7e63721d739f749be27f6b4fe81339c5019a9decab25070048f94b36ad48acc019109",
+      "password": "scrypt:4c53b7a0d3756917060d8a927d54b4ac:b65ead02c022c0af1547a45e2f614e7baa55721abc7f35de9a9d29ffa6cf2bde5af26d6260d43b6afd10aa4100ca454309cfee2eb2a403d2ba4434a4f270ce24",
       "displayName": "sngxadmin",
       "photoURL": "data:image/jpeg;base64,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",
       "phone": "",
@@ -21,7 +21,7 @@
       "subOwnerDurationDays": null,
       "subOwnerNote": null,
       "createdAt": "2026-09-07T18:01:28.283Z",
-      "lastLogin": "2026-09-09T17:00:44.268Z",
+      "lastLogin": "2026-09-14T02:49:11.608Z",
       "hasConfiguredJournal": true,
       "hasSeenTutorial": true,
       "tradingData": {},
@@ -101,15 +101,15 @@
       "tradingPair": "BTC/USDT",
       "tradingMarket": "BTC/USDT",
       "startingCapital": "100",
-      "role": "client",
-      "platformRole": "member",
-      "status": "pending",
+      "role": "moderator",
+      "platformRole": "moderator",
+      "status": "approved",
       "subOwnerExpiresAt": null,
       "subOwnerAssignedAt": null,
       "subOwnerDurationDays": null,
       "subOwnerNote": null,
       "createdAt": "2026-09-05T19:59:08.108Z",
-      "lastLogin": "2026-09-05T19:59:08.108Z",
+      "lastLogin": "2026-09-11T19:31:59.640Z",
       "hasConfiguredJournal": false,
       "hasSeenTutorial": false,
       "tradingData": {},
@@ -132,17 +132,75 @@
       "startingCapital": "100",
       "role": "verified_signal_provider",
       "platformRole": "verified_signal_provider",
-      "status": "approved",
+      "status": "pending",
       "subOwnerExpiresAt": null,
       "subOwnerAssignedAt": null,
       "subOwnerDurationDays": null,
       "subOwnerNote": null,
       "createdAt": "2026-09-01T19:19:25.459Z",
-      "lastLogin": "2026-09-09T17:22:44.720Z",
+      "lastLogin": "2026-09-14T03:03:56.980Z",
       "hasConfiguredJournal": true,
       "hasSeenTutorial": true,
       "tradingData": {},
-      "trialStartDate": "2026-09-02T17:08:13.989Z",
+      "trialStartDate": "2026-09-03T15:23:15.271Z",
+      "subscribed": false,
+      "wasApproved": false,
+      "bannedReason": ""
+    },
+    {
+      "id": "usr_1789315425259",
+      "email": "lithmalal@gmail.com",
+      "username": "_Akein",
+      "password": "scrypt:227305890b2bd2423893b410b92c725f:8fe80e5c1909fa0180325709f2f22b32f15d6df45685ff0501bcc672c7e1ea6e99d50ba32ba8cfda252c50c250aca53673f2d71f69360d5cff57e04db75af2e6",
+      "displayName": "Akein Lithmal",
+      "photoURL": "data:image/jpeg;base64,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",
+      "phone": "+94 727310162",
+      "dob": "2009-10-07",
+      "bio": "",
+      "tradingPair": "BTC/USDT",
+      "tradingMarket": "BTC/USDT",
+      "startingCapital": "10000000000",
+      "role": "client",
+      "platformRole": "pending_user",
+      "status": "pending",
+      "subOwnerExpiresAt": null,
+      "subOwnerAssignedAt": null,
+      "subOwnerDurationDays": null,
+      "subOwnerNote": null,
+      "createdAt": "2026-09-13T16:03:45.259Z",
+      "lastLogin": "2026-09-13T16:06:39.446Z",
+      "hasConfiguredJournal": true,
+      "hasSeenTutorial": true,
+      "tradingData": {},
+      "subscribed": false,
+      "wasApproved": false,
+      "bannedReason": ""
+    },
+    {
+      "id": "usr_0frc9ns",
+      "email": "test@gmail.com",
+      "username": "test",
+      "password": "scrypt:a4f6ef1533330e620bf917e069b0cb6e:3a790930b8ea3fc91a3f699ce9b6d40aae9f9d657ff355752999ea9fd142a752abfc1790e6f47fb217b1e5a50fb308f345d839236d3851291067393a23aec0b2",
+      "displayName": "test",
+      "photoURL": "",
+      "phone": "",
+      "dob": "",
+      "bio": "",
+      "tradingPair": "BTC/USDT",
+      "tradingMarket": "Crypto Market",
+      "startingCapital": "",
+      "role": "client",
+      "platformRole": "pending_user",
+      "status": "pending",
+      "subOwnerExpiresAt": null,
+      "subOwnerAssignedAt": null,
+      "subOwnerDurationDays": null,
+      "subOwnerNote": null,
+      "createdAt": "2026-09-14T01:42:49.320Z",
+      "lastLogin": "2026-09-14T01:42:49.320Z",
+      "hasConfiguredJournal": false,
+      "hasSeenTutorial": false,
+      "tradingData": {},
       "subscribed": false,
       "wasApproved": false,
       "bannedReason": ""
@@ -152,6 +210,61 @@
     "sngxworld@gmail.com"
   ],
   "logs": [
+    {
+      "timestamp": "2026-09-14T03:03:56.986Z",
+      "message": "Login event: sngxarmy@gmail.com (VERIFIED_SIGNAL_PROVIDER) - Status: PENDING",
+      "type": "access"
+    },
+    {
+      "timestamp": "2026-09-14T03:03:54.240Z",
+      "message": "Login event: sngxarmy@gmail.com (VERIFIED_SIGNAL_PROVIDER) - Status: PENDING",
+      "type": "access"
+    },
+    {
+      "timestamp": "2026-09-14T03:03:03.650Z",
+      "message": "Login event: sngxarmy@gmail.com (VERIFIED_SIGNAL_PROVIDER) - Status: PENDING",
+      "type": "access"
+    },
+    {
+      "timestamp": "2026-09-14T03:02:27.287Z",
+      "message": "Login event: sngxarmy@gmail.com (VERIFIED_SIGNAL_PROVIDER) - Status: PENDING",
+      "type": "access"
+    },
+    {
+      "timestamp": "2026-09-14T03:01:36.003Z",
+      "message": "Login event: sngxarmy@gmail.com (VERIFIED_SIGNAL_PROVIDER) - Status: PENDING",
+      "type": "access"
+    },
+    {
+      "timestamp": "2026-09-14T02:52:51.481Z",
+      "message": "Login event: sngxarmy@gmail.com (VERIFIED_SIGNAL_PROVIDER) - Status: PENDING",
+      "type": "access"
+    },
+    {
+      "timestamp": "2026-09-14T02:52:48.290Z",
+      "message": "Login event: sngxarmy@gmail.com (VERIFIED_SIGNAL_PROVIDER) - Status: PENDING",
+      "type": "access"
+    },
+    {
+      "timestamp": "2026-09-14T02:49:11.616Z",
+      "message": "Login event: sngxworld@gmail.com (ADMIN) - Status: APPROVED",
+      "type": "access"
+    },
+    {
+      "timestamp": "2026-09-14T01:42:49.330Z",
+      "message": "Login event: test@gmail.com (CLIENT) - Status: PENDING",
+      "type": "access"
+    },
+    {
+      "timestamp": "2026-09-14T01:42:49.325Z",
+      "message": "Auto-registered new client Gmail on login attempt: test@gmail.com - Status: PENDING",
+      "type": "info"
+    },
+    {
+      "timestamp": "2026-09-14T01:27:59.326Z",
+      "message": "Login event: sngxworld@gmail.com (ADMIN) - Status: APPROVED",
+      "type": "access"
+    },
     {
       "timestamp": "2026-09-07T18:03:19.515Z",
       "message": "[AUTH OTP] Dispatched 6-digit code to Gmail: newtestclient992@gmail.com. Code: 699704 (SMTP: DELIVERED)",
@@ -296,7 +409,10 @@
       "wonSignals": 0,
       "lostSignals": 0,
       "winRate": 0,
-      "createdAt": "2026-08-22T16:36:37.999Z"
+      "createdAt": "2026-08-22T16:36:37.999Z",
+      "pendingMembers": [],
+      "pendingRequests": [],
+      "votingPeriodDays": 3
     }
   ],
   "communityChatMessages": [
@@ -368,6 +484,13 @@
       "expiresAt": 1788804796480,
       "target": "newtestclient992@gmail.com",
       "type": "email"
+    }
+  },
+  "registeredDevices": {
+    "dev_fp_x06dug_3w9ku5gs": {
+      "email": "sngxarmy@gmail.com",
+      "registeredAt": "2026-09-01T19:19:25.459Z",
+      "isMasterDevice": true
     }
   }
 }
