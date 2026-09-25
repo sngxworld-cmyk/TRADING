@@ -4193,8 +4193,23 @@ if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
   createServerServer();
 } else if (!process.env.VERCEL) {
   const distPath = path.join(process.cwd(), "dist");
-  app.use(express.static(distPath));
+  app.use(
+    express.static(distPath, {
+      setHeaders: (res) => {
+        res.setHeader("X-Frame-Options", "SAMEORIGIN");
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Content-Security-Policy", CSP_POLICY);
+        res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+        res.setHeader("Permissions-Policy", PERMISSIONS_POLICY);
+      },
+    })
+  );
   app.get("*", (_req, res) => {
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Security-Policy", CSP_POLICY);
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    res.setHeader("Permissions-Policy", PERMISSIONS_POLICY);
     res.sendFile(path.join(distPath, "index.html"));
   });
 }
